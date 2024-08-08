@@ -22,6 +22,7 @@ setopt hist_verify
 #git
 alias gca="git commit -a -m"
 alias gst="git status"
+alias gp="git push"
 
 # completion using arrow keys (based on history)
 bindkey '^[[A' history-search-backward
