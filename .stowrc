@@ -1,3 +1,3 @@
---target=~/.config
---ignore=.stowrc
---ignore=DS_Store
+target=~/.dotfiles
+ignore=.stowrc
+-- ignore=DS_Store

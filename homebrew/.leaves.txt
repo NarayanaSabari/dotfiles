@@ -1,0 +1,7 @@
+eza
+git
+powerlevel10k
+stow
+zoxide
+zsh-autosuggestions
+zsh-syntax-highlighting
