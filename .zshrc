@@ -19,7 +19,7 @@ setopt hist_expire_dups_first
 setopt hist_ignore_dups
 setopt hist_verify
 
-#git
+# git aliases
 alias gca="git commit -a -m"
 alias gs="git status"
 alias gp="git push"
@@ -28,25 +28,14 @@ alias gp="git push"
 bindkey '^[[A' history-search-backward
 bindkey '^[[B' history-search-forward
 
-#plug-in
+# plugins
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # ---- Eza (better ls) -----
-
 alias ls="eza --icons=always"
 alias l="eza -l --icons --git -a"
+
 # ---- Zoxide (better cd) ----
 eval "$(zoxide init zsh)"
-
 alias cd="z"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/sabarinarayana/Developer/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sabarinarayana/Developer/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/sabarinarayana/Developer/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sabarinarayana/Developer/google-cloud-sdk/completion.zsh.inc'; fi

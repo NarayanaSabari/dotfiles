@@ -1,5 +1,6 @@
 eza
 git
+neovim
 powerlevel10k
 stow
 zoxide

@@ -11,10 +11,8 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup("sabari.plugins")
-
-require("lazy").setup("josean.plugins", {
-   checker = {
+require("lazy").setup("sabari.plugins", {
+  checker = {
     enabled = true,
     notify = false,
   },

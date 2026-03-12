@@ -1,9 +1,0 @@
-eza
-git
-neovim
-pipx
-powerlevel10k
-stow
-zoxide
-zsh-autosuggestions
-zsh-syntax-highlighting
