@@ -1,6 +1,9 @@
+anomalyco/tap/opencode
 eza
 git
 neovim
+pipx
+pnpm
 powerlevel10k
 stow
 zoxide
