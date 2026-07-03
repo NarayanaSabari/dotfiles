@@ -39,6 +39,12 @@
     "purple_FOR_SUBAGENTS_ONLY": "#756bb1",
     "orange_FOR_SUBAGENTS_ONLY": "#e6550d",
     "pink_FOR_SUBAGENTS_ONLY": "#fb9a99",
-    "cyan_FOR_SUBAGENTS_ONLY": "#80b1d3"
+    "cyan_FOR_SUBAGENTS_ONLY": "#80b1d3",
+    "userMessageBackground": "#22233a",
+    "userMessageBackgroundHover": "#2a2b45",
+    "messageActionsBackground": "#2e2f30",
+    "bashMessageBackgroundColor": "#261507",
+    "memoryBackgroundColor": "#241f33",
+    "selectionBg": "#515253"
   }
 }
