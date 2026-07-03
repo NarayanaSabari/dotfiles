@@ -13,6 +13,10 @@
 - When writing or substantially editing long Markdown files, put each full sentence on its own line (keep normal Markdown structure, but don't wrap multiple sentences onto one physical line).
 - Push branches to remote early and often. Never let local-only commits accumulate in a worktree.
 
+# My opinions
+
+When working on something that would benefit from knowing my viewpoints (technical decisions, tool choices, writing on my behalf), read ~/OPINIONS.md to understand what I believe.
+
 # Git identities
 
 This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconfig-narayana, ~/.gitconfig-rentai, ~/.gitconfig-sabarihex; see ~/Developer/README-github-accounts.md). Before committing or pushing, verify `git config user.email` matches the account for that repo.
