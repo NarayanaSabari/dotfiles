@@ -27,6 +27,18 @@
     "diffAddedDimmed": "#0d2415",
     "diffRemovedDimmed": "#2a0d0e",
     "diffAddedWord": "#1d6b38",
-    "diffRemovedWord": "#7c1a1c"
+    "diffRemovedWord": "#7c1a1c",
+    "rate_limit_fill": "#756bb1",
+    "rate_limit_empty": "#515253",
+    "briefLabelYou": "#dca060",
+    "briefLabelClaude": "#756bb1",
+    "red_FOR_SUBAGENTS_ONLY": "#e31a1c",
+    "blue_FOR_SUBAGENTS_ONLY": "#3182bd",
+    "green_FOR_SUBAGENTS_ONLY": "#31a354",
+    "yellow_FOR_SUBAGENTS_ONLY": "#dca060",
+    "purple_FOR_SUBAGENTS_ONLY": "#756bb1",
+    "orange_FOR_SUBAGENTS_ONLY": "#e6550d",
+    "pink_FOR_SUBAGENTS_ONLY": "#fb9a99",
+    "cyan_FOR_SUBAGENTS_ONLY": "#80b1d3"
   }
 }
