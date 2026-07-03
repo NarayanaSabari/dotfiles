@@ -1,0 +1,15 @@
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[user]
+	name = sabari
+	email = sabarinarayanakg@gmail.com
+[includeIf "gitdir:/Users/sabari/Developer/rentai/"]
+	path = ~/.gitconfig-rentai
+[includeIf "gitdir:/Users/sabari/Developer/sabarihex/"]
+	path = ~/.gitconfig-sabarihex
+[includeIf "gitdir:/Users/sabari/Developer/narayana/"]
+	path = ~/.gitconfig-narayana

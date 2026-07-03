@@ -1,0 +1,5 @@
+[user]
+	name = sabariHex
+	email = Sabari.Narayana@hexstream.com
+[core]
+	sshCommand = "ssh -i ~/.ssh/id_ed25519_sabarihex -o IdentitiesOnly=yes"

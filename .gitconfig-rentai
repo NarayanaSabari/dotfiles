@@ -1,0 +1,5 @@
+[user]
+	name = Sabari-RentAI
+	email = sabarinarayanakg@rentai.now
+[core]
+	sshCommand = "ssh -i ~/.ssh/id_ed25519_rentai -o IdentitiesOnly=yes"

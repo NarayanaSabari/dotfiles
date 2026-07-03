@@ -1,0 +1,21 @@
+personality = "pragmatic"
+
+[projects."/Users/sabari/Library/Application Support/com.conductor.app/bin"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Developer/TICM/DataInsights"]
+trust_level = "trusted"
+
+[hooks.state]
+
+[hooks.state."/Users/sabari/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:fc094b5636ec912161dd15d493210f4bcf35063140f0601bb99667e15be07d61"
+
+[hooks.state."/Users/sabari/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:edf8143c729337defc2df91b067f4b1956ed058d19a97ce3118b1e18ef1876af"
+
+[hooks.state."/Users/sabari/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:ad4d4716439a29dd3155d6a7499c79704a1a0fd5cff62755187ae620aeb3d3de"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 1
