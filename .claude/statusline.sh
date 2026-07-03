@@ -60,3 +60,16 @@ if [ -n "$week_pct" ]; then
 fi
 
 printf "%b${DIM} | ${CYN}%s%b%b${RST}" "$model_seg" "$dir" "$git_seg" "$limits_seg"
+
+# Line 2: context-window usage bar (appears once the first API response arrives).
+ctx=$(printf '%s' "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null | cut -d. -f1)
+if [ -n "$ctx" ]; then
+  filled=$((ctx / 10)); [ "$filled" -gt 10 ] && filled=10
+  bar=""; i=0
+  while [ $i -lt 10 ]; do
+    if [ $i -lt "$filled" ]; then bar="${bar}\xe2\x96\x93"; else bar="${bar}\xe2\x96\x91"; fi
+    i=$((i+1))
+  done
+  if [ "$ctx" -ge 80 ] 2>/dev/null; then cc="$RED"; elif [ "$ctx" -ge 60 ] 2>/dev/null; then cc="$YLW"; else cc="$GRN"; fi
+  printf "\n${DIM}ctx ${cc}${bar} ${ctx}%%${RST}"
+fi
