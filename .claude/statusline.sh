@@ -1,0 +1,35 @@
+#!/bin/bash
+# Claude Code status line. Receives session JSON on stdin.
+# Colors follow the base16 Brewer dark palette to match WezTerm.
+# Shows: model | directory | git branch (+dirty marker) | active git identity.
+
+input=$(cat)
+model=$(printf '%s' "$input" | jq -r '.model.display_name // "Claude"' 2>/dev/null)
+cwd=$(printf '%s' "$input" | jq -r '.workspace.current_dir // empty' 2>/dev/null)
+[ -z "$cwd" ] && cwd="$PWD"
+
+PUR='\033[38;2;117;107;177m'
+CYN='\033[38;2;128;177;211m'
+GRN='\033[38;2;49;163;84m'
+ORG='\033[38;2;230;85;13m'
+YLW='\033[38;2;220;160;96m'
+DIM='\033[38;2;115;116;117m'
+RST='\033[0m'
+
+dir="${cwd/#$HOME/~}"
+dir=$(printf '%s' "$dir" | awk -F/ 'NF<=3 {print; next} {print "\xe2\x80\xa6/" $(NF-1) "/" $NF}')
+
+git_seg=""
+if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  br=$(git -C "$cwd" branch --show-current 2>/dev/null)
+  [ -z "$br" ] && br=$(git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+  if [ -n "$(git -C "$cwd" status --porcelain 2>/dev/null | head -1)" ]; then
+    git_seg="${DIM} | ${ORG}${br}*"
+  else
+    git_seg="${DIM} | ${GRN}${br}"
+  fi
+  ident=$(git -C "$cwd" config user.name 2>/dev/null)
+  [ -n "$ident" ] && git_seg="${git_seg}${DIM} | ${YLW}${ident}"
+fi
+
+printf "${PUR}%s${DIM} | ${CYN}%s%b${RST}" "$model" "$dir" "$git_seg"

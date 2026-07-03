@@ -1,0 +1,32 @@
+{
+  "name": "Brewer Dark",
+  "base": "dark",
+  "overrides": {
+    "claude": "#756bb1",
+    "claudeShimmer": "#a49bd6",
+    "success": "#31a354",
+    "error": "#e31a1c",
+    "warning": "#dca060",
+    "warningShimmer": "#ecc890",
+    "suggestion": "#80b1d3",
+    "permission": "#3182bd",
+    "permissionShimmer": "#6aa6d6",
+    "planMode": "#80b1d3",
+    "autoAccept": "#dca060",
+    "bashBorder": "#e6550d",
+    "promptBorder": "#515253",
+    "promptBorderShimmer": "#737475",
+    "inactive": "#737475",
+    "inactiveShimmer": "#959697",
+    "subtle": "#515253",
+    "merged": "#756bb1",
+    "remember": "#756bb1",
+    "ide": "#3182bd",
+    "diffAdded": "#12351d",
+    "diffRemoved": "#3d1113",
+    "diffAddedDimmed": "#0d2415",
+    "diffRemovedDimmed": "#2a0d0e",
+    "diffAddedWord": "#1d6b38",
+    "diffRemovedWord": "#7c1a1c"
+  }
+}
