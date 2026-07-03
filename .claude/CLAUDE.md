@@ -17,8 +17,3 @@ This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconf
 - Shipping changes: validate through the no-mistakes pipeline (`/no-mistakes` or `git push no-mistakes <branch>`) instead of pushing directly.
 - Parallel work: create worktrees with `treehouse` (`treehouse get`, `treehouse status`, `treehouse return`, `treehouse prune`).
 - Second-opinion code reviews: delegate to the Codex CLI (`codex exec "review this diff: ..."`).
-
-# graphify
-
-- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
-When the user types `/graphify`, invoke the Skill tool with `skill: "graphify"` before doing anything else.
