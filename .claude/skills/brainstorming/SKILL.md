@@ -14,7 +14,7 @@ Core principle: unexamined assumptions cause the most wasted work, and "simple" 
 2. Ask clarifying questions one at a time to understand purpose, constraints, and success criteria. Prefer multiple choice.
 3. If the request spans multiple independent subsystems, decompose first and brainstorm one piece.
 4. Propose 2-3 approaches with trade-offs. Lead with your recommendation and why.
-5. Present the design in sections scaled to their complexity. For anything visual or comparison-heavy, present it through the lavish skill.
+5. Present the design in sections scaled to their complexity, in chat. Only when the design is about UI (mockups, layout options, visual variants) present it through the lavish skill.
 6. Get explicit approval before writing any code.
 
 ## Rules that survive pressure

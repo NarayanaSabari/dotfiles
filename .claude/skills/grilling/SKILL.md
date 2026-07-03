@@ -14,5 +14,5 @@ Walk down each branch of the design tree, resolving dependencies between decisio
 - For every question, provide your recommended answer and why.
 - If a question can be answered by exploring the codebase, explore the codebase instead of asking.
 - Attack the plan: probe edge cases, failure modes, hidden dependencies, unstated assumptions, and scope creep. The goal is to find the weak joints before the code does.
-- When decisions accumulate, summarize the hardened plan so far. For anything visual or comparison-heavy, present it through the lavish skill.
+- When decisions accumulate, summarize the hardened plan so far in chat (lavish only if the subject is UI itself).
 - Do not start implementing until the user confirms shared understanding has been reached.

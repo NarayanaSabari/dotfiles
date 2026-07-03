@@ -25,7 +25,7 @@ This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconf
 
 - GitHub operations: use the gh-axi skill (or plain `gh`). Never use a GitHub MCP server.
 - Browser work: use the chrome-devtools-axi skill.
-- Plans, comparisons, and anything visual: present via the lavish skill instead of walls of text.
+- Lavish is for UI reference ONLY: UI mockups, design options, visual UI reviews. Do NOT use lavish for plans, comparisons, codebase audits, backend work, or system design - present those directly in chat.
 - Shipping changes: validate through the no-mistakes pipeline (`/no-mistakes` or `git push no-mistakes <branch>`) instead of pushing directly.
 - Parallel work: create worktrees with `treehouse` (`treehouse get`, `treehouse status`, `treehouse return`, `treehouse prune`).
 - Second-opinion code reviews: delegate to the Codex CLI (`codex exec "review this diff: ..."`).
