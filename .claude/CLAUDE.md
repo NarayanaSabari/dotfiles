@@ -1,6 +1,10 @@
+# Writing style
+
+- Never use the em dash "—". Use a plain dash "-" or restructure the sentence instead.
+
 # Engineering rules
 
-- When making technical decisions, don't give much weight to development cost or "time to implement". You build far faster than human estimates suggest, so never pick a cheaper-but-worse option to "save time" — pick the option with the best quality, simplicity, robustness, scalability, and long-term maintainability.
+- When making technical decisions, don't give much weight to development cost or "time to implement". You build far faster than human estimates suggest, so never pick a cheaper-but-worse option to "save time". Pick the option with the best quality, simplicity, robustness, scalability, and long-term maintainability.
 - When fixing a bug, always start by reproducing it end to end, as closely as possible to how a real user experiences it. This makes sure you find the real problem, so your fix actually solves it. Unit tests alone are not proof of a fix.
 - Prefer end-to-end tests that guard real product behavior over unit-test-only coverage.
 - When end-to-end testing a product, be picky about the UI: if something clearly looks off, even if unrelated to your current task, get it fixed along the way.
