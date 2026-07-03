@@ -36,6 +36,13 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 alias ls="eza --icons=always"
 alias l="eza -l --icons --git -a"
 
-# ---- Zoxide (better cd) ----
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/sabari/Developer/freelancing/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/sabari/Developer/freelancing/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/sabari/Developer/freelancing/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sabari/Developer/freelancing/google-cloud-sdk/completion.zsh.inc'; fi
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+# ---- Zoxide (better cd) ---- (keep at end of .zshrc)
 eval "$(zoxide init zsh)"
 alias cd="z"
