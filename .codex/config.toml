@@ -19,3 +19,6 @@ trusted_hash = "sha256:ad4d4716439a29dd3155d6a7499c79704a1a0fd5cff62755187ae620a
 
 [tui.model_availability_nux]
 "gpt-5.5" = 1
+
+[features]
+hooks = true

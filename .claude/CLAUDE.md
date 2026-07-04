@@ -27,5 +27,5 @@ This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconf
 - Browser work: use the chrome-devtools-axi skill.
 - Lavish is for UI reference ONLY: UI mockups, design options, visual UI reviews. Do NOT use lavish for plans, comparisons, codebase audits, backend work, or system design - present those directly in chat.
 - Shipping changes: validate through the no-mistakes pipeline (`/no-mistakes` or `git push no-mistakes <branch>`) instead of pushing directly.
-- Parallel work: create worktrees with `treehouse` (`treehouse get`, `treehouse status`, `treehouse return`, `treehouse prune`).
+- Parallel agent sessions: managed in herdr (the herdr skill controls it from inside; sessions persist and agent state is tracked natively). Do not use tmux or treehouse - both are retired.
 - Second-opinion code reviews: delegate to the Codex CLI (`codex exec "review this diff: ..."`).
