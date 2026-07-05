@@ -13,3 +13,22 @@
 	path = ~/.gitconfig-sabarihex
 [includeIf "gitdir:/Users/sabari/Developer/narayana/"]
 	path = ~/.gitconfig-narayana
+
+# Remote-URL-based identity (git >= 2.36): follows the REPO, not the directory,
+# so tool-managed clones/worktrees (no-mistakes, herdr, CI helpers) commit with
+# the right account. Listed after the gitdir rules so remote evidence wins.
+# To map a new org/owner, add one https line pointing at the account's file.
+[includeIf "hasconfig:remote.*.url:https://*github.com/renatainow/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:github-rentai:**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:https://*github.com/NarayanaSabari/**"]
+	path = ~/.gitconfig-narayana
+[includeIf "hasconfig:remote.*.url:github-narayana:**"]
+	path = ~/.gitconfig-narayana
+[includeIf "hasconfig:remote.*.url:https://*github.com/sabariHex/**"]
+	path = ~/.gitconfig-sabarihex
+[includeIf "hasconfig:remote.*.url:https://*github.com/HEXstreamAnalytics/**"]
+	path = ~/.gitconfig-sabarihex
+[includeIf "hasconfig:remote.*.url:github-sabarihex:**"]
+	path = ~/.gitconfig-sabarihex
