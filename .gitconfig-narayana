@@ -1,5 +1,5 @@
 [user]
 	name = NarayanaSabari
-	email = sabarinarayanakg@gmail.com
+	email = sabarinarayanakg@proton.me
 [core]
 	sshCommand = "ssh -i ~/.ssh/id_ed25519_narayana -o IdentitiesOnly=yes"
