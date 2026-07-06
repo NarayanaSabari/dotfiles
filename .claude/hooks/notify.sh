@@ -5,7 +5,8 @@
 
 kind="${1:-attention}"
 input=$(cat)
-msg=$(printf '%s' "$input" | jq -r '.message // empty' 2>/dev/null | tr -d '"\\' | cut -c1-120)
+# tostring guards non-string payloads; newlines/CRs must die or osascript syntax-errors silently
+msg=$(printf '%s' "$input" | jq -r '(.message // empty) | tostring' 2>/dev/null | tr '\n\r' '  ' | tr -d '"\\' | cut -c1-120)
 
 case "$kind" in
   done)
