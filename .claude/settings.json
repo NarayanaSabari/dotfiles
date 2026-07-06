@@ -2,77 +2,69 @@
   "attribution": {
     "commit": ""
   },
-  "effortLevel": "xhigh",
-  "enabledPlugins": {},
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/sabari/.claude/hooks/notify.sh attention",
-            "timeout": 10,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/sabari/.claude/hooks/git-identity-guard.sh",
-            "timeout": 10,
-            "type": "command"
-          },
-          {
-            "command": "/Users/sabari/.claude/hooks/git-guardrails.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/sabari/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/sabari/.claude/hooks/notify.sh done",
-            "timeout": 10,
-            "type": "command"
-          }
-        ]
-      }
-    ]
-  },
-  "model": "opus[1m]",
   "permissions": {
     "allow": [
       "Bash(kubectl get *)",
       "Bash(kubectl describe *)",
       "Bash(kubectl logs *)",
       "Bash(docker compose config *)",
+      "Bash(treehouse status)",
       "Bash(no-mistakes status *)"
     ]
   },
-  "sandbox": {
-    "autoAllowBashIfSandboxed": true,
-    "enabled": true,
-    "excludedCommands": [
-      "codex"
+  "model": "opus[1m]",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/git-identity-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/git-guardrails.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/notify.sh attention",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/notify.sh done",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "/Users/sabari/.claude/statusline.sh"
+  },
+  "enabledPlugins": {},
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
     "network": {
       "allowedDomains": [
         "github.com",
@@ -80,18 +72,17 @@
         "*.githubusercontent.com",
         "registry.npmjs.org"
       ]
-    }
+    },
+    "excludedCommands": [
+      "codex"
+    ]
   },
+  "effortLevel": "high",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "statusLine": {
-    "command": "/Users/sabari/.claude/statusline.sh",
-    "type": "command"
-  },
-  "terminalProgressBarEnabled": true,
   "theme": "custom:brewer-dark",
-  "tui": "fullscreen",
-  "worktree": {
-    "baseRef": "fresh"
-  }
+  "preferredNotifChannel": "terminal_bell",
+  "terminalProgressBarEnabled": true,
+  "teammateMode": "tmux"
 }
