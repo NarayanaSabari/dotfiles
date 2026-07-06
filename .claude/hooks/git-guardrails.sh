@@ -6,14 +6,18 @@
 #
 # Parses each command segment and inspects the actual git subcommand, so text
 # in commit messages ("fixes the reset --hard bug") cannot false-positive.
+# Known accepted limitations (guards against mistakes, not adversaries):
+# - inline git aliases (git -c alias.x='reset --hard' x) are not expanded
+# - echo "git reset --hard" is blocked (quote-stripping false positive, safe side)
 
 input=$(cat)
 cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
 [ -z "$cmd" ] && exit 0
 
-# Normalize: join multi-line forms, drop quote characters so quoted subcommands
-# like git 'reset' cannot slip past tokenization.
-flat=$(printf '%s' "$cmd" | tr '\n' ' ' | tr -d "\"'\\\\")
+# Normalize before matching: join continuation/newlines, drop quote characters
+# so `git 'reset'` cannot slip past, and break command substitutions ($(git ...,
+# `git ...) into separate tokens so they are inspected too.
+flat=$(printf '%s' "$cmd" | tr '\n' ' ' | tr -d "\"'\\\\" | tr '$()`' ' ')
 case "$flat" in *git*) ;; *) exit 0 ;; esac
 
 block() {
@@ -30,20 +34,40 @@ check_git() {
     clean)
       for a in "$@"; do case "$a" in --force) block "git clean --force deletes untracked files permanently";; -[a-zA-Z]*) case "$a" in *f*) block "git clean -f deletes untracked files permanently";; esac;; esac; done ;;
     branch)
-      for a in "$@"; do [ "$a" = "-D" ] && block "git branch -D force-deletes a branch (unmerged commits may be lost); use -d or ask the user"; done ;;
+      del=0; forced=0
+      for a in "$@"; do
+        case "$a" in
+          -D) block "git branch -D force-deletes a branch (unmerged commits may be lost); use -d or ask the user" ;;
+          -d|--delete) del=1 ;;
+          -f|--force) forced=1 ;;
+          -[a-zA-Z]*) case "$a" in *d*) del=1;; esac; case "$a" in *f*) forced=1;; esac ;;
+        esac
+      done
+      [ "$del" = 1 ] && [ "$forced" = 1 ] && block "git branch --delete --force force-deletes a branch; use plain -d or ask the user" ;;
     checkout)
       for a in "$@"; do [ "$a" = "." ] && block "git checkout . discards all uncommitted changes"; done ;;
     restore)
-      staged=0; dot=0
-      for a in "$@"; do [ "$a" = "--staged" ] && staged=1; [ "$a" = "." ] && dot=1; done
-      [ "$dot" = 1 ] && [ "$staged" = 0 ] && block "git restore . discards all uncommitted changes (restore --staged is fine)" ;;
+      staged=0; worktree=0; dot=0
+      for a in "$@"; do
+        [ "$a" = "--staged" ] && staged=1
+        { [ "$a" = "--worktree" ] || [ "$a" = "-W" ]; } && worktree=1
+        [ "$a" = "." ] && dot=1
+      done
+      if [ "$dot" = 1 ]; then
+        if [ "$staged" = 0 ] || [ "$worktree" = 1 ]; then
+          block "git restore . discards all uncommitted changes (restore --staged alone is fine)"
+        fi
+      fi ;;
     push)
       force=0; tomain=0
       for a in "$@"; do
         case "$a" in
           --force|--force-with-lease*|-f) force=1 ;;
-          +main|+master) force=1; tomain=1 ;;
-          main|master) tomain=1 ;;
+          +*) force=1 ;;
+        esac
+        t="${a#+}"
+        case "$t" in
+          main|master|*:main|*:master|refs/heads/main|refs/heads/master|*:refs/heads/main|*:refs/heads/master) tomain=1 ;;
         esac
       done
       [ "$force" = 1 ] && [ "$tomain" = 1 ] && block "force-pushing to main/master rewrites shared history" ;;

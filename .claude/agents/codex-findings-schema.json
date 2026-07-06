@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings", "summary", "confidence"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "line", "severity", "title", "failure_scenario"],
+        "properties": {
+          "file": { "type": "string", "description": "Repo-relative path" },
+          "line": { "type": "integer", "description": "1-indexed line the finding anchors to" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "title": { "type": "string", "description": "One-sentence statement of the defect" },
+          "failure_scenario": { "type": "string", "description": "Concrete inputs/state that produce wrong behavior" }
+        }
+      }
+    },
+    "summary": { "type": "string", "description": "One-paragraph overall verdict" },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+  }
+}
