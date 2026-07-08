@@ -13,6 +13,8 @@
 	path = ~/.gitconfig-sabarihex
 [includeIf "gitdir:/Users/sabari/Developer/narayana/"]
 	path = ~/.gitconfig-narayana
+[includeIf "gitdir:/Users/sabari/Developer/neuskale/"]
+	path = ~/.gitconfig-narayana
 
 # Remote-URL-based identity (git >= 2.36): follows the REPO, not the directory,
 # so tool-managed clones/worktrees (no-mistakes, herdr, CI helpers) commit with
