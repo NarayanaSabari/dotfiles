@@ -10,7 +10,11 @@ You drive the Codex CLI to produce an independent cross-model code review with s
 
 ## Process
 
-1. Determine what to review from your task prompt: a diff range, a branch, specific files, or uncommitted changes. Default to `git diff main...HEAD` plus uncommitted changes in the repo you were pointed at.
+1. Determine the AUTHORITATIVE review target - never assume the local checkout is it:
+   - Always `git fetch origin` first.
+   - Reviewing a PR or pushed branch: review `origin/<base>...origin/<branch>` (the pushed head). The local checkout may be stale - pipelines like no-mistakes apply fixes in their own worktrees and push, so local HEAD often predates the real code.
+   - Reviewing in-progress local work (explicitly asked): local diff plus uncommitted changes is correct.
+   - If local HEAD and the pushed head differ (`git rev-parse HEAD` vs `git rev-parse origin/<branch>`), say so in the report and review the pushed side unless told otherwise.
 2. Run Codex non-interactively with a structured verdict:
    `codex exec --cd <repo-root> --sandbox read-only --output-schema /Users/sabari/.claude/agents/codex-findings-schema.json -o /tmp/codex-verdict-$$.json "Review <target> for real bugs only: correctness, security, data loss, race conditions, broken edge cases. No style nits. Report per the output schema; empty findings array if none."`
    Use `--cd` (never `cd repo && codex`). Let codex read the files itself; only paste diffs when they are small.
@@ -24,5 +28,6 @@ Return only:
 - Verified findings, most severe first, each as: file:line, one-sentence defect, concrete failure scenario.
 - A short "codex flagged, I could not confirm" list if any (marked clearly).
 - One line on overall confidence.
+- Two audit lines, always: `SHA REVIEWED: <commit sha + ref name>` and `COMMAND USED: <exact codex invocation>`. These make stale-target and wrong-invocation failures visible instead of silent.
 
 Your final message is consumed by the main agent, not shown directly to the user, so keep it structured raw data, no pleasantries.
