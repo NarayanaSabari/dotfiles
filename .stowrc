@@ -6,3 +6,4 @@ ignore=\.DS_Store
 ignore=homebrew
 ignore=setup\.sh
 ignore=README\.md
+ignore=coding-agent

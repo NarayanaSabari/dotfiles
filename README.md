@@ -114,17 +114,48 @@ brew leaves > ~/dotfiles/homebrew/leaves.txt
 
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
+## Coding Agents (Claude Code + pi)
+
+Instructions, skills, and sub-agent definitions for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) live under a single `coding-agent/` directory and are symlinked into both tools. Edit once, both tools update.
+
+```
+coding-agent/
+├── common/            # shared by BOTH tools
+│   ├── AGENTS.md      #   the instructions file (Claude reads it as CLAUDE.md)
+│   └── skills/        #   shared skills (brainstorming, debugging, tdd, ...)
+├── claude/
+│   └── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+└── pi/
+    └── agents/        # pi-format sub-agents (worker, codex-reviewer, ...)
+```
+
+How it maps into the live tools (all handled by `setup.sh`):
+
+| Source | Claude Code | pi |
+|--------|-------------|-----|
+| `common/AGENTS.md` | `~/.claude/CLAUDE.md` | `~/.pi/agent/AGENTS.md` |
+| `common/skills/` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` |
+| `claude/agents/` | `~/.claude/agents` | -- |
+| `pi/agents/` | -- | `~/.pi/agent/agents` |
+
+The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills and installs the pi [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) extension.
+
+**To change agent behavior:** edit `coding-agent/common/AGENTS.md`. **To add a shared skill:** drop a `<name>/SKILL.md` under `coding-agent/common/skills/` and re-run `setup.sh`.
+
 ## Repo Structure
 
 ```
 ~/dotfiles/
+├── .claude/            # Claude Code config (symlinks into coding-agent/)
 ├── .config/
 │   └── nvim/           # Neovim configuration (Lua)
+├── .pi/                # pi config (settings, extensions, symlinks into coding-agent/)
 ├── .gitignore
 ├── .p10k.zsh           # Powerlevel10k prompt config
-├── .stowrc             # GNU Stow settings
+├── .stowrc             # GNU Stow settings (ignores coding-agent/)
 ├── .wezterm.lua         # WezTerm terminal config
 ├── .zshrc              # Zsh shell config
+├── coding-agent/       # Shared Claude Code + pi instructions, skills, agents
 ├── homebrew/
 │   └── leaves.txt      # Homebrew package list
 ├── setup.sh            # Automated setup script
