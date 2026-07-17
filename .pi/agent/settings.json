@@ -1,4 +1,25 @@
 {
   "lastChangelogVersion": "0.80.10",
-  "theme": "dark"
+  "theme": "dark",
+  "images": {
+    "blockImages": true
+  },
+  "showHardwareCursor": true,
+  "terminal": {
+    "showTerminalProgress": true
+  },
+  "collapseChangelog": true,
+  "defaultProjectTrust": "always",
+  "warnings": {
+    "anthropicExtraUsage": true
+  },
+  "skills": [
+    "~/dotfiles/.claude/skills"
+  ],
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-8",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:@tintinweb/pi-subagents"
+  ]
 }
