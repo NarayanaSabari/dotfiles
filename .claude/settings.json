@@ -10,7 +10,8 @@
       "Bash(docker compose config *)",
       "Bash(treehouse status)",
       "Bash(no-mistakes status *)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
   "hooks": {

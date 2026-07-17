@@ -34,3 +34,5 @@
 	path = ~/.gitconfig-sabarihex
 [includeIf "hasconfig:remote.*.url:github-sabarihex:**"]
 	path = ~/.gitconfig-sabarihex
+[url "git@github-narayana:NarayanaSabari/"]
+	insteadOf = git@github.com:NarayanaSabari/

@@ -24,6 +24,8 @@ You PROPOSE changes; you never rewrite ~/OPINIONS.md itself.
 
 6. Update memory files only for clear factual corrections (a memory that names something that no longer exists). Do not rewrite opinions there.
 
+6b. Stow-integrity check: tool-managed configs sometimes atomically replace their stow symlinks with real files, silently breaking dotfiles tracking. For each of ~/.claude/settings.json, ~/.codex/config.toml, ~/.pi/agent/settings.json, ~/.config/zed/settings.json: if it exists and is NOT a symlink, copy the live file over its counterpart in ~/dotfiles (live file is truth), remove the real file, and run `cd ~/dotfiles && stow .`. Include what you resynced in the commit.
+
 7. `git -C ~/dotfiles add OPINIONS-proposals.md && git -C ~/dotfiles commit -m "opinions: weekly maintenance proposals"` (only if there are changes).
 
 Keep the whole run modest: no web access needed, no subagents, sample rather than read everything.
