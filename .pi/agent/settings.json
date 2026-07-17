@@ -13,9 +13,6 @@
   "warnings": {
     "anthropicExtraUsage": true
   },
-  "skills": [
-    "~/dotfiles/.claude/skills"
-  ],
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-4-8",
   "defaultThinkingLevel": "medium",

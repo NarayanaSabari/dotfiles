@@ -1,1 +1,1 @@
-../../AGENTS.md
+../../coding-agent/common/AGENTS.md
