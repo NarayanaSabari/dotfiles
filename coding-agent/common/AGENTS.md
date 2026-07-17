@@ -40,6 +40,7 @@ Manage and inspect all agents with `/agents`.
 
 Available agent types:
 
+- `worker`: hands-on coding agent running on Claude Sonnet 5. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
 - `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Sol). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
@@ -49,6 +50,7 @@ Available agent types:
 Delegation defaults:
 
 - Reach for a subagent when a task is self-contained, parallelizable, or context-heavy, so the main session stays focused.
+- Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
 - Prefer `codex-reviewer` for any second opinion instead of shelling out to the `codex` CLI.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
 - Use `Explore` for recon before large changes rather than reading many files in the main session.
