@@ -70,6 +70,7 @@ Manage running agents with `/agents`.
 | `codex-reviewer` | `openai-codex/gpt-5.6-sol` | high | read, grep, find, bash | Cross-model second-opinion code review |
 | `evidence-verifier` | `claude-sonnet-4-5` | inherit | read, grep, find, ls, bash | End-to-end verification with captured evidence |
 | `okf-writer` | `anthropic/claude-sonnet-5` | high | all 7 | Authors docs as [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundles (markdown + YAML frontmatter) |
+| `codebase-wiki` | `anthropic/claude-sonnet-5` | high | all 7 | Analyzes a codebase and writes a navigable OKF wiki for it (quickstart + section pages), modeled on [LangChain OpenWiki](https://github.com/langchain-ai/openwiki) code mode |
 
 Built-in pi agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
 

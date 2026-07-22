@@ -44,6 +44,7 @@ Available agent types:
 - `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Sol). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: authors documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Use it to write, enrich, or restructure knowledge docs into a portable, version-controllable bundle.
+- `codebase-wiki`: analyzes a codebase and writes a navigable OKF wiki for it (a quickstart plus focused section pages), grounded in source and git evidence. Use it to generate or update repository documentation.
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
 - `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
 - `general-purpose`: parent twin with the full toolset, for general delegated work.
