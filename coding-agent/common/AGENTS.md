@@ -43,8 +43,7 @@ Available agent types:
 - `worker`: hands-on coding agent running on Claude Sonnet 5. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
 - `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Sol). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
-- `okf-writer`: authors documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Use it to write, enrich, or restructure knowledge docs into a portable, version-controllable bundle.
-- `codebase-wiki`: analyzes a codebase and writes a navigable OKF wiki for it (a quickstart plus focused section pages), grounded in source and git evidence. Use it to generate or update repository documentation.
+- `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
 - `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
 - `general-purpose`: parent twin with the full toolset, for general delegated work.
@@ -56,3 +55,4 @@ Delegation defaults:
 - Prefer `codex-reviewer` for any second opinion instead of shelling out to the `codex` CLI.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
 - Use `Explore` for recon before large changes rather than reading many files in the main session.
+- Write all project documentation as OKF bundles by delegating to `okf-writer`, in every repository. For a codebase wiki it defaults the bundle to `openwiki/` at the repo root. Commit the generated docs on your feature branch, then validate the change (docs included) through the no-mistakes pipeline before shipping.
