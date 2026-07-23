@@ -1,2 +1,6 @@
 .DS_Store
 .tmux/plugins/
+
+# Codex writes runtime state (trust levels, hook hashes, nux flags) here.
+# Managed per-machine by the codex CLI, not version-controlled.
+.codex/config.toml
