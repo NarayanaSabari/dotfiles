@@ -24,7 +24,7 @@ fi
 
 # Pre-create dirs that hold live tool state so Stow tree-folds into them
 # (creates per-file symlinks) instead of replacing them with whole-dir symlinks.
-mkdir -p ~/.claude ~/.pi/agent
+mkdir -p ~/.claude ~/.pi/agent ~/.no-mistakes
 
 # Stow dotfiles to home directory
 echo "Symlinking dotfiles..."
