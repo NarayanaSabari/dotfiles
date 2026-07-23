@@ -1,7 +1,7 @@
 ---
-description: Cross-model second-opinion code review, running natively on the OpenAI Codex model (GPT-5.6 Sol). Use after significant code changes, before opening a PR, or whenever the user asks for a codex review or second opinion. A different model family catches what same-model review misses.
+description: Cross-model second-opinion code review, running natively on the OpenAI Codex model (GPT-5.6 Luna). Use after significant code changes, before opening a PR, or whenever the user asks for a codex review or second opinion. A different model family catches what same-model review misses.
 display_name: Codex Reviewer
-model: openai-codex/gpt-5.6-sol
+model: openai-codex/gpt-5.6-luna
 tools: read, grep, find, bash
 thinking: high
 max_turns: 30

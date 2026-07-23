@@ -67,7 +67,7 @@ Manage running agents with `/agents`.
 | Agent | Model | Thinking | Tools | Purpose |
 |-------|-------|----------|-------|---------|
 | `worker` | `anthropic/claude-sonnet-5` | high | all 7 | Hands-on coding: implement features, fixes, refactors end to end |
-| `codex-reviewer` | `openai-codex/gpt-5.6-sol` | high | read, grep, find, bash | Cross-model second-opinion code review |
+| `codex-reviewer` | `openai-codex/gpt-5.6-luna` | high | read, grep, find, bash | Cross-model second-opinion code review |
 | `evidence-verifier` | `claude-sonnet-4-5` | inherit | read, grep, find, ls, bash | End-to-end verification with captured evidence |
 | `okf-writer` | `anthropic/claude-sonnet-5` | high | all 7 | Writes docs as [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundles - general knowledge docs and full codebase wikis (quickstart + section pages), modeled on [LangChain OpenWiki](https://github.com/langchain-ai/openwiki) code mode |
 
@@ -98,7 +98,7 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 `worker` and `codex-reviewer` are pinned to specific models.
 
 - Anthropic: `anthropic/claude-sonnet-5`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`, and others.
-- OpenAI Codex (authenticated via the `openai-codex` provider): `openai-codex/gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.5`, `gpt-5.4`, and others.
+- OpenAI Codex (authenticated via the `openai-codex` provider): `openai-codex/gpt-5.6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.5`, `gpt-5.4`, and others.
 
 `claude-sonnet-5` exposes all thinking levels including the extended `xhigh` and `max`.
 To change a pinned model, edit the agent's `model:` frontmatter.

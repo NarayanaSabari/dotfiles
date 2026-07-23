@@ -42,7 +42,7 @@ Manage and inspect all agents with `/agents`.
 Available agent types:
 
 - `worker`: hands-on coding agent running on Claude Sonnet 5. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
-- `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Sol). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
+- `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Luna). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.

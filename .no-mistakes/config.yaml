@@ -31,12 +31,11 @@ log_level: info
 #   codex: /opt/codex
 
 # Extra native agent CLI flags (optional, global only)
-# Pin the codex model and reasoning effort. gpt-5.5 is the codex CLI's
-# frontier coding model; gpt-5.6-* are not exposed by the codex CLI.
+# Pin the codex model and reasoning effort.
 agent_args_override:
   codex:
     - -m
-    - gpt-5.5
+    - gpt-5.6-luna
     - -c
     - model_reasoning_effort="high"
 #
