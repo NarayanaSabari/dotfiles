@@ -83,6 +83,5 @@
   "skipWorkflowUsageWarning": true,
   "theme": "custom:brewer-dark",
   "preferredNotifChannel": "terminal_bell",
-  "terminalProgressBarEnabled": true,
-  "teammateMode": "tmux"
+  "terminalProgressBarEnabled": true
 }

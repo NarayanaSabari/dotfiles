@@ -65,6 +65,8 @@ The Bash sandbox is on, and two of its edges bite regularly:
 Claude Code's config in `~/.claude` (`CLAUDE.md`, `agents`, `hooks`, `settings.json`, `statusline.sh`, `keybindings.json`) is symlinked from `~/dotfiles`.
 Edit the file in `~/dotfiles`, not the `~/.claude` path, so the change is version-controlled.
 
+Claude Code's own teammate panes run in-process, in its TUI. `teammateMode` is deliberately unset, so never set it to `tmux` or `iterm2` and never reach for tmux to arrange parallel sessions - that is herdr's job.
+
 Write temp files to `$TMPDIR` or the session scratchpad, never `/tmp`.
 
 # Subagents
