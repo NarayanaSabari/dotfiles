@@ -1,18 +1,20 @@
 # coding-agent
 
 Single source of truth for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) coding-agent configuration.
-Instructions, skills, and sub-agent definitions live here once and are symlinked into both tools, so editing one file updates both.
+Skills are shared and symlinked into both tools.
+Instructions and sub-agent definitions are per harness, because the two tools expose different agent tooling and different agent rosters.
 
 ## Layout
 
 ```
 coding-agent/
 ├── common/            # shared by BOTH tools
-│   ├── AGENTS.md      #   instructions (Claude Code reads it as CLAUDE.md)
 │   └── skills/        #   shared skills, each a <name>/SKILL.md directory
 ├── claude/
+│   ├── CLAUDE.md      # Claude Code instructions
 │   └── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
 └── pi/
+    ├── AGENTS.md      # pi instructions
     └── agents/        # pi-format sub-agents
 ```
 
@@ -22,7 +24,8 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 
 | Source | Claude Code | pi |
 |--------|-------------|-----|
-| `common/AGENTS.md` | `~/.claude/CLAUDE.md` | `~/.pi/agent/AGENTS.md` |
+| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
+| `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
 | `common/skills/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` (whole dir) |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
@@ -30,11 +33,17 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 pi discovers skills natively from `~/.pi/agent/skills`, so no `skills` entry is needed in pi settings.
 Claude Code's `~/.claude/skills` is a real directory shared with other skill sources (for example `chrome-devtools-axi`, `gh-axi`, `lavish`, `no-mistakes`), so shared skills are linked one by one.
 
-## Instructions (`common/AGENTS.md`)
+## Instructions (`claude/CLAUDE.md`, `pi/AGENTS.md`)
 
-The single instructions file loaded globally by both tools at startup.
-It holds writing style, engineering rules, git-identity rules, tooling conventions, and a `Subagents` section describing when to delegate.
-To change agent behavior for both tools, edit this file.
+One instructions file per harness, loaded globally by that tool at startup.
+Each holds writing style, engineering rules, git-identity rules, tooling conventions, and a `Subagents` section describing when to delegate.
+
+They were a single shared file until the harness-specific parts drifted into being wrong for one of the tools: the shared `Subagents` section documented pi's extension API (`run_in_background`, `get_subagent_result`, `steer_subagent`) and pi's agent roster, none of which exist in Claude Code.
+Splitting them lets each file describe its own harness accurately.
+
+Everything from the top of the file down to the `Tooling` heading is shared verbatim between the two.
+**When you change a rule in that shared region, mirror it into the other file** - a comment at the top of each file says the same.
+Below `Tooling`, the two are meant to differ; do not sync those.
 
 ## Skills (`common/skills/`)
 
@@ -88,7 +97,8 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 | `okf-writer` | sonnet | Writes docs as OKF bundles: general knowledge docs and codebase wikis |
 
 Built-in Claude Code agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
-Keep this table in sync with the `Available agent types` list in `common/AGENTS.md` - that list is loaded by both tools, so an agent named there must exist in `claude/agents/` and `pi/agents/` alike.
+Keep this table in sync with the `Available agent types` list in `claude/CLAUDE.md` - every agent named there must have a definition in `claude/agents/`, or the delegation rule points at an agent type that does not exist.
+The same invariant holds between `pi/AGENTS.md` and `pi/agents/`, independently.
 
 `codex-findings-schema.json` is the structured-output schema the Claude `codex-reviewer` passes to `codex exec --output-schema`.
 

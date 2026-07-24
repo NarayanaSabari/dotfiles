@@ -1,3 +1,9 @@
+<!--
+Instructions for Claude Code only. The pi counterpart is coding-agent/pi/AGENTS.md.
+Sections below the "Tooling" heading are harness-specific and deliberately differ between the two files.
+Everything above it is shared: when you change a rule there, mirror it into the other file.
+-->
+
 # Writing style
 
 - Never use the em dash "—". Use a plain dash "-" or restructure the sentence instead.
@@ -44,20 +50,27 @@ Full details: ~/Developer/README-github-accounts.md.
 
 # Subagents
 
-Subagents run in isolated sessions with their own tools, model, and system prompt.
+Subagents run in isolated sessions with their own context window, tools, model, and system prompt.
+They cannot see this conversation: the prompt you pass is everything they get, so make it self-contained.
+Only their final message comes back, so their intermediate tool calls never enter this context.
+
 Spawn one with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
-Manage and inspect agents with `/agents`.
-Both tools can also run an agent in the background and steer a running one instead of restarting it, but they name those parameters and tools differently - read the Agent tool's own schema in the current session before using either, rather than assuming.
+Send several `Agent` calls in one message to run them concurrently.
+Continue an already-spawned agent with `SendMessage`, which keeps its context intact; a fresh `Agent` call starts from zero.
+Inspect agents with `/agents`.
+
+Definitions live in `~/.claude/agents`, symlinked from `dotfiles/coding-agent/claude/agents`.
+A repo's own `.claude/agents/` overrides these on a name collision.
 
 Available agent types:
 
-- `worker`: hands-on coding agent running on Sonnet. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
-- `codex-reviewer`: cross-model second opinion from the OpenAI Codex model family. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
+- `worker`: hands-on coding agent on Sonnet. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
+- `codex-reviewer`: cross-model second opinion. It is a Sonnet agent that drives the `codex` CLI with a structured output schema, then verifies each finding against the real source before reporting. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
 - `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
-- `general-purpose`: parent twin with the full toolset, for general delegated work.
+- `general-purpose`: full toolset, for general delegated work.
 
 Delegation defaults:
 

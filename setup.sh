@@ -33,9 +33,9 @@ stow .
 # ---------------------------------------------------------------------------
 # Coding-agent wiring (Claude Code + pi share one source: coding-agent/)
 #
-#   coding-agent/common  -> shared AGENTS.md + skills (linked into BOTH tools)
-#   coding-agent/claude  -> Claude-format agents
-#   coding-agent/pi      -> pi-format subagents
+#   coding-agent/common  -> shared skills (linked into BOTH tools)
+#   coding-agent/claude  -> CLAUDE.md instructions + Claude-format agents
+#   coding-agent/pi      -> AGENTS.md instructions + pi-format subagents
 #
 # Stow already reproduces the .claude/.pi symlinks tracked in the repo
 # (CLAUDE.md, AGENTS.md, agents, settings.json, extensions). This section

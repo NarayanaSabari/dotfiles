@@ -116,16 +116,17 @@ After making changes to any dotfile, they're already symlinked -- no need to re-
 
 ## Coding Agents (Claude Code + pi)
 
-Instructions, skills, and sub-agent definitions for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) live under a single `coding-agent/` directory and are symlinked into both tools. Edit once, both tools update.
+Instructions, skills, and sub-agent definitions for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) live under a single `coding-agent/` directory and are symlinked into both tools. Skills are shared; instructions and sub-agents are per harness, because the two tools expose different agent tooling and different agent rosters.
 
 ```
 coding-agent/
 ├── common/            # shared by BOTH tools
-│   ├── AGENTS.md      #   the instructions file (Claude reads it as CLAUDE.md)
 │   └── skills/        #   shared skills (brainstorming, debugging, tdd, ...)
 ├── claude/
+│   ├── CLAUDE.md      # Claude Code instructions
 │   └── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
 └── pi/
+    ├── AGENTS.md      # pi instructions
     └── agents/        # pi-format sub-agents (worker, codex-reviewer, ...)
 ```
 
@@ -133,14 +134,15 @@ How it maps into the live tools (all handled by `setup.sh`):
 
 | Source | Claude Code | pi |
 |--------|-------------|-----|
-| `common/AGENTS.md` | `~/.claude/CLAUDE.md` | `~/.pi/agent/AGENTS.md` |
+| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
+| `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
 | `common/skills/` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
 
 The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills and installs the pi [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) extension.
 
-**To change agent behavior:** edit `coding-agent/common/AGENTS.md`. **To add a shared skill:** drop a `<name>/SKILL.md` under `coding-agent/common/skills/` and re-run `setup.sh`.
+**To change agent behavior:** edit `coding-agent/claude/CLAUDE.md` (Claude Code) or `coding-agent/pi/AGENTS.md` (pi). Everything above each file's `Tooling` heading is shared verbatim, so mirror those edits into both. **To add a shared skill:** drop a `<name>/SKILL.md` under `coding-agent/common/skills/` and re-run `setup.sh`.
 
 ## Repo Structure
 

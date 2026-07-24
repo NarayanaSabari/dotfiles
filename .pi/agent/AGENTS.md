@@ -1,1 +1,1 @@
-../../coding-agent/common/AGENTS.md
+../../coding-agent/pi/AGENTS.md
