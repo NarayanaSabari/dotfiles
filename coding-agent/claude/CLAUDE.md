@@ -13,8 +13,8 @@ Everything above it is shared: when you change a rule there, mirror it into the 
 - When making technical decisions, don't give much weight to development cost or "time to implement". You build far faster than human estimates suggest, so never pick a cheaper-but-worse option to "save time". Pick the option with the best quality, simplicity, robustness, scalability, and long-term maintainability.
 - When fixing a bug, always start by reproducing it end to end, as closely as possible to how a real user experiences it. This makes sure you find the real problem, so your fix actually solves it. Unit tests alone are not proof of a fix.
 - Prefer end-to-end tests that guard real product behavior over unit-test-only coverage.
-- When end-to-end testing a product, be picky about the UI: if something clearly looks off, even if unrelated to your current task, get it fixed along the way.
-- Apply the same standard to engineering excellence: lint errors, test failures, and test flakiness get fixed when you see them, even if you didn't cause them.
+- When end-to-end testing a product, be picky about the UI: if something clearly looks off, say so, even when it is unrelated to your current task. Fix it in passing when the fix is small and sits in code you are already touching; when it is larger, report it instead of widening the task on your own.
+- Apply the same standard to engineering excellence: lint errors, test failures, and test flakiness get fixed when you see them, even if you didn't cause them, under that same bound - small and local gets fixed, bigger gets reported with what you found. Never let either kind of cleanup delay, obscure, or silently replace the work I actually asked for.
 - Never manually modify CHANGELOG.md or any file marked as auto-generated.
 - Never commit secrets: no .env files, API keys, tokens, service-account JSON, or private keys, even into a file that is already gitignored elsewhere in the tree. If a task needs a credential, reference it from the environment and say so.
 - When writing or substantially editing long Markdown files, put each full sentence on its own line (keep normal Markdown structure, but don't wrap multiple sentences onto one physical line).
@@ -48,6 +48,25 @@ Full details: ~/Developer/README-github-accounts.md.
 - Parallel agent sessions: managed in herdr (the herdr skill controls it from inside; sessions persist and agent state is tracked natively). Do not use tmux or treehouse - both are retired.
 - Second-opinion code reviews: delegate to the `codex-reviewer` subagent (see Subagents below).
 
+# This machine's harness
+
+Two `PreToolUse` hooks run on every Bash call.
+They are guardrails, not obstacles: when one blocks you, fix the cause it names - never rephrase the command to slip past it.
+
+- `git-identity-guard.sh` blocks `git commit` and `git push` when the repo's identity does not match the account for its directory, per the table above. It checks the session cwd plus every `git -C <path>` in the command, and resolves linked worktrees to their main repo. Fix the identity, don't bypass it.
+- `git-guardrails.sh` blocks operations that silently destroy work: `git reset --hard`, `git clean -f`, `git checkout .`, `git restore .`, `git branch -D`, `-d --force`, and force-pushing to main or master. Plain `git push` is deliberately allowed, and plain `git branch -d` is fine because it refuses unmerged branches on its own. If one of these is genuinely needed, ask me to run it rather than working around the hook.
+
+The Bash sandbox is on, and two of its edges bite regularly:
+
+- **Writes** are confined to the working directory and `$TMPDIR`. Claude Code's own config under `~/.claude/**` is write-denied even when it lives in `~/dotfiles` behind a symlink. Git operations touching those paths fail with `Operation not permitted` and can half-apply, leaving a merge stuck partway. Retry those specific commands with the sandbox disabled rather than editing around them, and re-verify the symlinks afterward - a half-applied checkout has deleted `~/.claude/CLAUDE.md` before.
+- **Network** is limited to an allowlist (github.com, githubusercontent, registry.npmjs.org). Anything else needs the sandbox off.
+- `codex` is in `excludedCommands`, so `codex exec` runs unsandboxed by design; its own `--sandbox read-only` is the containment layer.
+
+Claude Code's config in `~/.claude` (`CLAUDE.md`, `agents`, `hooks`, `settings.json`, `statusline.sh`, `keybindings.json`) is symlinked from `~/dotfiles`.
+Edit the file in `~/dotfiles`, not the `~/.claude` path, so the change is version-controlled.
+
+Write temp files to `$TMPDIR` or the session scratchpad, never `/tmp`.
+
 # Subagents
 
 Subagents run in isolated sessions with their own context window, tools, model, and system prompt.
@@ -57,6 +76,7 @@ Only their final message comes back, so their intermediate tool calls never ente
 Spawn one with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
 Send several `Agent` calls in one message to run them concurrently.
 Continue an already-spawned agent with `SendMessage`, which keeps its context intact; a fresh `Agent` call starts from zero.
+Pass `isolation: "worktree"` when two or more agents will edit files at the same time, so each works in its own git worktree instead of fighting over the tree. It costs setup time and disk per agent, so use it only for genuinely concurrent edits, not for read-only or sequential work.
 Inspect agents with `/agents`.
 
 Definitions live in `~/.claude/agents`, symlinked from `dotfiles/coding-agent/claude/agents`.
@@ -64,7 +84,8 @@ A repo's own `.claude/agents/` overrides these on a name collision.
 
 Available agent types:
 
-- `worker`: hands-on coding agent on Sonnet. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
+- `worker`: hands-on coding agent on Sonnet, with web access for looking up unfamiliar APIs. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
+- `sweeper`: cheap Haiku agent for mechanical edits that are already fully specified - renames, codemods, import rewrites, bulk string changes. It cannot run commands or create files, and it reports ambiguous sites instead of guessing. Use it only when the change needs no judgment; anything else goes to `worker`.
 - `codex-reviewer`: cross-model second opinion. It is a Sonnet agent that drives the `codex` CLI with a structured output schema, then verifies each finding against the real source before reporting. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
@@ -76,6 +97,7 @@ Delegation defaults:
 
 - Reach for a subagent when a task is self-contained, parallelizable, or context-heavy, so the main session stays focused.
 - Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
+- Send fully-specified mechanical sweeps to `sweeper` rather than `worker`, and split a large sweep across several of them running concurrently.
 - Prefer `codex-reviewer` for any second opinion instead of running the `codex` CLI yourself from the main session.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
 - Use `Explore` for recon before large changes rather than reading many files in the main session.

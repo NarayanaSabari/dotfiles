@@ -124,7 +124,8 @@ coding-agent/
 │   └── skills/        #   shared skills (brainstorming, debugging, tdd, ...)
 ├── claude/
 │   ├── CLAUDE.md      # Claude Code instructions
-│   └── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   ├── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   └── commands/      # Claude Code slash commands (/ship, /harness-check)
 └── pi/
     ├── AGENTS.md      # pi instructions
     └── agents/        # pi-format sub-agents (worker, codex-reviewer, ...)
@@ -138,6 +139,7 @@ How it maps into the live tools (all handled by `setup.sh`):
 | `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
 | `common/skills/` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` |
 | `claude/agents/` | `~/.claude/agents` | -- |
+| `claude/commands/` | `~/.claude/commands` | -- |
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
 
 The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills and installs the pi [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) extension.

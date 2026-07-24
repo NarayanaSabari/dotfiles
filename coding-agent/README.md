@@ -12,7 +12,8 @@ coding-agent/
 │   └── skills/        #   shared skills, each a <name>/SKILL.md directory
 ├── claude/
 │   ├── CLAUDE.md      # Claude Code instructions
-│   └── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   ├── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   └── commands/      # Claude Code slash commands
 └── pi/
     ├── AGENTS.md      # pi instructions
     └── agents/        # pi-format sub-agents
@@ -28,6 +29,7 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 | `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
 | `common/skills/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` (whole dir) |
 | `claude/agents/` | `~/.claude/agents` | -- |
+| `claude/commands/` | `~/.claude/commands` | -- |
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
 
 pi discovers skills natively from `~/.pi/agent/skills`, so no `skills` entry is needed in pi settings.
@@ -62,6 +64,17 @@ Each skill is a `<name>/SKILL.md` directory with `name` and `description` frontm
 
 **Add a shared skill:** create `common/skills/<name>/SKILL.md`, then re-run `../setup.sh` to link it into both tools.
 
+## Slash commands (`claude/commands/`)
+
+Claude Code only; pi has no equivalent directory here.
+Each command is a `<name>.md` file whose body is the prompt, with optional `description`, `argument-hint`, and `allowed-tools` frontmatter.
+`$ARGUMENTS` interpolates whatever the user typed after the command.
+
+| Command | Purpose |
+|---------|---------|
+| `/ship` | Cross-model review with `codex-reviewer`, then validate through the no-mistakes gate. Encodes the flow the instructions already prescribe, instead of pushing directly. |
+| `/harness-check` | Verify every symlink feeding Claude Code and pi still resolves, plus the roster and shared-region invariants. A half-applied git operation can delete one of these silently. |
+
 ## Sub-agents
 
 Sub-agents run in isolated sessions with their own tools, model, and system prompt.
@@ -91,7 +104,8 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| `worker` | sonnet | Hands-on coding: implement features, fixes, refactors end to end |
+| `worker` | sonnet | Hands-on coding: implement features, fixes, refactors end to end (has web access for API docs) |
+| `sweeper` | haiku | Cheap tier for fully-specified mechanical edits; no Bash, no file creation, reports ambiguity instead of guessing |
 | `codex-reviewer` | sonnet | Drives the Codex CLI for a cross-model review (uses `codex-findings-schema.json`) |
 | `evidence-verifier` | sonnet | End-to-end verification with captured evidence |
 | `okf-writer` | sonnet | Writes docs as OKF bundles: general knowledge docs and codebase wikis |

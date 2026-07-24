@@ -8,7 +8,6 @@
       "Bash(kubectl describe *)",
       "Bash(kubectl logs *)",
       "Bash(docker compose config *)",
-      "Bash(treehouse status)",
       "Bash(no-mistakes status *)"
     ],
     "defaultMode": "auto"
