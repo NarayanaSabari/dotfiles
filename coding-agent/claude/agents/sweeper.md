@@ -3,6 +3,7 @@ name: sweeper
 description: Cheap, fast agent for mechanical edits that are already fully specified - renames, codemods, import rewrites, bulk config or string changes across many files. Use ONLY when the change needs no judgment calls. Anything requiring design decisions or reading intent belongs to worker instead.
 tools: Read, Edit, Glob, Grep
 model: haiku
+effort: low
 color: cyan
 ---
 
