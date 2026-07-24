@@ -82,9 +82,13 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
+| `worker` | sonnet | Hands-on coding: implement features, fixes, refactors end to end |
 | `codex-reviewer` | sonnet | Drives the Codex CLI for a cross-model review (uses `codex-findings-schema.json`) |
 | `evidence-verifier` | sonnet | End-to-end verification with captured evidence |
 | `okf-writer` | sonnet | Writes docs as OKF bundles: general knowledge docs and codebase wikis |
+
+Built-in Claude Code agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
+Keep this table in sync with the `Available agent types` list in `common/AGENTS.md` - that list is loaded by both tools, so an agent named there must exist in `claude/agents/` and `pi/agents/` alike.
 
 `codex-findings-schema.json` is the structured-output schema the Claude `codex-reviewer` passes to `codex exec --output-schema`.
 

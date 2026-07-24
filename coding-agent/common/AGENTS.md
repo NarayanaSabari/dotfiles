@@ -10,6 +10,7 @@
 - When end-to-end testing a product, be picky about the UI: if something clearly looks off, even if unrelated to your current task, get it fixed along the way.
 - Apply the same standard to engineering excellence: lint errors, test failures, and test flakiness get fixed when you see them, even if you didn't cause them.
 - Never manually modify CHANGELOG.md or any file marked as auto-generated.
+- Never commit secrets: no .env files, API keys, tokens, service-account JSON, or private keys, even into a file that is already gitignored elsewhere in the tree. If a task needs a credential, reference it from the environment and say so.
 - When writing or substantially editing long Markdown files, put each full sentence on its own line (keep normal Markdown structure, but don't wrap multiple sentences onto one physical line).
 - Push branches to remote early and often. Never let local-only commits accumulate in a worktree.
 
@@ -19,7 +20,18 @@ When working on something that would benefit from knowing my viewpoints (technic
 
 # Git identities
 
-This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconfig-narayana, ~/.gitconfig-rentai, ~/.gitconfig-sabarihex; see ~/Developer/README-github-accounts.md). Before committing or pushing, verify `git config user.email` matches the account for that repo.
+This machine uses three GitHub accounts.
+`~/.gitconfig` selects the right one automatically with `includeIf`, matching both the directory and the remote URL:
+
+| Account | Email | Matches |
+|---------|-------|---------|
+| NarayanaSabari | sabarinarayanakg@proton.me | `~/Developer/narayana/`, `~/Developer/neuskale/`, remotes under `NarayanaSabari/` |
+| Sabari-RentAI | sabarinarayanakg@rentai.now | `~/Developer/rentai/`, remotes under `renatainow/` |
+| sabariHex | Sabari.Narayana@hexstream.com | `~/Developer/sabarihex/`, remotes under `sabariHex/` or `HEXstreamAnalytics/` |
+
+Before committing or pushing, check `git config user.email` against this table.
+If it is empty or wrong, the repo sits outside the configured roots and needs an explicit identity - ask rather than committing under the wrong account.
+Full details: ~/Developer/README-github-accounts.md.
 
 # Tooling
 
@@ -32,16 +44,15 @@ This machine uses three GitHub accounts via per-directory gitconfigs (~/.gitconf
 
 # Subagents
 
-Subagents run in isolated sessions with their own tools, model, and system prompt, via the `@tintinweb/pi-subagents` extension.
+Subagents run in isolated sessions with their own tools, model, and system prompt.
 Spawn one with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
-Foreground agents block and return inline; pass `run_in_background: true` to run concurrently and collect results later with `get_subagent_result`.
-Redirect a running agent with `steer_subagent` instead of restarting it.
-Manage and inspect all agents with `/agents`.
+Manage and inspect agents with `/agents`.
+Both tools can also run an agent in the background and steer a running one instead of restarting it, but they name those parameters and tools differently - read the Agent tool's own schema in the current session before using either, rather than assuming.
 
 Available agent types:
 
-- `worker`: hands-on coding agent running on Claude Sonnet 5. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
-- `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Luna). Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
+- `worker`: hands-on coding agent running on Sonnet. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
+- `codex-reviewer`: cross-model second opinion from the OpenAI Codex model family. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
@@ -52,7 +63,7 @@ Delegation defaults:
 
 - Reach for a subagent when a task is self-contained, parallelizable, or context-heavy, so the main session stays focused.
 - Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
-- Prefer `codex-reviewer` for any second opinion instead of shelling out to the `codex` CLI.
+- Prefer `codex-reviewer` for any second opinion instead of running the `codex` CLI yourself from the main session.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
 - Use `Explore` for recon before large changes rather than reading many files in the main session.
 - Write all project documentation as OKF bundles by delegating to `okf-writer`, in every repository. For a codebase wiki it defaults the bundle to `openwiki/` at the repo root. Commit the generated docs on your feature branch, then validate the change (docs included) through the no-mistakes pipeline before shipping.
