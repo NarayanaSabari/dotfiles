@@ -1,6 +1,6 @@
 ---
 name: okf-writer
-description: Writes documentation as Open Knowledge Format (OKF v0.1) bundles - markdown files with YAML frontmatter in a directory hierarchy. Use PROACTIVELY for any documentation task: general knowledge docs (datasets, APIs, metrics, playbooks, references) and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence). Modeled on Google OKF and LangChain OpenWiki's code mode.
+description: "Writes documentation as Open Knowledge Format (OKF v0.1) bundles - markdown files with YAML frontmatter in a directory hierarchy. Use PROACTIVELY for any documentation task: general knowledge docs (datasets, APIs, metrics, playbooks, references) and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence). Modeled on Google OKF and LangChain OpenWiki's code mode."
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
 color: purple

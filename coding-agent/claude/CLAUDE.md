@@ -78,8 +78,8 @@ Only their final message comes back, so their intermediate tool calls never ente
 Spawn one with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
 Send several `Agent` calls in one message to run them concurrently.
 Continue an already-spawned agent with `SendMessage`, which keeps its context intact; a fresh `Agent` call starts from zero.
-Pass `isolation: "worktree"` when two or more agents will edit files at the same time, so each works in its own git worktree instead of fighting over the tree. It costs setup time and disk per agent, so use it only for genuinely concurrent edits, not for read-only or sequential work.
-Inspect agents with `/agents`.
+Pass `isolation: "worktree"` when two or more agents will edit files at the same time, so each works in its own git worktree instead of fighting over the tree. That worktree branches from the repo's default branch, not from this session's HEAD, so an agent that needs the current branch's commits must be told to check it out. It costs setup time and disk per agent, so use it only for genuinely concurrent edits, not for read-only or sequential work.
+Running and finished subagents are listed in `/tasks`. `/agents` no longer opens a management wizard - to add or change one, edit the files directly.
 
 Definitions live in `~/.claude/agents`, symlinked from `dotfiles/coding-agent/claude/agents`.
 A repo's own `.claude/agents/` overrides these on a name collision.
@@ -94,6 +94,10 @@ Available agent types:
 - `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
 - `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
 - `general-purpose`: full toolset, for general delegated work.
+
+`Explore` and `Plan` are the only subagents that do not load this file or the session's git status, so any rule here that matters for their task has to be restated in the prompt you give them.
+They also inherit this session's model rather than running on a cheap one, so they save context, not tokens.
+Every other agent above, built-in or custom, loads this file in full.
 
 Delegation defaults:
 
