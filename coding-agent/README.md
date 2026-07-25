@@ -105,6 +105,8 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 | Agent | Model | Purpose |
 |-------|-------|---------|
 | `worker` | sonnet | Hands-on coding: implement features, fixes, refactors end to end (has web access for API docs) |
+| `codex-worker` | sonnet | Drives `codex exec --sandbox workspace-write` so implementation bills against the ChatGPT subscription, not the Claude limit, then verifies the diff |
+| `Explore` | sonnet | Overrides the built-in Explore, which otherwise inherits the session model and puts recon on Opus during plan mode |
 | `sweeper` | haiku | Cheap tier for fully-specified mechanical edits; no Bash, no file creation, reports ambiguity instead of guessing. Runs at `effort: low` |
 | `codex-reviewer` | sonnet | Drives the Codex CLI for a cross-model review (uses `codex-findings-schema.json`). Keeps `memory: user`, so recurring defect patterns and known false positives carry across reviews and projects |
 | `evidence-verifier` | sonnet | End-to-end verification with captured evidence |
