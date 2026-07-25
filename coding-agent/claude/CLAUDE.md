@@ -91,7 +91,6 @@ Available agent types:
 - `codex-reviewer`: cross-model second opinion. It is a Sonnet agent that drives the `codex` CLI with a structured output schema, then verifies each finding against the real source before reporting. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
 - `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
 - `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
-- `codex-worker`: offloads well-specified implementation to the OpenAI Codex CLI, which bills against the ChatGPT subscription instead of the Claude usage limit. Use it when the plan is settled and only the coding remains, then let it verify Codex's diff against this project's conventions. Ambiguous or judgment-heavy work goes to `worker` instead.
 - `Explore`: fast read-only codebase recon, pinned to Sonnet. Use it to locate code and gather context without loading files into the main session.
 - `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
 - `general-purpose`: full toolset, for general delegated work.
@@ -106,7 +105,7 @@ Delegation defaults:
 - Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
 - Send fully-specified mechanical sweeps to `sweeper` rather than `worker`, and split a large sweep across several of them running concurrently.
 - This session runs `opusplan`: Opus in plan mode, Sonnet everywhere else. Plan the hard part in plan mode, then let execution drop to Sonnet rather than reasoning through implementation at Opus prices. Add `ultrathink` to a prompt for one deep turn without changing the session effort level.
-- Once a plan is settled and the remaining work is purely writing code to spec, prefer `codex-worker` over `worker`. It runs on the ChatGPT subscription, so it does not consume the Claude limit at all. The ChatGPT plan is Plus and modest, so send it complete specs, not exploratory work.
+- The Codex budget is a $20 ChatGPT Plus plan, so it is reserved for `codex-reviewer` and nothing else. Never route implementation to the `codex` CLI to save Claude tokens; all coding goes to `worker` on Sonnet.
 - Prefer `codex-reviewer` for any second opinion instead of running the `codex` CLI yourself from the main session.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
 - Use `Explore` for recon before large changes rather than reading many files in the main session.
