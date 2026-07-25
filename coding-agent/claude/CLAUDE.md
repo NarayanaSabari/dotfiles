@@ -105,6 +105,7 @@ Delegation defaults:
 - Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
 - Send fully-specified mechanical sweeps to `sweeper` rather than `worker`, and split a large sweep across several of them running concurrently.
 - This session runs `opusplan`: Opus in plan mode, Sonnet everywhere else. Plan the hard part in plan mode, then let execution drop to Sonnet rather than reasoning through implementation at Opus prices. Add `ultrathink` to a prompt for one deep turn without changing the session effort level.
+- I launch with `--dangerously-skip-permissions`, so the harness does not enforce plan mode's read-only blocks. Enforce them yourself: while in plan mode, do not edit or write files and do not run mutating commands, even though nothing will stop you. Plan mode is the Opus phase, so anything built there is built at Opus prices. Research, propose, exit plan mode, then implement on Sonnet.
 - The Codex budget is a $20 ChatGPT Plus plan, so it is reserved for `codex-reviewer` and nothing else. Never route implementation to the `codex` CLI to save Claude tokens; all coding goes to `worker` on Sonnet.
 - Prefer `codex-reviewer` for any second opinion instead of running the `codex` CLI yourself from the main session.
 - Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
