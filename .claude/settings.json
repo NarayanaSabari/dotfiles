@@ -62,6 +62,9 @@
     "command": "/Users/sabari/.claude/statusline.sh"
   },
   "enabledPlugins": {},
+  "skillOverrides": {
+    "handoff": "off"
+  },
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
