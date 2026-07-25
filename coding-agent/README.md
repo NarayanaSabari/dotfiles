@@ -72,7 +72,7 @@ Each command is a `<name>.md` file whose body is the prompt, with optional `desc
 
 | Command | Purpose |
 |---------|---------|
-| `/ship` | Cross-model review with `codex-reviewer`, then validate through the no-mistakes gate. Encodes the flow the instructions already prescribe, instead of pushing directly. |
+| `/ship` | Validate the branch through the no-mistakes gate, which is configured with `agent: codex` and so performs the cross-model review itself. Deliberately does not spawn `codex-reviewer` first; that would review the same diff twice on one ChatGPT Plus budget. |
 | `/harness-check` | Verify every symlink feeding Claude Code and pi still resolves, plus the roster and shared-region invariants. A half-applied git operation can delete one of these silently. |
 
 ## Sub-agents
