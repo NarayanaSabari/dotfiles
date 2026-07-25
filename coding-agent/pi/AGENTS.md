@@ -2,32 +2,32 @@
 Instructions for pi only. The Claude Code counterpart is coding-agent/claude/CLAUDE.md.
 Sections below the "Tooling" heading are harness-specific and deliberately differ between the two files.
 Everything above it is shared: when you change a rule there, mirror it into the other file.
+
+Written for Claude 5 generation models: gotchas over rules, judgment over enumeration.
+Don't restate what the agent can discover from tool descriptions, agent frontmatter, or the repo itself.
 -->
 
 # Writing style
 
-- Never use the em dash "—". Use a plain dash "-" or restructure the sentence instead.
+- Never use the em dash "—". Use a plain dash "-" or restructure the sentence.
+- In long Markdown files, put each sentence on its own line, keeping normal Markdown structure otherwise.
 
 # Engineering rules
 
-- When making technical decisions, don't give much weight to development cost or "time to implement". You build far faster than human estimates suggest, so never pick a cheaper-but-worse option to "save time". Pick the option with the best quality, simplicity, robustness, scalability, and long-term maintainability.
-- When fixing a bug, always start by reproducing it end to end, as closely as possible to how a real user experiences it. This makes sure you find the real problem, so your fix actually solves it. Unit tests alone are not proof of a fix.
-- Prefer end-to-end tests that guard real product behavior over unit-test-only coverage.
-- When end-to-end testing a product, be picky about the UI: if something clearly looks off, say so, even when it is unrelated to your current task. Fix it in passing when the fix is small and sits in code you are already touching; when it is larger, report it instead of widening the task on your own.
-- Apply the same standard to engineering excellence: lint errors, test failures, and test flakiness get fixed when you see them, even if you didn't cause them, under that same bound - small and local gets fixed, bigger gets reported with what you found. Never let either kind of cleanup delay, obscure, or silently replace the work I actually asked for.
-- Never manually modify CHANGELOG.md or any file marked as auto-generated.
-- Never commit secrets: no .env files, API keys, tokens, service-account JSON, or private keys, even into a file that is already gitignored elsewhere in the tree. If a task needs a credential, reference it from the environment and say so.
-- When writing or substantially editing long Markdown files, put each full sentence on its own line (keep normal Markdown structure, but don't wrap multiple sentences onto one physical line).
-- Push branches to remote early and often. Never let local-only commits accumulate in a worktree.
+- Optimize for quality, simplicity, robustness, and long-term maintainability. Don't weigh "time to implement" - you build far faster than human estimates assume, so a cheaper-but-worse option is almost never the right trade.
+- Reproduce a bug end to end, the way a real user hits it, before fixing it. Unit tests alone are not proof. Prefer end-to-end tests that guard real product behavior.
+- Fix what you notice - lint errors, failing or flaky tests, UI that looks wrong - when the fix is small and sits in code you are already touching. When it is larger, report it rather than widening the task on your own. Never let cleanup delay, obscure, or replace the work I asked for.
+- Never commit secrets: .env files, API keys, tokens, service-account JSON, private keys. Reference them from the environment instead and say so.
+- Never hand-edit CHANGELOG.md or any file marked auto-generated.
+- Push branches early and often. Don't let local-only commits accumulate in a worktree.
 
 # My opinions
 
-When working on something that would benefit from knowing my viewpoints (technical decisions, tool choices, writing on my behalf), read ~/OPINIONS.md to understand what I believe.
+Read ~/OPINIONS.md when a task would benefit from knowing my views: technical decisions, tool choices, or writing on my behalf.
 
 # Git identities
 
-This machine uses three GitHub accounts.
-`~/.gitconfig` selects the right one automatically with `includeIf`, matching both the directory and the remote URL:
+Three GitHub accounts. `~/.gitconfig` picks one automatically via `includeIf`, matching both directory and remote URL:
 
 | Account | Email | Matches |
 |---------|-------|---------|
@@ -35,47 +35,28 @@ This machine uses three GitHub accounts.
 | Sabari-RentAI | sabarinarayanakg@rentai.now | `~/Developer/rentai/`, remotes under `renatainow/` |
 | sabariHex | Sabari.Narayana@hexstream.com | `~/Developer/sabarihex/`, remotes under `sabariHex/` or `HEXstreamAnalytics/` |
 
-Before committing or pushing, check `git config user.email` against this table.
-If it is empty or wrong, the repo sits outside the configured roots and needs an explicit identity - ask rather than committing under the wrong account.
-Full details: ~/Developer/README-github-accounts.md.
+Check `git config user.email` against this before committing. Empty or wrong means the repo sits outside the configured roots: ask rather than commit under the wrong account. Details in ~/Developer/README-github-accounts.md.
 
 # Tooling
 
-- GitHub operations: use the gh-axi skill (or plain `gh`). Never use a GitHub MCP server.
-- Browser work: use the chrome-devtools-axi skill.
-- Lavish is for UI reference ONLY: UI mockups, design options, visual UI reviews. Do NOT use lavish for plans, comparisons, codebase audits, backend work, or system design - present those directly in chat.
-- Shipping changes: validate through the no-mistakes pipeline (`/no-mistakes` or `git push no-mistakes <branch>`) instead of pushing directly.
-- Parallel agent sessions: managed in herdr (the herdr skill controls it from inside; sessions persist and agent state is tracked natively). Do not use tmux or treehouse - both are retired.
-- Second-opinion code reviews: delegate to the `codex-reviewer` subagent (see Subagents below).
+- GitHub: the gh-axi skill or plain `gh`. Never a GitHub MCP server.
+- Browser work: the chrome-devtools-axi skill.
+- Lavish is for UI reference only - mockups, design options, visual reviews. Plans, comparisons, audits, backend and system design go in chat.
+- Shipping: validate through no-mistakes rather than pushing directly.
+- Parallel sessions: herdr. tmux and treehouse are retired.
 
 # Subagents
 
-Subagents run in isolated sessions with their own context window, tools, model, and system prompt, via the `@tintinweb/pi-subagents` extension (declared under `packages` in `~/.pi/agent/settings.json`).
-They cannot see this conversation: the prompt you pass is everything they get, so make it self-contained.
+Run via the `@tintinweb/pi-subagents` extension, declared under `packages` in `~/.pi/agent/settings.json`. Each agent's frontmatter description says what it is for, so this file doesn't repeat them. What those descriptions don't tell you:
 
-Spawn one with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
-Foreground agents block and return inline; pass `run_in_background: true` to run concurrently and collect results later with `get_subagent_result`.
-Redirect a running agent with `steer_subagent` instead of restarting it.
-Manage and inspect all agents with `/agents`.
+- A subagent cannot see this conversation. The prompt you pass is everything it gets, so make it self-contained.
+- Foreground agents block and return inline. Pass `run_in_background: true` to run concurrently and collect results later with `get_subagent_result`.
+- Redirect a running agent with `steer_subagent` rather than restarting it. Inspect them all with `/agents`.
+- Frontmatter is authoritative: a pinned `model` or `thinking` overrides anything the caller passes.
+- `codex-reviewer` here runs natively on an OpenAI Codex model, not through the `codex` CLI.
 
-Definitions live in `~/.pi/agent/agents`, symlinked from `dotfiles/coding-agent/pi/agents`.
-Frontmatter is authoritative: a pinned `model` or `thinking` overrides anything the caller passes.
+Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one. Hands-on implementation goes to `worker`.
 
-Available agent types:
-
-- `worker`: hands-on coding agent running on Claude Sonnet 5. Use it to implement features, bug fixes, and refactors end to end, so the main session stays focused on orchestration.
-- `codex-reviewer`: cross-model second opinion running natively on the OpenAI Codex model (GPT-5.6 Luna), not through the `codex` CLI. Use it after significant code changes and before opening a PR, so a different model family catches what same-model review misses.
-- `evidence-verifier`: end-to-end verification with captured evidence. Use it after implementing a feature or fix to prove the change works the way a real user hits it.
-- `okf-writer`: writes documentation as Open Knowledge Format (OKF) bundles - markdown files with YAML frontmatter in a directory hierarchy. Handles both general knowledge docs and full codebase wikis (analyze a repository, then write a navigable quickstart plus focused section pages grounded in source and git evidence).
-- `Explore`: fast read-only codebase recon. Use it to locate code and gather context without spending main-session budget.
-- `Plan`: read-only implementation planning. Use it to produce a plan before writing code.
-- `general-purpose`: parent twin with the full toolset, for general delegated work.
-
-Delegation defaults:
-
-- Reach for a subagent when a task is self-contained, parallelizable, or context-heavy, so the main session stays focused.
-- Delegate hands-on implementation to `worker` and keep the main session orchestrating, especially for large or multi-step coding tasks.
-- Prefer `codex-reviewer` for any second opinion instead of running the `codex` CLI yourself from the main session.
-- Prefer `evidence-verifier` to run the reproduce-and-prove step the Engineering rules require for bug fixes and feature work.
-- Use `Explore` for recon before large changes rather than reading many files in the main session.
-- Write all project documentation as OKF bundles by delegating to `okf-writer`, in every repository. For a codebase wiki it defaults the bundle to `openwiki/` at the repo root. Commit the generated docs on your feature branch, then validate the change (docs included) through the no-mistakes pipeline before shipping.
+- The Codex budget is a $20 ChatGPT Plus plan, reserved for review. All coding goes to `worker`, never to the `codex` CLI.
+- no-mistakes runs `agent: codex`, so its review step already is the cross-model review. Run the gate alone; spawning `codex-reviewer` first reviews the same diff twice on that budget. Use `codex-reviewer` only where the gate doesn't run: an ungated repo, a mid-development opinion, or someone else's PR.
+- Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch and ship them through the gate with the rest of the change.

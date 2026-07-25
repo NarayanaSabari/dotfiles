@@ -43,6 +43,10 @@ Each holds writing style, engineering rules, git-identity rules, tooling convent
 They were a single shared file until the harness-specific parts drifted into being wrong for one of the tools: the shared `Subagents` section documented pi's extension API (`run_in_background`, `get_subagent_result`, `steer_subagent`) and pi's agent roster, none of which exist in Claude Code.
 Splitting them lets each file describe its own harness accurately.
 
+Both are written for Claude 5 generation models, following [the new rules of context engineering](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models): spend the tokens on gotchas, prefer judgment to enumerated rules, and never restate what the model can read from a tool description, agent frontmatter, or the repo itself.
+Concretely, these files do not list the agent roster, because each agent's `description` frontmatter already carries it and Claude Code surfaces those descriptions at spawn time.
+Before adding anything here, check whether it belongs in an agent description or a skill instead.
+
 Everything from the top of the file down to the `Tooling` heading is shared verbatim between the two.
 **When you change a rule in that shared region, mirror it into the other file** - a comment at the top of each file says the same.
 Below `Tooling`, the two are meant to differ; do not sync those.
