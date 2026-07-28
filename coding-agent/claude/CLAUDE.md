@@ -44,6 +44,7 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 - Lavish is for UI reference only - mockups, design options, visual reviews. Plans, comparisons, audits, backend and system design go in chat.
 - Shipping: validate through no-mistakes rather than pushing directly.
 - Parallel sessions: herdr. tmux and treehouse are retired.
+- Memory: claude-mem captures every tool call into `~/.claude-mem/claude-mem.db`, unencrypted, all projects in one file. Scope is `CLAUDE_MEM_EXCLUDED_PROJECTS` in `~/.claude-mem/settings.json`, an exclude-list with no allow-list, so it is fail-open: a newly cloned client repo is captured from its first session until it is named there. Patterns compile anchored, so excluding a repo needs both `path` and `path/**`. Nothing is redacted automatically - wrap secrets in `<private>` tags.
 
 # This machine's harness
 
@@ -65,16 +66,18 @@ Claude Code's config in `~/.claude` is symlinked from `~/dotfiles`. Edit the dot
 
 Each agent's frontmatter description says what it is for, so this file doesn't repeat them. What those descriptions don't tell you:
 
-- **Tiers.** `sweeper` is Haiku, the rest are Sonnet, this session is `opusplan`. Route by tier rather than habit: mechanical and fully specified goes to `sweeper`, everything hands-on to `worker`.
+- **Tiers.** `sweeper` is Haiku, the rest are Sonnet, this session is Opus. Route by tier rather than habit: mechanical and fully specified goes to `sweeper`, everything hands-on to `worker`.
 - **`Plan` alone doesn't load this file** or the session's git status, so restate anything it needs in its prompt. It also inherits the session model, so it saves context, not tokens.
 - **`isolation: "worktree"` branches from the repo's default branch**, not this session's HEAD. An agent that needs the current branch's commits has to check it out.
+- **A worktree agent's memories are filed under the worktree's own project name**, not the parent repo's, and they live in the central DB rather than the worktree. `npx claude-mem adopt` reattaches them, but it finds work via `git worktree list` + `git branch --merged HEAD`, so **it must run before `git worktree remove`** - once the worktree is gone the link is unrecoverable and those observations are orphaned for good. Squash merges leave the branch tip outside HEAD's history, so pass `--branch <name>` explicitly or nothing is detected. Worktrees under `$TMPDIR` are never captured at all.
 - Running and finished subagents are in `/tasks`. `/agents` no longer opens a management wizard.
 
 Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one.
 
 Cost rules that aren't discoverable anywhere else:
 
-- `opusplan` means plan mode is the Opus phase. Plan there, then exit before building - I launch with `--dangerously-skip-permissions`, so nothing enforces plan mode's read-only blocks and it is on you not to implement at Opus prices. `ultrathink` buys one deep turn without changing the session effort level.
-- The Codex budget is a $20 ChatGPT Plus plan, reserved for review. All coding goes to `worker` on Sonnet, never to the `codex` CLI.
+- `ultrathink` buys one deep turn without changing the session effort level.
+- claude-mem's PostToolUse hook fires on *every* subagent tool call, and each one becomes a background Haiku compression billed to this subscription. A wide fan-out multiplies that invisibly, so delegation is no longer the automatically cheaper choice.
+- The Codex budget is a $20 ChatGPT Plus plan, reserved for review. All coding goes to `worker`, never to the `codex` CLI.
 - no-mistakes runs `agent: codex`, so its review step already is the cross-model review. Run the gate alone; spawning `codex-reviewer` first reviews the same diff twice on that budget. Use `codex-reviewer` only where the gate doesn't run: an ungated repo, a mid-development opinion, or someone else's PR.
 - Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch and ship them through the gate with the rest of the change.
