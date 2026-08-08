@@ -49,6 +49,14 @@ check_git() {
       done ;;
     filter-branch)
       block "git filter-branch rewrites every commit; use it deliberately and by hand, not from an agent" ;;
+    prune)
+      # Same destructive effect as `gc --prune=now`, which is blocked below:
+      # it deletes unreachable objects, which is where a bad reset or rebase
+      # leaves the only copy of your work. Bare `git prune` still deletes
+      # anything past gc.pruneExpire, so the whole subcommand is blocked.
+      # `prune-packed` is a different subcommand and is not matched here: it
+      # only drops loose duplicates of already-packed objects.
+      block "git prune permanently deletes unreachable objects, including anything a recent reset, rebase or branch deletion left behind" ;;
     reset)
       for a in "$@"; do [ "$a" = "--hard" ] && block "git reset --hard discards uncommitted changes"; done ;;
     clean)

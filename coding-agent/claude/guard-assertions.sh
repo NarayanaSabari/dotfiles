@@ -74,14 +74,16 @@ for c in "$G reset --hard" "$G clean -fd" "$G checkout ." "$G restore ." \
          "/usr/bin/$G reset --hard" "./$G clean -fd" \
          "$G reflog expire --expire=now --all" "$G reflog delete HEAD@{2}" \
          "$G update-ref -d refs/heads/main" "$G filter-branch --force --all" \
-         "$G gc --prune=now" "$G stash clear" "$G rm -rf ."; do
+         "$G gc --prune=now" "$G stash clear" "$G rm -rf ." \
+         "$G prune" "$G prune --expire=now" "/usr/bin/$G prune"; do
   assert BLOCK git-guardrails.sh "guardrails blocks: $c" "$(bash_json "$CLEANREPO" "$c")"
 done
 # negative controls: a guard that blocks these is broken
 for c in "$G status" "$G log --oneline" "$G push origin feature" "$G branch -d x" \
          "$G checkout -b new" "$G restore --staged ." "$G stash" "$G stash pop" \
          "$G stash drop" "$G rm oldfile.txt" "$G rm -r somedir" "$G rm --cached f" \
-         "$G gc" "$G gc --auto" "$G reflog show HEAD" "$G worktree list" "ls -la"; do
+         "$G gc" "$G gc --auto" "$G reflog show HEAD" "$G worktree list" "ls -la" \
+         "$G prune-packed" "$G repack -ad" "$G fsck"; do
   assert ALLOW git-guardrails.sh "guardrails allows: $c" "$(bash_json "$CLEANREPO" "$c")"
 done
 
