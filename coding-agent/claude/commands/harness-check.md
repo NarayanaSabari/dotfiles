@@ -42,4 +42,14 @@ Verify and report a table of what resolves and what does not:
 
    As of 2026-07-28 the referenced set is `smart_search`, `smart_outline`, `smart_unfold`, `search`, `timeline`, `get_observations`, all in `Explore.md`. Report any name that no longer resolves, and note that the fix is to update the agent definition rather than to pin the plugin version.
 
+11. **Guard assertions.** Run `bash ~/dotfiles/coding-agent/claude/guard-assertions.sh`. It feeds each `PreToolUse` hook its real stdin contract in a scratch tree under a relocated `$HOME` and asserts the exit code, roughly 90 assertions in about 5 seconds. Reading a hook only tells you what its author believed; every gap fixed in this repo was found by running one.
+
+    It never touches a live repo, and it carries negative controls as well as positive ones - a suite that only checks blocking keeps passing after a hook starts blocking everything. Verified against four mutants: reverting the path-qualified-git anchor, reverting the identity-guard verb list, breaking the credential sweep, and a hook that blocks unconditionally. All four were caught.
+
+    Exit 0 means every assertion held. Non-zero prints the failing assertion by name; the name says which guard and which command. Do not "fix" a failure by editing the assertion.
+
+12. **Startup cleanliness.** The suite's last assertion runs `claude -d -p` in a scratch directory and requires zero `Permission deny rule` warnings. This is the cheapest check here and it catches a whole class of silent failure: the settings schema sets `additionalProperties: true`, so a malformed or misnested rule is accepted without error and only ever surfaces in that warning. A `Write(path)` rule is the common case - Claude Code only consults `Edit(path)` and `Read(path)` for file permissions, so a `Write(**/.env)` deny looks protective and does nothing.
+
+    If the assertion fires outside a scratch directory too, run `claude -d -p` in this repo and read the warnings; they name the file and the rule.
+
 Report only what is wrong plus a one-line all-clear for what is fine. If something is broken, say exactly which link and what it should point at; recreate it only if I confirm.
