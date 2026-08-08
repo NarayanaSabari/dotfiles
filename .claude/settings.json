@@ -3,7 +3,8 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "attribution": {
-    "commit": ""
+    "commit": "",
+    "sessionUrl": false
   },
   "permissions": {
     "allow": [
@@ -23,6 +24,16 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Write|Edit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/credential-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -38,6 +49,11 @@
           {
             "type": "command",
             "command": "/Users/sabari/.claude/hooks/worktree-adopt-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/commit-signature-guard.sh",
             "timeout": 10
           }
         ]
