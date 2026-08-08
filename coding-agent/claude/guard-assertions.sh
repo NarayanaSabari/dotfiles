@@ -102,6 +102,33 @@ for c in "$G status" "$G fetch origin" "$G merge-base main HEAD" "$G log --merge
          "$G rebase --abort" "$G merge --abort" "$G cherry-pick --abort" "$G rebase --skip"; do
   assert ALLOW git-identity-guard.sh "identity allows: $c" "$(bash_json "$IDREPO" "$c")"
 done
+# --- identity guard: `cd <repo> && git ...` resolution ----------------------
+# The cd parser is DUPLICATED in git-identity-guard.sh and credential-guard.sh
+# on purpose (standalone hooks). Both copies are asserted here; a future edit
+# that fixes one and misses the other must fail.
+OTHERWD="$ROOT/elsewhere"; mkdir -p "$OTHERWD"
+assert BLOCK git-identity-guard.sh "identity resolves: cd <repo> && git commit" \
+  "$(bash_json "$OTHERWD" "cd $IDREPO && $G commit -m x")"
+assert BLOCK git-identity-guard.sh "identity resolves: cd <repo>; git commit" \
+  "$(bash_json "$OTHERWD" "cd $IDREPO; $G commit -m x")"
+assert BLOCK git-identity-guard.sh "identity resolves quoted cd target" \
+  "$(bash_json "$OTHERWD" "cd \"$IDREPO\" && $G commit -m x")"
+# Unresolvable targets must fall back to the session cwd - today's behaviour,
+# never a new hole. cwd here is a plain directory, so fallback means ALLOW,
+# exactly as before the change.
+for c in "cd \$REPO && $G commit -m x" \
+         "cd \$(git rev-parse --show-toplevel) && $G commit -m x" \
+         "cd - && $G commit -m x" \
+         "pushd $IDREPO && $G commit -m x" \
+         "($G commit -m x)"; do
+  assert ALLOW git-identity-guard.sh "identity falls back when cd is unresolvable" \
+    "$(bash_json "$OTHERWD" "$c")"
+done
+# Fallback must not LOSE coverage either: unresolvable cd, but cwd is itself
+# the bad repo -> still blocked.
+assert BLOCK git-identity-guard.sh "identity fallback still checks the session cwd" \
+  "$(bash_json "$IDREPO" "cd \$REPO && $G commit -m x")"
+
 # negative control: identity corrected -> the same verbs must pass
 ( cd "$IDREPO" && $G config user.email sabarinarayanakg@rentai.now ) >/dev/null 2>&1
 for c in "$G commit -m x" "$G push" "$G rebase main" "$G merge --no-ff f"; do
@@ -134,6 +161,24 @@ assert ALLOW credential-guard.sh "cred allows commit -am"                "$(bash
 # commit-message prose must not be read as paths
 assert ALLOW credential-guard.sh "cred allows .env in a commit message" \
   "$(bash_json "$CREDREPO" "$G commit -m \\\"stop committing .env files\\\"")"
+# --- credential guard: the SAME cd resolution, second copy ------------------
+# .env is present in CREDREPO at this point.
+assert BLOCK credential-guard.sh "cred resolves: cd <repo> && git add -A" \
+  "$(bash_json "$OTHERWD" "cd $CREDREPO && $G add -A")"
+assert BLOCK credential-guard.sh "cred resolves: cd <repo>; git add ." \
+  "$(bash_json "$OTHERWD" "cd $CREDREPO; $G add .")"
+assert BLOCK credential-guard.sh "cred resolves quoted cd target" \
+  "$(bash_json "$OTHERWD" "cd \"$CREDREPO\" && $G add -A")"
+for c in "cd \$REPO && $G add -A" \
+         "cd \$(git rev-parse --show-toplevel) && $G add -A" \
+         "cd - && $G add -A" \
+         "pushd $CREDREPO && $G add -A"; do
+  assert ALLOW credential-guard.sh "cred falls back when cd is unresolvable" \
+    "$(bash_json "$OTHERWD" "$c")"
+done
+assert BLOCK credential-guard.sh "cred fallback still checks the session cwd" \
+  "$(bash_json "$CREDREPO" "cd \$REPO && $G add -A")"
+
 # index must be untouched by the check
 STAGED=$( cd "$CREDREPO" && $G diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')
 [ "$STAGED" = 0 ] && pass || fail "cred check mutated the index ($STAGED files staged)"

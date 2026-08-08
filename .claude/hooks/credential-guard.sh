@@ -114,7 +114,31 @@ case "$TOOL" in
       # tripping the check.
       if printf '%s' "$CMD" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]+([^;&|]*[[:space:]])?add([[:space:]]|$)' &&
          printf '%s' "$CMD" | grep -qE '(^|[[:space:]])(-[a-zA-Z]*A[a-zA-Z]*|--all|\.)([[:space:]]|$)'; then
+        # `cd <repo> && git add -A` was checked against the wrong directory.
+        # Resolve a leading literal `cd`; anything unresolvable ($VAR, $(...),
+        # globs, `cd -`, pushd, subshells) falls back to the session cwd, which
+        # is today's behaviour. Adds coverage, never opens a new hole.
+        #
+        # Duplicated verbatim in git-identity-guard.sh rather than shared:
+        # these hooks are standalone, and one missing library file would break
+        # both guards.
+        effective_cwd() { # effective_cwd <command> <cwd>
+          _c="$1"; _w="$2"
+          _t=$(printf '%s' "$_c" | sed -nE 's%^[[:space:]]*cd[[:space:]]+([^;&|]*)[[:space:]]*(&&|;).*%\1%p' | head -1)
+          _t=$(printf '%s' "$_t" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+                                       -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//")
+          case "$_t" in
+            ''|-|*'$'*|*'`'*|*'*'*|*'?'*) printf '%s' "$_w"; return ;;
+          esac
+          case "$_t" in
+            '~')   _t="$HOME" ;;
+            '~/'*) _t="$HOME/${_t#\~/}" ;;
+          esac
+          case "$_t" in /*) ;; *) _t="$_w/$_t" ;; esac
+          if [ -d "$_t" ]; then printf '%s' "$_t"; else printf '%s' "$_w"; fi
+        }
         CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+        CWD=$(effective_cwd "$CMD" "$CWD")
         if [ -n "$CWD" ] && command -v git >/dev/null 2>&1 &&
            git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
           # --porcelain -uall is read-only and lists every worktree path a

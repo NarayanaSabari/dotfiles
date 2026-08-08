@@ -33,6 +33,33 @@ case "$flat" in
     printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push)([[:space:]]|$)' || exit 0 ;;
 esac
 
+# `cd <repo> && git commit` was invisible: only `git -C` paths and the session
+# cwd were inspected. Resolve a leading literal `cd` so the command is checked
+# against the repo it actually runs in.
+#
+# Unresolvable targets ($VAR, $(...), globs, `cd -`, pushd, subshells, a second
+# cd) fall back to the session cwd, which is exactly today's behaviour. This
+# can only add coverage; it never opens a new hole.
+#
+# Duplicated verbatim in credential-guard.sh rather than shared: these hooks are
+# standalone by design, and one missing library file would break both guards.
+effective_cwd() { # effective_cwd <command> <cwd>
+  _c="$1"; _w="$2"
+  _t=$(printf '%s' "$_c" | sed -nE 's%^[[:space:]]*cd[[:space:]]+([^;&|]*)[[:space:]]*(&&|;).*%\1%p' | head -1)
+  _t=$(printf '%s' "$_t" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+                               -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//")
+  case "$_t" in
+    ''|-|*'$'*|*'`'*|*'*'*|*'?'*) printf '%s' "$_w"; return ;;
+  esac
+  case "$_t" in
+    '~')   _t="$HOME" ;;
+    '~/'*) _t="$HOME/${_t#\~/}" ;;
+  esac
+  case "$_t" in /*) ;; *) _t="$_w/$_t" ;; esac
+  if [ -d "$_t" ]; then printf '%s' "$_t"; else printf '%s' "$_w"; fi
+}
+cwd=$(effective_cwd "$cmd" "$cwd")
+
 check_repo() {
   repodir="$1"
   repodir="${repodir/#\~/$HOME}"
