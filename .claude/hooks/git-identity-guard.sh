@@ -17,7 +17,21 @@ cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
 flat=$(printf '%s' "$cmd" | tr '\n' ' ' | tr -d "\"'\\\\" | tr '$()`' ' ')
 # `([^;&|[:space:]]*/)?` accepts a path-qualified git (/usr/bin/git, ./git,
 # ~/bin/git). Matching only the bare word let an absolute path bypass this hook.
-printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push)([[:space:]]|$)' || exit 0
+#
+# cherry-pick, revert, merge, rebase and am all write commits using the repo's
+# configured identity, which is exactly what this hook exists to prevent. They
+# were not matched before. This is a PreToolUse hook, so blocking happens
+# before git runs and no commit is created - including for a rebase that would
+# have written several, and for the `--continue` that resumes a stopped one.
+printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push|cherry-pick|revert|merge|rebase|am)([[:space:]]|$)' || exit 0
+
+# Unwinding a stopped sequence creates no commits, so let it through however
+# wrong the identity is. Being unable to abort a conflicted rebase until the
+# identity is fixed would be a guard worth routing around.
+case "$flat" in
+  *--abort*|*--quit*|*--skip*)
+    printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push)([[:space:]]|$)' || exit 0 ;;
+esac
 
 check_repo() {
   repodir="$1"
