@@ -29,6 +29,26 @@ block() {
 check_git() {
   sub="$1"; shift
   case "$sub" in
+    # --- operations that destroy the recovery path itself -------------------
+    # Everything else in this file is survivable because the reflog still
+    # points at the old commit. These three remove that, so a mistake made
+    # after one of them cannot be undone at all. All are rare and deliberate,
+    # so the existing "ask the user to run it" path is the escape hatch; no
+    # bypass variable is warranted.
+    reflog)
+      for a in "$@"; do
+        case "$a" in
+          expire) block "git reflog expire destroys the reflog, which is the only way back from reset --hard, branch -D and a bad rebase" ;;
+          delete) block "git reflog delete removes the entry that makes a bad commit recoverable" ;;
+        esac
+      done ;;
+    update-ref)
+      for a in "$@"; do
+        [ "$a" = "-d" ] && block "git update-ref -d deletes a ref outside the normal commands, so it leaves no branch reflog to recover from"
+        [ "$a" = "--stdin" ] && block "git update-ref --stdin can delete refs in bulk with no reflog to recover from"
+      done ;;
+    filter-branch)
+      block "git filter-branch rewrites every commit; use it deliberately and by hand, not from an agent" ;;
     reset)
       for a in "$@"; do [ "$a" = "--hard" ] && block "git reset --hard discards uncommitted changes"; done ;;
     clean)
@@ -46,6 +66,34 @@ check_git() {
       [ "$del" = 1 ] && [ "$forced" = 1 ] && block "git branch --delete --force force-deletes a branch; use plain -d or ask the user" ;;
     checkout)
       for a in "$@"; do [ "$a" = "." ] && block "git checkout . discards all uncommitted changes"; done ;;
+    gc)
+      # Only dangerous next to the operations above: it is what makes an
+      # expired reflog's objects actually unrecoverable.
+      for a in "$@"; do
+        case "$a" in --prune=now|--prune=all) block "git gc $a permanently deletes unreachable objects, including anything a recent reset or rebase left behind" ;; esac
+      done ;;
+    stash)
+      # `stash drop` is deliberately NOT blocked: dropping the stash you just
+      # applied is routine, and a guard you route around weekly is worse than
+      # no guard. `clear` drops every stash at once, which is rare and is the
+      # one that loses work you had forgotten about.
+      for a in "$@"; do
+        [ "$a" = "clear" ] && block "git stash clear drops every stash at once; drop them individually or ask the user"
+      done ;;
+    rm)
+      # `git rm <path>` is normal. Only the recursive-forced-broad form is
+      # blocked: -f overrides git's refusal to delete files with uncommitted
+      # modifications, and those modifications are in no object database.
+      rf=0; rr=0; broad=0
+      for a in "$@"; do
+        case "$a" in
+          -f|--force) rf=1 ;;
+          -r) rr=1 ;;
+          -[a-zA-Z]*) case "$a" in *f*) rf=1;; esac; case "$a" in *r*) rr=1;; esac ;;
+          .|./|'*') broad=1 ;;
+        esac
+      done
+      [ "$rf" = 1 ] && [ "$rr" = 1 ] && [ "$broad" = 1 ] && block "git rm -rf . deletes every tracked file and discards uncommitted modifications along with them" ;;
     restore)
       staged=0; worktree=0; dot=0
       for a in "$@"; do
