@@ -161,7 +161,7 @@ v1 scored `credential-guard.sh` 5/5 and quoted its own comment as evidence — a
 | This session's `credential-guard` fix | "Verified, 48ms" in `claude-setup-fixes.md` | That was a 5-file scratch repo. The real number was 133 seconds. **A latency figure without the repo size beside it means nothing.** |
 | `guard-assertions.sh` | Reads like proof the guards are sufficient | It proves they have not **regressed**, not that they **cover** the threat. `git prune` and the `cd` shape were both found by reading, and the suite passed clean the whole time they were open. There is no mechanical check for the second claim, and this table is no exception to its own rule. |
 
-The suite in `coding-agent/claude/guard-assertions.sh` is the standing answer to all of this: 103 assertions, positive and negative, mutation-tested. If you change a guard, run it. If it fails, do not edit the assertion.
+The suite in `coding-agent/claude/guard-assertions.sh` is the standing answer to most of this: 126 assertions, positive and negative, mutation-tested. If you change a guard, run it. If it fails, do not edit the assertion. It is not an answer to the last row.
 
 ---
 
