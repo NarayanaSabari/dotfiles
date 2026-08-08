@@ -11,9 +11,13 @@ cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
 [ -z "$cmd" ] && exit 0
 
 # Normalize before matching: join continuation/newlines, drop quote characters
-# so `git 'commit'`, `git com""mit`, and multi-line forms cannot slip past.
-flat=$(printf '%s' "$cmd" | tr '\n' ' ' | tr -d "\"'\\\\")
-printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push)([[:space:]]|$)' || exit 0
+# so `git 'commit'`, `git com""mit`, and multi-line forms cannot slip past, and
+# break command substitutions ($(which git), `which git`) into separate tokens
+# so they are inspected too. Same normalization as git-guardrails.sh.
+flat=$(printf '%s' "$cmd" | tr '\n' ' ' | tr -d "\"'\\\\" | tr '$()`' ' ')
+# `([^;&|[:space:]]*/)?` accepts a path-qualified git (/usr/bin/git, ./git,
+# ~/bin/git). Matching only the bare word let an absolute path bypass this hook.
+printf '%s' "$flat" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]([^;&|]*[[:space:]])?\$?(commit|push)([[:space:]]|$)' || exit 0
 
 check_repo() {
   repodir="$1"

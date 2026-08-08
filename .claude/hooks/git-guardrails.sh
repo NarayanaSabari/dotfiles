@@ -74,6 +74,16 @@ check_git() {
   esac
 }
 
+# A git invocation is `git` or any path ending in /git (/usr/bin/git, ./git,
+# ~/bin/git). Matching only the bare word let an absolute path bypass every
+# check in this file.
+is_git_token() {
+  case "$1" in
+    git|*/git) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # Split the command on ; & | into segments, then scan each segment's tokens for
 # a git invocation, skipping git's global flags to find the real subcommand.
 while IFS= read -r seg; do
@@ -81,7 +91,7 @@ while IFS= read -r seg; do
   # shellcheck disable=SC2086
   set -- $seg
   while [ $# -gt 0 ]; do
-    if [ "$1" = "git" ]; then
+    if is_git_token "$1"; then
       shift
       while [ $# -gt 0 ]; do
         case "$1" in
