@@ -10,21 +10,17 @@ Everything here is against Claude Code **2.1.226**.
 
 ## 1. Read this first
 
-**One thing on disk is not in any commit, and one command destroys it.**
+**Resolved.** Both guard registrations and `attribution.sessionUrl: false` are committed in `f42c93d`, verified firing, and your ~130 lines of in-progress work in `.claude/settings.json` are untouched and byte-identical to how you left them.
 
-`credential-guard.sh` and `commit-signature-guard.sh` are committed as files, but their **registration in `.claude/settings.json` is not**. `"attribution": {"sessionUrl": false}` is not committed either. All three live in a file carrying ~130 lines of your unrelated in-progress work.
+`git checkout .claude/settings.json` is now safe with respect to the guards. It still discards your uncommitted work, so §7.3's guidance stands for everything else.
 
-```
-git checkout .claude/settings.json     # <-- DO NOT RUN. Silently unregisters two guards.
-```
-
-Section 7 gives the exit. Do that before anything else.
+One item remains disk-only by design: `skillOverrides` was restored to your working copy (§7.4) so committing that file cannot silently re-enable `handoff` and `receiving-review`. It belongs to your lines, so it is not committed.
 
 ---
 
 ## 2. What changed
 
-Eight commits, `3dc5b1e..cfeddc1`, one change each, all independently revertible.
+Twelve commits, `3dc5b1e..c1c3006`, one change each, all independently revertible.
 
 | SHA | Change |
 |---|---|
@@ -36,8 +32,12 @@ Eight commits, `3dc5b1e..cfeddc1`, one change each, all independently revertible
 | `a957405` | `commit-signature-guard`, new hook |
 | `a27a205` | `credential-guard` sweep bounded; it blew its own timeout |
 | `cfeddc1` | Suite asserts the signature guard and the sweep's cost ceiling |
+| `2aae6f3` | This document |
+| `f42c93d` | Both guards registered in settings, plus `attribution.sessionUrl: false` |
+| `3d36db1` | `git-guardrails` blocks `git prune` |
+| `c1c3006` | Both guards resolve a leading `cd` |
 
-Plus, uncommitted in `.claude/settings.json`: two hook registrations and `sessionUrl: false`.
+Disk-only by design: `skillOverrides` restored to your working copy (§7.4).
 
 **Before and after, on the things that matter:**
 
@@ -49,7 +49,10 @@ Plus, uncommitted in `.claude/settings.json`: two hook registrations and `sessio
 | `git reflog expire`, `update-ref -d`, `filter-branch`, `gc --prune=now`, `stash clear`, `git rm -rf .` | ran | blocked |
 | `git add -A` sweeping an untracked `.env` | staged it | blocked |
 | Commit carrying a signature trailer | committed | blocked |
-| Guard regressions | invisible | 103 assertions, ~5s |
+| `git prune`, `git prune --expire=now` | ran | blocked |
+| `cd <repo> && git commit` with wrong identity | ran | blocked |
+| `cd <repo> && git add -A` sweeping a `.env` | staged it | blocked |
+| Guard regressions | invisible | 126 assertions, ~5s |
 
 ---
 
@@ -64,14 +67,17 @@ Every row below has a command whose output was observed. Nothing here rests on r
 | Both git guards block path-qualified `git` (`/usr/bin/`, `/opt/homebrew/bin/`, `./`, `~/bin/`) and `$(which git)` | 13-form matrix against both hooks, before/after |
 | `git-identity-guard` blocks `commit`, `push`, `-c` override, `--author`, env-var override, `--amend`, `bash -c`, `git -C <other>`, and the five commit-creating verbs | Scratch repo under a relocated `$HOME` at `Developer/rentai/`, with the correct-identity negative control passing |
 | It fires before anything is written | Repo held exactly its 1 base commit after the full wrong-identity suite |
-| `git-guardrails` blocks 18 destructive forms and allows 17 legitimate neighbours | Direct stdin probes |
+| `git-guardrails` blocks 21 destructive forms and allows 20 legitimate neighbours | Direct stdin probes |
+| `git prune` and `git prune --expire=now` block; `prune-packed`, `repack -ad` and `fsck` do not | Direct probes plus a mutant removing the case |
+| Both guards resolve `cd <repo> && git …` and fall back safely on `$VAR`, `$(...)`, `cd -`, `pushd`, subshells | Mutating each hook's copy separately breaks only its own 3 assertions |
 | `credential-guard` blocks a sweeping `git add` that would stage a credential file | Same command, only the presence of an untracked `.env` differing |
 | ...and does not mutate the index | `git status --porcelain` byte-identical before/after; `git diff --cached` empty |
 | ...and is bounded in cost | 60k untracked files: 133,480 ms → 234 ms |
 | `commit-signature-guard` blocks real trailers and passes prose | **Every commit message in this repo replayed: 60 messages, 47 allowed, 13 blocked — and the 13 are exactly the 13 the audit identified. Zero false positives.** |
 | `worktree-adopt-guard` blocks on unadopted memories, allows once adopted, honours `SKIP_ADOPT_GUARD=1`, fails open as documented | Real worktree + seeded sqlite DB, `merged_into_project` the only variable |
 | `notify.sh` survives empty, non-JSON, object, array, 20KB and injection payloads | 7 payloads, all exit 0 |
-| The assertion suite fails when a guard breaks | Six mutants, all caught: 2, 6, 16, 4, 3 and 1 failures respectively |
+| Both guards fire from the **committed** settings, not just the working copy | Independent `claude -p` sessions: `credential-guard` blocked `git add -A` naming its own path, `commit-signature-guard` blocked a trailer commit and the commit was not created. `permissions.deny` is empty in the committed file, so neither block can be a permission rule |
+| The assertion suite fails when a guard breaks | Nine mutants, all caught: 2, 6, 16, 4, 3, 1, 3, 3 and 3 failures respectively |
 
 ### Settings keys
 
@@ -117,10 +123,9 @@ v1 claimed all of these were valid on the strength of `strings` output against t
 
 Plainly, and this list is the honest one.
 
-**The `cd` shape.** `cd <dir> && git <op>` defeats `git-identity-guard` and the `credential-guard` sweep, because both resolve paths against the session `cwd`. Measured against 25,332 real Bash tool calls in your transcripts: **369 matches (1.5%), of which 88 are `git add` and 41 are `commit`/`push`/`merge`.** Not theoretical. Analysis in §8. `git-guardrails` is unaffected — it matches text and never consults `cwd`.
+**The `cd` shape, partially.** `c1c3006` resolves a leading literal `cd`, which covered 72% of the 369 real occurrences measured. Still uncovered: `cd $VAR`, `cd $(...)`, `cd -`, `pushd`, subshells `(cd x && …)`, and a second `cd` in the same command. All of these fall back to the session `cwd`, so they behave exactly as before the fix rather than failing open. `git-guardrails` never needed it — it matches text and does not consult `cwd`.
 
 **Git, uncovered:**
-- `git prune` and `git prune --expire=now` — same destructive effect as `gc --prune=now`, which *is* blocked. **`git prune` is the hole in 924cc65**; `git prune-packed` is harmless (it only drops loose duplicates of already-packed objects), and `git repack -ad` is also allowed.
 - `git pull` creating a merge commit under a wrong identity. Deliberate: too common to block without being routed around.
 - `git -c alias.zap='reset --hard' zap` — the alias bypass `git-guardrails` has always admitted to.
 - `git` under another name (`g`, a shell alias, a PATH-shadowed binary). No text-matching guard can see this.
@@ -154,6 +159,7 @@ v1 scored `credential-guard.sh` 5/5 and quoted its own comment as evidence — a
 | `reference/subagents.md` and `harness.md` | Prose about cost and sandbox edges | The strongest documents here; every claim I tested held. Trust them more than the hook comments. |
 | v1 and v2 reports | Read as conclusions | v1's token analysis was wrong in both directions and its hook scores were uncalibrated. v2 corrected them and introduced its own errors (the byte/token calibration, R8). Both are working, not conclusions. |
 | This session's `credential-guard` fix | "Verified, 48ms" in `claude-setup-fixes.md` | That was a 5-file scratch repo. The real number was 133 seconds. **A latency figure without the repo size beside it means nothing.** |
+| `guard-assertions.sh` | Reads like proof the guards are sufficient | It proves they have not **regressed**, not that they **cover** the threat. `git prune` and the `cd` shape were both found by reading, and the suite passed clean the whole time they were open. There is no mechanical check for the second claim, and this table is no exception to its own rule. |
 
 The suite in `coding-agent/claude/guard-assertions.sh` is the standing answer to all of this: 103 assertions, positive and negative, mutation-tested. If you change a guard, run it. If it fails, do not edit the assertion.
 
@@ -238,22 +244,26 @@ If you would rather not run a script, the equivalent `git add -p` selection is: 
 
 ### 7.3 Corrected rollback instructions
 
-`claude-setup-fixes.md` §2.5 and v2's rollback section both offer `git checkout .claude/settings.json`. **That is wrong and destructive** — it discards two guard registrations and `sessionUrl: false` along with your work. Superseded by:
+`claude-setup-fixes.md` §2.5 and v2's rollback section both offer `git checkout .claude/settings.json`. **That was wrong and destructive when written** — it discarded two guard registrations and `sessionUrl: false`. Since `f42c93d` those three are committed, so the command no longer loses guards. It still discards your uncommitted work, including the restored `skillOverrides`. Superseded by:
 
 | To undo | Do this |
 |---|---|
 | A hook change | `git revert <sha>` — each is independent |
-| The `Write(**/.env*)` deletion | Re-add the two strings to `permissions.deny`. Do not `git checkout` the file. |
-| A guard registration | Delete that one entry from `hooks.PreToolUse` by hand. Do not `git checkout` the file. |
-| Everything, deliberately | Only after §7.2 has landed. Until then there is no clean full revert of that file. |
+| A guard registration | `git revert f42c93d`, or delete that one entry from `hooks.PreToolUse` by hand |
+| The `Write(**/.env*)` deletion | Re-add the two strings to `permissions.deny`. They were never in HEAD, so there is nothing to revert. |
+| Your uncommitted settings work | No clean revert exists, and `git checkout` discards all of it. Copy the file aside first. |
 
 Run reverts with the sandbox off: `~/.claude/**` writes are blocked, proven, and a half-applied git operation there has deleted `CLAUDE.md` before. Re-run `/harness-check` after.
 
 Before any of it: `cp -r ~/.claude/skills $TMPDIR/skills-backup` — five skills are not in git.
 
+### 7.4 `skillOverrides`, restored on disk only
+
+HEAD carries `{"handoff": "off", "receiving-review": "off"}`; your working copy had dropped the key entirely, so committing that file would have silently re-enabled both skills. The key is restored to the working copy, matching HEAD exactly. It is **not committed** — it belongs to your ~130 lines, and the decision of whether those skills stay off is yours.
+
 ---
 
-## 8. The `cd` hole: analysis, not implementation
+## 8. The `cd` hole: analysis, and what shipped
 
 **One shape, two hooks.** `cd <dir> && git <op>` defeats `git-identity-guard` and the `credential-guard` sweep. Both take the effective repo from the session `cwd`, and neither parses a leading `cd`. `git-guardrails` is immune (pure text matching), so this is two hooks, not three.
 
@@ -279,7 +289,11 @@ command substitution             3
 
 **What it would not cover:** `$VAR` and `$(...)` targets (~27%), `pushd`, subshell `(cd x && …)`, and multiple sequential `cd`s.
 
-**My read:** small, clean, no false-positive surface, closes ~72% of a 1.5%-frequency hole in two guards. Worth doing. **Not implemented, per your instruction.**
+**What it does not cover:** `$VAR` and `$(...)` targets (~27%), `pushd`, subshell `(cd x && …)`, and multiple sequential `cd`s. All fall back to the session `cwd`.
+
+**Shipped in `c1c3006`**, gated on a latency measurement because resolving `cd` means the sweep now runs `git status` against the resolved repo rather than the small `cwd`: `cd <neuskale> && git add -A` costs **72 ms** against a 250 ms budget.
+
+Two bugs surfaced in the first draft, both silent: BSD `sed` has no `\|` alternation in basic regex, so the extraction matched nothing and the hook quietly kept its old behaviour; and using `|` as the `sed` delimiter collided with the pattern's own alternation. Both produced a hook that ran, exited 0, and looked fine.
 
 ## 9. Latency, honestly
 
@@ -300,10 +314,30 @@ Worst case is now bounded by the 200-candidate cap rather than by repo size, and
 
 ---
 
-## 10. Open decisions
+## 10. Maintenance
 
-1. **Run §7.2.** Nothing else here matters until the two guard registrations are committed.
-2. **Implement the `cd` fix?** §8. Small, clean, zero false-positive surface, closes a measured 1.5% hole in two guards. I would do it.
-3. **Add `git prune` / `git prune --expire=now` to `git-guardrails`?** Same effect as the already-blocked `gc --prune=now`. One line, no legitimate agent use I can name.
-4. **`skillOverrides` is in HEAD but absent from your working copy.** Committing the working file re-enables `handoff` and `receiving-review`. Restore it or drop it deliberately.
-5. **Leave `disableBundledSkills` and the other unverified keys alone** until there is a test. Do not act on an unverified key.
+Two things, both cheap.
+
+**After any hook edit:**
+
+```bash
+bash ~/dotfiles/coding-agent/claude/guard-assertions.sh
+```
+
+126 assertions, about 5 seconds. It fails by name. Do not fix a failure by editing the assertion. Remember what §6 says about it: it proves no regression, not sufficiency.
+
+**After any Claude Code upgrade:**
+
+```bash
+claude -d -p | grep -c "Permission deny rule"      # must print 0
+```
+
+The settings schema accepts unknown and misnested keys silently, so a schema change between versions is otherwise invisible. This is how the dead `Write(**/.env*)` rules would have been caught on day one. `/harness-check` runs both of these as steps 11 and 12.
+
+---
+
+## 11. Open decisions
+
+1. **`skillOverrides` is restored on disk but uncommitted** (§7.4). Decide whether `handoff` and `receiving-review` stay off when you land your settings work.
+2. **Leave `disableBundledSkills` and the other unverified keys alone** until there is a test. Do not act on an unverified key.
+3. **Optional, low value:** the not-chased findings at the end of §5 (`setup.sh` re-enabling disabled skills, README drift, the stale audit backup, five unversioned skills, the `pi/AGENTS.md` drift). All still correct; none is worth a session on its own.
