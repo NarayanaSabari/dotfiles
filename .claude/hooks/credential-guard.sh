@@ -122,14 +122,29 @@ case "$TOOL" in
           if ! STAGEABLE=$(git -C "$CWD" status --porcelain -uall 2>/dev/null); then
             block "git could not report what \"$CMD\" would stage, so I cannot rule out a credential file."
           fi
-          printf '%s\n' "$STAGEABLE" | while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            path=${line#???}            # strip the two status columns + space
-            path=${path##* -> }         # renames: keep the destination
-            is_credential_path "$path" && printf '%s\n' "$path"
-          done > "${TMPDIR:-/tmp}/.credguard.$$" 2>/dev/null
-          HIT=$(head -1 "${TMPDIR:-/tmp}/.credguard.$$" 2>/dev/null)
-          rm -f "${TMPDIR:-/tmp}/.credguard.$$"
+          # Narrow with one grep before touching the shell loop. Calling
+          # is_credential_path per line costs ~2ms, so a repo with 60k
+          # untracked files took 133s - thirteen times the hook's own 10s
+          # timeout. This regex is deliberately WIDER than
+          # is_credential_path: it only has to avoid missing a candidate, and
+          # every survivor is then judged by the function itself, so the
+          # decision stays identical.
+          CANDIDATES=$(printf '%s\n' "$STAGEABLE" \
+            | sed -e 's/^...//' -e 's/.* -> //' \
+            | grep -iE '(^|/)\.env($|\.)|\.(pem|key|p12|pfx|jks|keystore)$|(^|/)id_(rsa|dsa|ecdsa|ed25519)$|(^|/)(\.npmrc|\.pypirc|\.netrc|credentials)$|service-?account|_secret|secrets\.(json|ya?ml)$' \
+            | head -200)
+          HIT=""
+          if [ -n "$CANDIDATES" ]; then
+            OLDIFS=$IFS; IFS='
+'
+            for path in $CANDIDATES; do
+              IFS=$OLDIFS
+              if is_credential_path "$path"; then HIT="$path"; break; fi
+              IFS='
+'
+            done
+            IFS=$OLDIFS
+          fi
           if [ -n "$HIT" ]; then
             block "this sweeps the whole worktree and $HIT is a credential file. Stage the paths you mean explicitly, or add $HIT to .gitignore first."
           fi
