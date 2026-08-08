@@ -40,7 +40,13 @@ assert() {
 }
 
 bash_json() { # bash_json <cwd> <command>
-  printf '{"tool_name":"Bash","cwd":"%s","tool_input":{"command":"%s"}}' "$1" "$2"
+  # Commit-message assertions carry real newlines and quotes, which are not
+  # legal raw inside a JSON string: jq would fail, the hook would see an empty
+  # command, and the assertion would pass for the wrong reason.
+  local esc
+  esc=$(printf '%s' "$2" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+        | awk 'BEGIN{ORS=""} NR>1{print "\\n"} {print}')
+  printf '{"tool_name":"Bash","cwd":"%s","tool_input":{"command":"%s"}}' "$1" "$esc"
 }
 
 G=g\it
@@ -162,6 +168,57 @@ if command -v sqlite3 >/dev/null 2>&1; then
 else
   printf 'SKIP  worktree assertions (sqlite3 not installed)\n' >&2
 fi
+
+# ============================================================ STEP 11e
+# commit-signature-guard.sh - trailers must block, prose about them must not.
+SESS="https://claude.ai/code/session_0123456789abcdef"
+CAB="Co-""Authored-By"
+for c in "$G commit -m \"fix
+
+$CAB: Claude <noreply@anthropic.com>\"" \
+         "$G commit -m \"fix
+
+Claude-Session: $SESS\"" \
+         "$G commit --amend -m \"fix
+
+$CAB: Claude <x@y.z>\"" \
+         "/usr/bin/$G commit -m \"fix
+
+$CAB: Claude <x@y.z>\"" \
+         "bash -c '$G commit -m \"fix
+
+$CAB: Claude <x@y.z>\"'"; do
+  assert BLOCK commit-signature-guard.sh "signature blocks a real trailer" "$(bash_json "$CLEANREPO" "$c")"
+done
+# Prose. These are the cases that make a guard worth having rather than
+# worth removing: the audit's own commit messages discuss all three strings.
+for c in "$G commit -m \"hooks: forbid the $CAB trailer\"" \
+         "$G commit -m \"docs: explain why we ban $CAB and session links\"" \
+         "$G commit -m \"guard: block Generated with Claude Code lines\"" \
+         "$G commit -m \"note: $CAB: is the trailer we ban\"" \
+         "$G commit -m \"fix
+
+See https://claude.ai/code for docs\"" \
+         "$G commit -m \"add file\"" \
+         "$G commit --amend --no-edit" \
+         "$G commit -am wip" \
+         "$G status"; do
+  assert ALLOW commit-signature-guard.sh "signature allows prose/ordinary" "$(bash_json "$CLEANREPO" "$c")"
+done
+
+# ============================================================ STEP 11f
+# credential-guard must stay fast on a repo with many untracked files. The
+# first implementation called a bash function per line and took 133 SECONDS on
+# 60k files, against its own 10s timeout. This is the regression guard.
+PERFREPO="$ROOT/perfrepo"; mkdir -p "$PERFREPO"
+( cd "$PERFREPO" && $G init -q . ) >/dev/null 2>&1
+i=0; while [ $i -lt 40 ]; do mkdir -p "$PERFREPO/d$i"; j=0
+  while [ $j -lt 125 ]; do : > "$PERFREPO/d$i/f$j.txt"; j=$((j+1)); done; i=$((i+1)); done
+START=$(date +%s)
+printf '%s' "$(bash_json "$PERFREPO" "$G add -A")" | "$HOOKS/credential-guard.sh" >/dev/null 2>&1
+ELAPSED=$(( $(date +%s) - START ))
+if [ "$ELAPSED" -le 3 ]; then pass
+else fail "credential-guard took ${ELAPSED}s on 5000 untracked files (budget 3s, hook timeout 10s)"; fi
 
 # ============================================================ STEP 12
 # notify.sh must never hang or fail, whatever it is handed
