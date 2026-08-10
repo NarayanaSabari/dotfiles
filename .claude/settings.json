@@ -4,15 +4,134 @@
   },
   "attribution": {
     "commit": "",
+    "pr": "",
     "sessionUrl": false
   },
   "permissions": {
     "allow": [
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git remote -v)",
+      "Bash(git rev-parse*)",
+      "Bash(git config user.email)",
+      "Bash(git config user.name)",
+      "Bash(git fetch*)",
+      "Bash(git worktree list*)",
+      "Bash(git --no-pager *)",
+      "Bash(uv run pytest*)",
+      "Bash(uv run ruff*)",
+      "Bash(uv run pyright*)",
+      "Bash(uv run mypy*)",
+      "Bash(uv sync*)",
+      "Bash(uv lock*)",
+      "Bash(npx tsc*)",
+      "Bash(node --test*)",
+      "Bash(npm test*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run typecheck*)",
+      "Bash(npm run build*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm lint*)",
+      "Bash(pytest*)",
+      "Bash(cargo build*)",
+      "Bash(cargo test*)",
+      "Bash(cargo clippy*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue list*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)",
+      "Bash(no-mistakes status *)",
+      "Bash(no-mistakes axi status*)",
+      "Bash(no-mistakes axi run*)",
+      "Bash(no-mistakes axi respond*)",
       "Bash(kubectl get *)",
       "Bash(kubectl describe *)",
       "Bash(kubectl logs *)",
       "Bash(docker compose config *)",
-      "Bash(no-mistakes status *)"
+      "Bash(docker compose ps*)",
+      "Bash(docker compose logs*)",
+      "Bash(herdr status*)",
+      "Bash(herdr agent list*)",
+      "Bash(herdr agent get*)",
+      "Bash(herdr agent read*)",
+      "Bash(herdr agent explain*)",
+      "Bash(herdr pane list*)",
+      "Bash(herdr pane current*)",
+      "Bash(herdr pane get*)",
+      "Bash(herdr pane layout*)",
+      "Bash(herdr pane read*)",
+      "Bash(herdr pane process-info*)",
+      "Bash(herdr pane neighbor*)",
+      "Bash(herdr pane edges*)",
+      "Bash(herdr workspace list*)",
+      "Bash(herdr workspace get*)",
+      "Bash(herdr tab list*)",
+      "Bash(herdr tab get*)",
+      "Bash(herdr integration status*)"
+    ],
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(doas *)",
+      "Bash(curl * | sh*)",
+      "Bash(curl * | bash*)",
+      "Bash(curl * | zsh*)",
+      "Bash(wget * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(git push --force origin main*)",
+      "Bash(git push --force origin master*)",
+      "Bash(git push --force-with-lease origin main*)",
+      "Bash(git push --force-with-lease origin master*)",
+      "Bash(git push -f origin main*)",
+      "Bash(git push -f origin master*)",
+      "Bash(git push --force --all*)",
+      "Bash(git push --mirror*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -fr /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -rf $HOME*)",
+      "Bash(rm -rf ..*)",
+      "Bash(rm -rf /Users/sabari/.claude*)",
+      "Bash(rm -rf /Users/sabari/dotfiles*)",
+      "Bash(rm -rf /Users/sabari/Developer*)",
+      "Bash(rm -rf /Users/sabari/.ssh*)",
+      "Bash(rm -rf /Users/sabari/.claude-mem*)",
+      "Bash(terraform destroy*)",
+      "Bash(terraform apply -auto-approve*)",
+      "Bash(pulumi destroy*)",
+      "Bash(kubectl delete *)",
+      "Bash(helm delete *)",
+      "Bash(helm uninstall *)",
+      "Bash(aws * delete-*)",
+      "Bash(gcloud * delete *)",
+      "Bash(psql *prod*)",
+      "Bash(mysql *prod*)",
+      "Bash(dropdb *)",
+      "Bash(* DROP TABLE *)",
+      "Bash(* DROP DATABASE *)",
+      "Bash(* TRUNCATE *)",
+      "Bash(*prisma migrate reset*)",
+      "Bash(*prisma db push --accept-data-loss*)",
+      "Bash(*alembic downgrade*)",
+      "Bash(*flyctl * destroy*)",
+      "Bash(npm publish*)",
+      "Bash(chmod -R 777 *)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/.aws/credentials)",
+      "Read(/Users/sabari/.ssh/**)",
+      "Read(/Users/sabari/.claude/.credentials.json)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)"
     ],
     "defaultMode": "auto"
   },
@@ -22,6 +141,17 @@
     "receiving-review": "off"
   },
   "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sabari/.claude/hooks/notify.sh attention",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit|NotebookEdit|Bash",
@@ -59,12 +189,23 @@
         ]
       }
     ],
-    "Notification": [
+    "SessionStart": [
       {
+        "matcher": "startup|resume",
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/notify.sh attention",
+            "command": "'/Users/sabari/.local/bin/jcode' setup-hotkey --notify-cli-launch claude",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/sabari/.claude/hooks/herdr-agent-state.sh' session",
             "timeout": 10
           }
         ]
@@ -100,7 +241,11 @@
         "github.com",
         "*.github.com",
         "*.githubusercontent.com",
-        "registry.npmjs.org"
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "api.anthropic.com",
+        "api.openai.com"
       ]
     },
     "excludedCommands": [
