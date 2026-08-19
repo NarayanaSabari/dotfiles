@@ -9,8 +9,6 @@
 	email = sabarinarayanakg@proton.me
 [includeIf "gitdir:/Users/sabari/Developer/rentai/"]
 	path = ~/.gitconfig-rentai
-[includeIf "gitdir:/Users/sabari/Developer/sabarihex/"]
-	path = ~/.gitconfig-sabarihex
 [includeIf "gitdir:/Users/sabari/Developer/narayana/"]
 	path = ~/.gitconfig-narayana
 [includeIf "gitdir:/Users/sabari/Developer/neuskale/"]
@@ -28,11 +26,5 @@
 	path = ~/.gitconfig-narayana
 [includeIf "hasconfig:remote.*.url:github-narayana:**"]
 	path = ~/.gitconfig-narayana
-[includeIf "hasconfig:remote.*.url:https://*github.com/sabariHex/**"]
-	path = ~/.gitconfig-sabarihex
-[includeIf "hasconfig:remote.*.url:https://*github.com/HEXstreamAnalytics/**"]
-	path = ~/.gitconfig-sabarihex
-[includeIf "hasconfig:remote.*.url:github-sabarihex:**"]
-	path = ~/.gitconfig-sabarihex
 [url "git@github-narayana:NarayanaSabari/"]
 	insteadOf = git@github.com:NarayanaSabari/

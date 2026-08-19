@@ -80,13 +80,11 @@ check_repo() {
   case "$maindir/" in
     "$HOME/Developer/rentai/"*)
       [ "$email" = "sabarinarayanakg@rentai.now" ] || fail "repos under Developer/rentai must commit as Sabari-RentAI <sabarinarayanakg@rentai.now>" ;;
-    "$HOME/Developer/sabarihex/"*)
-      [ "$email" = "Sabari.Narayana@hexstream.com" ] || fail "repos under Developer/sabarihex must commit as sabariHex <Sabari.Narayana@hexstream.com>" ;;
     "$HOME/Developer/narayana/"*|"$HOME/Developer/neuskale/"*)
       [ "$name" = "NarayanaSabari" ] || fail "repos under Developer/narayana and Developer/neuskale must commit as NarayanaSabari" ;;
     *)
       case "$email" in
-        "sabarinarayanakg@rentai.now"|"Sabari.Narayana@hexstream.com")
+        "sabarinarayanakg@rentai.now")
           fail "client identity <$email> is set on a repo outside its account directory" ;;
       esac ;;
   esac
