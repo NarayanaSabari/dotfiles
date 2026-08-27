@@ -50,6 +50,7 @@ jcode has no per-agent-file roster like Claude Code's `agents/` or pi's `agents/
 
 - Normal and light-swarm mode are one-level fan-out: only the root session spawns; workers report back and cannot spawn further. `swarm-deep` mode allows recursive spawning, bounded by a live-worker cap.
 - Cross-model review still matters here: when spawning a review-only or verification-only agent, prefer routing it to a different model family than the coordinator's active model where the swarm prompt's routing table allows it - a second pass from the same model family is not the same signal as an independent one.
+- `swarm spawn` silently ignores a `model` it cannot route and hands back a worker on the coordinator's own model, so a "cross-model" review pass can be same-family without anything saying so. Verify with `swarm list` after spawning, which prints each agent's actual model. When the route is missing, the `codex` CLI is a genuinely independent second model: `codex exec --sandbox read-only -` with the prompt on stdin, from inside the repo. Its own `--model` flag is just as silent about unsupported values (`gpt-5.1-codex-max` and `gpt-5.1-codex` both fail on a ChatGPT account, after a long hang), so omit it and let `~/.codex/config.toml` choose.
 - Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a spawned agent's context, not this one.
 
 # This machine's harness

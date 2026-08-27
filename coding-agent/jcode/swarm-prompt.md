@@ -23,11 +23,26 @@ specific one.
   routes allow it. A same-family reviewer catches less than an independent
   one. Run at most one cross-model review pass per diff; a second one on the
   same change burns the same budget for the same signal.
+- **Independence is the point of a review agent, so never let it fall back
+  silently.** `swarm spawn` accepts a `model` that is not actually routable and
+  gives you a worker on the coordinator's own model without erroring, which
+  looks identical in the UI to the cross-model review you asked for. Two
+  same-family passes then get reported as independent review, which is worse
+  than no review, because it is a false negative wearing a badge. So for any
+  review or verification agent:
+  1. Confirm the route exists (`swarm list_models`) before relying on it.
+  2. Confirm the worker is actually running what you asked for after it
+     spawns - `swarm list` shows each agent's model. Check it.
+  3. If the route is unavailable, say so out loud and either use a
+     genuinely different harness (the `codex` CLI is installed and
+     authenticated - `codex exec --sandbox read-only -` with the prompt on
+     stdin is a real second model) or state plainly that the review was
+     same-family. Never quietly accept the fallback.
 - Context fetching, bulk reading, and summarization: the cheapest/fastest
   available model - this work does not need reasoning depth.
 - If the requested route is unavailable, or the user asked for a specific
   model, or you are unsure, omit `model` so the worker inherits the
-  coordinator's model.
+  coordinator's model. This fallback is for WORK, not for review: see above.
 
 Structure guidance for spawned swarm agents:
 
