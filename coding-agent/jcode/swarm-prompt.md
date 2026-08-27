@@ -21,9 +21,8 @@ specific one.
 - Review, verification, and cross-model second opinions: prefer a different
   model family from whatever the coordinator is running, when the available
   routes allow it. A same-family reviewer catches less than an independent
-  one. Do not spawn a review agent at all if `no-mistakes` will already gate
-  this change with `agent: codex` - that review step already is the
-  cross-model pass; spawning one first burns the same review twice.
+  one. Run at most one cross-model review pass per diff; a second one on the
+  same change burns the same budget for the same signal.
 - Context fetching, bulk reading, and summarization: the cheapest/fastest
   available model - this work does not need reasoning depth.
 - If the requested route is unavailable, or the user asked for a specific

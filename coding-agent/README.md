@@ -1,15 +1,15 @@
 # coding-agent
 
 Single source of truth for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) coding-agent configuration.
-Skills are shared and symlinked into both tools.
+Skills come from [mattpocock/skills](https://github.com/mattpocock/skills) and are symlinked into every tool.
 Instructions and sub-agent definitions are per harness, because the two tools expose different agent tooling and different agent rosters.
 
 ## Layout
 
 ```
 coding-agent/
-├── common/            # shared by BOTH tools
-│   └── skills/        #   shared skills, each a <name>/SKILL.md directory
+├── common/            # retired shared skills, kept for reference only
+│   └── skills/        #   no longer linked into any tool (see Skills below)
 ├── claude/
 │   ├── CLAUDE.md      # Claude Code instructions
 │   ├── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
@@ -27,13 +27,14 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 |--------|-------------|-----|
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
 | `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
-| `common/skills/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` (whole dir) |
+| `~/.agents/mattpocock-skills/skills/*/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills/<name>` (per skill) |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `claude/commands/` | `~/.claude/commands` | -- |
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
 
 pi discovers skills natively from `~/.pi/agent/skills`, so no `skills` entry is needed in pi settings.
-Claude Code's `~/.claude/skills` is a real directory shared with other skill sources (for example `chrome-devtools-axi`, `gh-axi`, `lavish`, `no-mistakes`), so shared skills are linked one by one.
+Every skills directory is a real directory shared with other skill sources (for example `chrome-devtools-axi` and `gh-axi`), so skills are linked one by one.
+jcode reads `~/.jcode/skills` and gets the same links.
 
 ## Instructions (`claude/CLAUDE.md`, `pi/AGENTS.md`)
 
@@ -51,22 +52,18 @@ Everything from the top of the file down to the `Tooling` heading is shared verb
 **When you change a rule in that shared region, mirror it into the other file** - a comment at the top of each file says the same.
 Below `Tooling`, the two are meant to differ; do not sync those.
 
-## Skills (`common/skills/`)
+## Skills
 
-On-demand capability packages following the [Agent Skills standard](https://agentskills.io/specification).
-Each skill is a `<name>/SKILL.md` directory with `name` and `description` frontmatter.
+Installed from [mattpocock/skills](https://github.com/mattpocock/skills), cloned to `~/.agents/mattpocock-skills` and symlinked into `~/.claude/skills`, `~/.jcode/skills`, and `~/.pi/agent/skills` by `../setup.sh`.
+The repo is the source of truth; this dotfiles repo does not vendor them.
 
-| Skill | Purpose |
-|-------|---------|
-| `brainstorming` | Starting creative or feature work before writing code |
-| `debugging` | Any bug, test failure, or unexpected behavior, before proposing fixes |
-| `grilling` | Stress-testing a plan or design before building |
-| `handoff` | Compacting a conversation into a handoff document (invocation-only) |
-| `herdr` | Controlling herdr from inside it (active only when `HERDR_ENV=1`) |
-| `receiving-review` | Processing code-review feedback before implementing suggestions |
-| `tdd` | Test-driven implementation of any feature or bugfix |
+- **Update:** `git -C ~/.agents/mattpocock-skills pull`, then re-run `../setup.sh` to pick up any new skills.
+- **Per repo:** run `/setup-matt-pocock-skills` once to choose the issue tracker, triage labels, and docs location.
+- **Router:** `/ask-matt` picks the right skill when you are unsure.
+- **Daily loop:** `/grill-with-docs` to align before a change, `/to-spec` and `/to-tickets` to break it down, `/implement` and `/tdd` to build, `/diagnosing-bugs` when stuck, `/code-review` before commit.
 
-**Add a shared skill:** create `common/skills/<name>/SKILL.md`, then re-run `../setup.sh` to link it into both tools.
+`common/skills/` holds the previous local set (`ponytail*`, `no-mistakes`, `herdr`, `brainstorming`, `debugging`, `grilling`, `handoff`, `receiving-review`, `tdd`).
+It is retired and no longer linked anywhere; kept in git so anything worth salvaging can be pulled back.
 
 ## Slash commands (`claude/commands/`)
 
@@ -76,7 +73,7 @@ Each command is a `<name>.md` file whose body is the prompt, with optional `desc
 
 | Command | Purpose |
 |---------|---------|
-| `/ship` | Validate the branch through the no-mistakes gate, which is configured with `agent: codex` and so performs the cross-model review itself. Deliberately does not spawn `codex-reviewer` first; that would review the same diff twice on one ChatGPT Plus budget. |
+| `/ship` | Validate the branch before pushing. Retired along with the no-mistakes gate; use `/code-review` instead. |
 | `/harness-check` | Verify every symlink feeding Claude Code and pi still resolves, plus the roster and shared-region invariants. A half-applied git operation can delete one of these silently. |
 
 ## Sub-agents
@@ -144,6 +141,6 @@ From the dotfiles root:
 ./setup.sh
 ```
 
-This links the shared skills into both tools and installs the pi-subagents extension.
+This clones and links the skills into every tool and installs the pi-subagents extension.
 The `.claude`/`.pi` instruction and agent symlinks are committed in the repo and recreated by `stow .`.
 See the root [README](../README.md) for the full machine setup.

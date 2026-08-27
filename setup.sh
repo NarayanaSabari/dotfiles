@@ -33,26 +33,33 @@ stow .
 # ---------------------------------------------------------------------------
 # Coding-agent wiring (Claude Code + pi share one source: coding-agent/)
 #
-#   coding-agent/common  -> shared skills (linked into BOTH tools)
+#   skills come from ~/.agents/mattpocock-skills (external repo, not stowed)
 #   coding-agent/claude  -> CLAUDE.md instructions + Claude-format agents
 #   coding-agent/pi      -> AGENTS.md instructions + pi-format subagents
 #
 # Stow already reproduces the .claude/.pi symlinks tracked in the repo
 # (CLAUDE.md, AGENTS.md, agents, settings.json, extensions). This section
-# fills the one gap Stow does not manage: the shared skills symlinks.
+# fills the one gap Stow does not manage: the skill symlinks.
+#
+# Skills come from https://github.com/mattpocock/skills, cloned outside this
+# repo so it can be updated with a plain `git pull`.
 # ---------------------------------------------------------------------------
 echo "Linking coding-agent skills..."
-CA="$DOTFILES/coding-agent"
+SKILLS_REPO="$HOME/.agents/mattpocock-skills"
 
-# pi discovers skills natively from ~/.pi/agent/skills
-ln -sfn "$CA/common/skills" ~/.pi/agent/skills
+if [ ! -d "$SKILLS_REPO/.git" ]; then
+  mkdir -p "$HOME/.agents"
+  git clone --depth 1 https://github.com/mattpocock/skills.git "$SKILLS_REPO"
+fi
 
-# Claude Code discovers skills from ~/.claude/skills (real dir shared with
-# other skill sources, so link each shared skill individually).
-mkdir -p ~/.claude/skills
-for skill in "$CA"/common/skills/*/; do
-  [ -d "$skill" ] || continue
-  ln -sfn "$skill" ~/.claude/skills/"$(basename "$skill")"
+# Each agent reads a flat skills dir, so link every skill individually into
+# each one (these dirs are shared with other skill sources).
+for target in ~/.claude/skills ~/.jcode/skills ~/.pi/agent/skills; do
+  mkdir -p "$target"
+  for skill in "$SKILLS_REPO"/skills/engineering/*/ "$SKILLS_REPO"/skills/productivity/*/; do
+    [ -f "$skill/SKILL.md" ] || continue
+    ln -sfn "${skill%/}" "$target/$(basename "$skill")"
+  done
 done
 
 # The pi-subagents extension is declared in .pi/agent/settings.json under

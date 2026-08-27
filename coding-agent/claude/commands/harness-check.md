@@ -15,7 +15,7 @@ Verify and report a table of what resolves and what does not:
    - `~/.claude/agents` should resolve to `dotfiles/coding-agent/claude/agents`
    - `~/.pi/agent/agents` should resolve to `dotfiles/coding-agent/pi/agents`
 
-3. **Skills** - every directory under `dotfiles/coding-agent/common/skills/` should be linked into `~/.claude/skills/` individually, and `~/.pi/agent/skills` should point at the whole shared directory.
+3. **Skills** - every skill under `~/.agents/mattpocock-skills/skills/engineering/` and `.../productivity/` should be linked individually into `~/.claude/skills/`, `~/.jcode/skills/`, and `~/.pi/agent/skills/`, and each link should resolve to a directory containing `SKILL.md`. `dotfiles/coding-agent/common/skills/` is retired and should not be linked anywhere.
 
 4. **Other Claude Code config**: `~/.claude/settings.json`, `~/.claude/hooks`, `~/.claude/statusline.sh`, `~/.claude/keybindings.json`, and `~/.claude/commands` should all resolve into `~/dotfiles`.
 

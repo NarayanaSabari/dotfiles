@@ -39,11 +39,11 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 
 # Tooling
 
-- GitHub: the gh-axi skill or plain `gh`. Never a GitHub MCP server.
-- Browser work: the chrome-devtools-axi skill.
-- Lavish is for UI reference only - mockups, design options, visual reviews. Plans, comparisons, audits, backend and system design go in chat.
-- Shipping: validate through no-mistakes rather than pushing directly.
+- GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`. Never a GitHub MCP server.
+- Browser work: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
+- Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
+- Skills: `~/.pi/agent/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit. The old local set (ponytail, no-mistakes, herdr, lavish) is retired; snapshot in `~/.skills-backup-2026-08-27/`.
 
 # Subagents
 
@@ -58,5 +58,5 @@ Run via the `@tintinweb/pi-subagents` extension, declared under `packages` in `~
 Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one. Hands-on implementation goes to `worker`.
 
 - The Codex budget is a $20 ChatGPT Plus plan, reserved for review. All coding goes to `worker`, never to the `codex` CLI.
-- no-mistakes runs `agent: codex`, so its review step already is the cross-model review. Run the gate alone; spawning `codex-reviewer` first reviews the same diff twice on that budget. Use `codex-reviewer` only where the gate doesn't run: an ungated repo, a mid-development opinion, or someone else's PR.
-- Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch and ship them through the gate with the rest of the change.
+- `codex-reviewer` is the cross-model review pass. Run it once per diff: on an ungated repo, for a mid-development opinion, or on someone else's PR.
+- Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch with the rest of the change.

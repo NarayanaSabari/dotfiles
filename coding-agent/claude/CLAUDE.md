@@ -39,11 +39,11 @@ Table and details: [reference/git-identities.md](reference/git-identities.md).
 
 # Tooling
 
-- GitHub: the gh-axi skill or plain `gh`. Never a GitHub MCP server.
-- Browser work: the chrome-devtools-axi skill.
-- Lavish is for UI reference only - mockups, design options, visual reviews. Plans, comparisons, audits, backend and system design go in chat.
-- Shipping: validate through no-mistakes rather than pushing directly.
+- GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`. Never a GitHub MCP server.
+- Browser work: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
+- Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
+- Skills: `~/.claude/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit. The old local set (ponytail, no-mistakes, herdr, lavish) is retired; snapshot in `~/.skills-backup-2026-08-27/`.
 - Memory: claude-mem captures every tool call, unencrypted, into one shared DB, and its scoping is fail-open. Wrap secrets in `<private>` tags.
 
 # This machine's harness
@@ -60,4 +60,4 @@ Read [reference/harness.md](reference/harness.md) before touching config, worktr
 Agent frontmatter says what each one is for; [reference/subagents.md](reference/subagents.md) says what frontmatter can't - tiers, worktree and memory traps, and which agents cost real money.
 
 Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one.
-Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. `codex-reviewer` and no-mistakes both spend the $20 Codex budget - don't run them on the same diff.
+Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. `codex-reviewer` spends the $20 Codex budget - use it for review only, and only once per diff.

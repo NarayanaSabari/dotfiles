@@ -38,11 +38,10 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 
 # Tooling
 
-- GitHub: the gh-axi skill or plain `gh`. Never a GitHub MCP server.
-- Browser work: the chrome-devtools-axi skill for Chrome. jcode's built-in `browser` tool (`jcode browser status` / `setup`) is Firefox-only via Firefox Agent Bridge - use it for quick in-session Firefox actions, chrome-devtools-axi for anything Chrome-specific.
-- Lavish is for UI reference only - mockups, design options, visual reviews. Plans, comparisons, audits, backend and system design go in chat.
-- Shipping: validate through no-mistakes rather than pushing directly.
-- Parallel sessions across projects: herdr. Parallel work inside one repo: jcode's native `swarm` tool, which auto-resolves file conflicts between sibling agents server-side - prefer it over herdr for same-repo fan-out.
+- GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`. Never a GitHub MCP server.
+- Browser work: the `chrome-devtools-axi` CLI (`~/.agents/skills/chrome-devtools-axi`) for Chrome. jcode's built-in `browser` tool (`jcode browser status` / `setup`) is Firefox-only via Firefox Agent Bridge - use it for quick in-session Firefox actions, chrome-devtools-axi for anything Chrome-specific.
+- Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
+- Parallel work inside one repo: jcode's native `swarm` tool, which auto-resolves file conflicts between sibling agents server-side.
 - Memory is native here (embedded per-turn vectors, auto-recalled, consolidated by ambient mode) - claude-mem does not apply to jcode sessions. Use the `memory` tool for explicit search/store; `session_search` covers older sessions and other harnesses (Claude Code, Codex, pi).
 
 # Swarm
@@ -55,5 +54,7 @@ jcode has no per-agent-file roster like Claude Code's `agents/` or pi's `agents/
 
 # This machine's harness
 
-- `~/.jcode/skills/` holds the shared skills (`coding-agent/common/skills/`, symlinked one by one) plus jcode-native ones installed independently (gh-axi, chrome-devtools-axi, lavish, no-mistakes). Skills are not all loaded at startup - they inject on a semantic match to the conversation, same mechanism as memory recall, or activate explicitly via `/skillname` or the `Skill` tool.
+- `~/.jcode/skills/` and `~/.claude/skills/` both symlink into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/` - the only skill set installed on this machine. Update with `git -C ~/.agents/mattpocock-skills pull`. The previous local set (ponytail, no-mistakes, herdr, lavish, and the rest of `coding-agent/common/skills/`) is retired; sources remain in this repo and a snapshot sits in `~/.skills-backup-2026-08-27/`.
+- Per repo, run `/setup-matt-pocock-skills` once to pick the issue tracker, triage labels, and docs location. `/ask-matt` routes to the right skill when unsure. `/grill-with-docs` before any non-trivial change, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit.
+- Skills are not all loaded at startup - they inject on a semantic match to the conversation, same mechanism as memory recall, or activate explicitly via `/skillname` or the `Skill` tool.
 - Self-dev (editing jcode's own source) is genuinely different work from a normal session: use a frontier model, since jcode's own codebase is not small and weaker models make subtle breaking changes.

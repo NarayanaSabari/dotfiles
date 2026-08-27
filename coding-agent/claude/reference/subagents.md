@@ -28,7 +28,7 @@ Anything whose output you would never re-read belongs in a subagent's context, n
   All coding goes to `worker`, never to the `codex` CLI.
 - `code-reviewer` is the in-model reviewer and costs nothing extra; reach for it first.
   `codex-reviewer` spends the Codex budget, so use it only where a cross-model opinion is worth that: an ungated repo, a mid-development second opinion, or someone else's PR.
-- no-mistakes runs `agent: codex`, so its review step already *is* the cross-model review.
+- The `/code-review` skill runs its Standards and Spec passes as sub-agents; `codex-reviewer` is the separate cross-model opinion.
   Run the gate alone; spawning `codex-reviewer` first reviews the same diff twice on that budget.
 - Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root.
   Commit them on the feature branch and ship them through the gate with the rest of the change.
