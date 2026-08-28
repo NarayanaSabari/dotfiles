@@ -4,10 +4,10 @@
   "defaultThinkingLevel": "high",
   "showCacheMissNotices": true,
   "packages": [
-    "git:github.com/NarayanaSabari/herdr-subagents"
+    "npm:pi-subagents"
   ],
   "theme": "dark",
-  "tuiMode": "regular",
+  "tuiMode": "fullscreen",
   "showHardwareCursor": true,
   "collapseChangelog": true,
   "defaultProjectTrust": "always",
