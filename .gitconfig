@@ -49,6 +49,18 @@
 	path = ~/.gitconfig-rentai
 [includeIf "hasconfig:remote.*.url:*github-rentai:Sabari-RentAI/**"]
 	path = ~/.gitconfig-rentai
+# Client-owned org: the repo lives under the client's GitHub org, not either of
+# my accounts, but the work is RentAI's. Without this it resolves to the
+# personal default whenever the clone sits outside ~/Developer/rentai/ (herdr
+# and no-mistakes worktrees do).
+[includeIf "hasconfig:remote.*.url:https://*github.com/TAMIRATECH-PRIVATE-LIMITED/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:ssh://*github.com/TAMIRATECH-PRIVATE-LIMITED/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github.com:TAMIRATECH-PRIVATE-LIMITED/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github-rentai:TAMIRATECH-PRIVATE-LIMITED/**"]
+	path = ~/.gitconfig-rentai
 [includeIf "hasconfig:remote.*.url:https://*github.com/NarayanaSabari/**"]
 	path = ~/.gitconfig-narayana
 [includeIf "hasconfig:remote.*.url:ssh://*github.com/NarayanaSabari/**"]
