@@ -62,15 +62,9 @@ for target in ~/.claude/skills ~/.jcode/skills ~/.pi/agent/skills; do
   done
 done
 
-# pi loads extensions by discovering ~/.pi/agent/extensions/, so each one needs a
-# symlink there. Stow creates the anthropic-subscription-fix.ts link (it is a
-# tracked file), but the directory-style extensions are not tracked as symlinks,
-# so link them here. Without this a fresh machine silently runs pi with NO
-# safety guards.
-echo "Linking pi extensions..."
-mkdir -p ~/.pi/agent/extensions
-for ext in guards; do
-  ln -sfn "$DOTFILES/.pi/agent/extensions/$ext" ~/.pi/agent/extensions/"$ext"
-done
+# pi's agent definitions and extensions live in coding-agent/pi/ like every
+# other harness's behaviour files, and .pi/agent/{agents,extensions} are
+# committed symlinks into them, so `stow .` reproduces the wiring. Nothing to
+# do here.
 
 echo "Done! Restart your terminal or run: source ~/.zshrc"

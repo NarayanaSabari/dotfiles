@@ -3,16 +3,13 @@
   "defaultModel": "claude-opus-5",
   "defaultThinkingLevel": "high",
   "showCacheMissNotices": true,
-
   "packages": [],
-
   "theme": "dark",
   "tuiMode": "regular",
   "showHardwareCursor": true,
   "collapseChangelog": true,
   "defaultProjectTrust": "always",
   "doubleEscapeAction": "tree",
-
   "images": {
     "blockImages": false
   },
@@ -22,13 +19,11 @@
   "warnings": {
     "anthropicExtraUsage": true
   },
-
   "compaction": {
     "enabled": true,
     "reserveTokens": 16384,
     "keepRecentTokens": 20000
   },
-
   "retry": {
     "enabled": true,
     "maxRetries": 3,
@@ -38,6 +33,6 @@
       "maxRetryDelayMs": 60000
     }
   },
-
-  "lastChangelogVersion": "0.84.3"
+  "lastChangelogVersion": "0.84.3",
+  "treeFilterMode": "default"
 }

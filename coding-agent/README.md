@@ -15,7 +15,9 @@ coding-agent/
 │   ├── agents/        # Claude-format sub-agents
 │   └── commands/      # Claude Code slash commands
 └── pi/
-    └── AGENTS.md      # pi instructions
+    ├── AGENTS.md      # pi instructions
+    ├── agents/        # subagent definitions (herdr-subagents)
+    └── extensions/    # pi extensions (guards, anthropic-subscription-fix)
 ```
 
 ## How it maps into the live tools
@@ -26,6 +28,8 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 |--------|-------------|-----|
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
 | `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
+| `pi/agents/` | -- | `~/.pi/agent/agents` |
+| `pi/extensions/` | -- | `~/.pi/agent/extensions` |
 | `~/.agents/mattpocock-skills/skills/*/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills/<name>` (per skill) |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `claude/commands/` | `~/.claude/commands` | -- |
