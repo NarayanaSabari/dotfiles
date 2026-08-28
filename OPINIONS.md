@@ -19,11 +19,14 @@ I tried and deleted five GUI agent apps (atrium, supacode, Superset, Conductor, 
 The durable pieces are the ones that compose: git, worktrees, CLIs, skills, markdown memory files.
 
 **Fewer harnesses, clearer roles.**
-One main harness (Claude Code) and one for second opinions (Codex) beats six half-configured ones.
+One main harness plus native cross-model routing beats six half-configured ones.
 Every extra harness is a config surface that drifts and a memory silo that forgets.
+This is why Codex was retired on 2026-08-28: its only remaining job was second opinions.
+The caveat worth remembering: the replacement was not verified working at the time it replaced something that was.
 
 **Cross-model review catches what self-review misses.**
 A different model family reviewing the diff is an independent perspective, not just a second pass.
+It has to actually be a different family: a same-family pass reported as independent review is a false negative wearing a badge.
 
 ## Software engineering and craft
 

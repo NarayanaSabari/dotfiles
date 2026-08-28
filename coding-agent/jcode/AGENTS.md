@@ -43,7 +43,7 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 - Browser work: the `chrome-devtools-axi` CLI (`~/.agents/skills/chrome-devtools-axi`) for Chrome. jcode's built-in `browser` tool (`jcode browser status` / `setup`) is Firefox-only via Firefox Agent Bridge - use it for quick in-session Firefox actions, chrome-devtools-axi for anything Chrome-specific.
 - Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
 - Parallel work inside one repo: jcode's native `swarm` tool, which auto-resolves file conflicts between sibling agents server-side.
-- Memory is native here (embedded per-turn vectors, auto-recalled, consolidated by ambient mode) - claude-mem does not apply to jcode sessions. Use the `memory` tool for explicit search/store; `session_search` covers older sessions and other harnesses (Claude Code, Codex, pi).
+- Memory is native here (embedded per-turn vectors, auto-recalled, consolidated by ambient mode) - claude-mem does not apply to jcode sessions. Use the `memory` tool for explicit search/store; `session_search` covers older sessions and other harnesses (Claude Code, pi). Codex was retired on 2026-08-28; its 869 sessions are archived at `~/codex-archive-2026-08-28/`.
 
 # Swarm
 
@@ -51,7 +51,7 @@ jcode has no per-agent-file roster like Claude Code's `agents/` or pi's `agents/
 
 - Normal and light-swarm mode are one-level fan-out: only the root session spawns; workers report back and cannot spawn further. `swarm-deep` mode allows recursive spawning, bounded by a live-worker cap.
 - Cross-model review still matters here: when spawning a review-only or verification-only agent, prefer routing it to a different model family than the coordinator's active model where the swarm prompt's routing table allows it - a second pass from the same model family is not the same signal as an independent one.
-- `swarm spawn` silently ignores a `model` it cannot route and hands back a worker on the coordinator's own model, so a "cross-model" review pass can be same-family without anything saying so. Verify with `swarm list` after spawning, which prints each agent's actual model. When the route is missing, the `codex` CLI is a genuinely independent second model: `codex exec --sandbox read-only -` with the prompt on stdin, from inside the repo. Its own `--model` flag is just as silent about unsupported values (`gpt-5.1-codex-max` and `gpt-5.1-codex` both fail on a ChatGPT account, after a long hang), so omit it and let `~/.codex/config.toml` choose.
+- `swarm spawn` silently ignores a `model` it cannot route and hands back a worker on the coordinator's own model, so a "cross-model" review pass can be same-family without anything saying so. Verify with `swarm list` after spawning, which prints each agent's actual model. **Measured on 2026-08-28: pinning was ignored for every route tried, including a same-provider `claude-haiku-4-5` control, and the OpenAI token has been failing to refresh since 2026-08-20.** So assume same-family and say so, unless a throwaway "which model are you?" spawn proves otherwise. The `codex` CLI was retired on 2026-08-28 and is no longer the fallback.
 - Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a spawned agent's context, not this one.
 
 # This machine's harness

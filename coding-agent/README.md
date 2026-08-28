@@ -12,7 +12,7 @@ coding-agent/
 │   └── skills/        #   no longer linked into any tool (see Skills below)
 ├── claude/
 │   ├── CLAUDE.md      # Claude Code instructions
-│   ├── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   ├── agents/        # Claude-format sub-agents
 │   └── commands/      # Claude Code slash commands
 └── pi/
     ├── AGENTS.md      # pi instructions
@@ -90,7 +90,6 @@ Manage running agents with `/agents`.
 | Agent | Model | Thinking | Tools | Purpose |
 |-------|-------|----------|-------|---------|
 | `worker` | `anthropic/claude-sonnet-5` | high | all 7 | Hands-on coding: implement features, fixes, refactors end to end |
-| `codex-reviewer` | `openai-codex/gpt-5.6-luna` | high | read, grep, find, bash | Cross-model second-opinion code review |
 | `evidence-verifier` | `claude-sonnet-4-5` | inherit | read, grep, find, ls, bash | End-to-end verification with captured evidence |
 | `okf-writer` | `anthropic/claude-sonnet-5` | high | all 7 | Writes docs as [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundles - general knowledge docs and full codebase wikis (quickstart + section pages), modeled on [LangChain OpenWiki](https://github.com/langchain-ai/openwiki) code mode |
 
@@ -108,15 +107,12 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 | `worker` | sonnet | Hands-on coding: implement features, fixes, refactors end to end (has web access for API docs) |
 | `Explore` | sonnet | Overrides the built-in Explore, which otherwise inherits the session model and puts recon on Opus during plan mode |
 | `sweeper` | haiku | Cheap tier for fully-specified mechanical edits; no Bash, no file creation, reports ambiguity instead of guessing. Runs at `effort: low` |
-| `codex-reviewer` | sonnet | Drives the Codex CLI for a cross-model review (uses `codex-findings-schema.json`). Keeps `memory: user`, so recurring defect patterns and known false positives carry across reviews and projects |
 | `evidence-verifier` | sonnet | End-to-end verification with captured evidence |
 | `okf-writer` | sonnet | Writes docs as OKF bundles: general knowledge docs and codebase wikis |
 
 Built-in Claude Code agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
 Keep this table in sync with the `Available agent types` list in `claude/CLAUDE.md` - every agent named there must have a definition in `claude/agents/`, or the delegation rule points at an agent type that does not exist.
 The same invariant holds between `pi/AGENTS.md` and `pi/agents/`, independently.
-
-`codex-findings-schema.json` is the structured-output schema the Claude `codex-reviewer` passes to `codex exec --output-schema`.
 
 ### Add a new agent
 
@@ -125,10 +121,18 @@ The same invariant holds between `pi/AGENTS.md` and `pi/agents/`, independently.
 
 ## Models
 
-`worker` and `codex-reviewer` are pinned to specific models.
+`worker` is pinned to a specific model.
 
 - Anthropic: `anthropic/claude-sonnet-5`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`, and others.
-- OpenAI Codex (authenticated via the `openai-codex` provider): `openai-codex/gpt-5.6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.5`, `gpt-5.4`, and others.
+
+For a cross-model second opinion, pin a reviewing agent to a family other than the one that wrote the code.
+
+The Codex harness was retired on 2026-08-28. Note that its replacement is not yet proven: on
+2026-08-28, three `swarm spawn` probes (`gpt-5.6-luna`, `google/gemini-3.7-flash`, and a
+same-provider `claude-haiku-4-5` control) all came back reporting the coordinator's own model,
+and jcode's OpenAI token has been failing to refresh since 2026-08-20
+(`~/.jcode/auth-refresh-state.json`). Until that is fixed, **assume a spawned "cross-model"
+reviewer is same-family** and say so, rather than reporting it as an independent pass.
 
 `claude-sonnet-5` exposes all thinking levels including the extended `xhigh` and `max`.
 To change a pinned model, edit the agent's `model:` frontmatter.

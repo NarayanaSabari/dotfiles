@@ -60,4 +60,4 @@ Read [reference/harness.md](reference/harness.md) before touching config, worktr
 Agent frontmatter says what each one is for; [reference/subagents.md](reference/subagents.md) says what frontmatter can't - tiers, worktree and memory traps, and which agents cost real money.
 
 Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one.
-Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. `codex-reviewer` spends the $20 Codex budget - use it for review only, and only once per diff.
+Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. For a cross-model second opinion, spawn a reviewer on a different model family than the one that wrote the code, and run it at most once per diff.

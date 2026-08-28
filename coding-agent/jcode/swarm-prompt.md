@@ -33,11 +33,18 @@ specific one.
   1. Confirm the route exists (`swarm list_models`) before relying on it.
   2. Confirm the worker is actually running what you asked for after it
      spawns - `swarm list` shows each agent's model. Check it.
-  3. If the route is unavailable, say so out loud and either use a
-     genuinely different harness (the `codex` CLI is installed and
-     authenticated - `codex exec --sandbox read-only -` with the prompt on
-     stdin is a real second model) or state plainly that the review was
-     same-family. Never quietly accept the fallback.
+  3. If the route is unavailable, say so out loud and either pick another
+     genuinely different family from `swarm list_models` or state plainly that
+     the review was same-family. Never quietly accept the fallback.
+     The `codex` CLI is no longer the escape hatch: that harness was retired
+     on 2026-08-28.
+- **As of 2026-08-28, `model` pinning on this machine appears to be ignored
+  entirely.** Three probes (`gpt-5.6-luna`, `google/gemini-3.7-flash`, and a
+  same-provider `claude-haiku-4-5` control) all spawned workers that reported
+  the coordinator's own model. The OpenAI token has also been failing to
+  refresh since 2026-08-20. So until a probe demonstrates otherwise, treat
+  every spawned reviewer as same-family and report it that way. Verify with a
+  throwaway "which model are you?" spawn before claiming independence.
 - Context fetching, bulk reading, and summarization: the cheapest/fastest
   available model - this work does not need reasoning depth.
 - If the requested route is unavailable, or the user asked for a specific

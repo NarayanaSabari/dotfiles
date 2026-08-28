@@ -124,11 +124,11 @@ coding-agent/
 │   └── skills/        #   shared skills (brainstorming, debugging, tdd, ...)
 ├── claude/
 │   ├── CLAUDE.md      # Claude Code instructions
-│   ├── agents/        # Claude-format sub-agents (+ codex-findings-schema.json)
+│   ├── agents/        # Claude-format sub-agents
 │   └── commands/      # Claude Code slash commands (/ship, /harness-check)
 └── pi/
     ├── AGENTS.md      # pi instructions
-    └── agents/        # pi-format sub-agents (worker, codex-reviewer, ...)
+    └── agents/        # pi-format sub-agents (worker, evidence-verifier, ...)
 ```
 
 How it maps into the live tools (all handled by `setup.sh`):

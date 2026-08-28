@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Reviews a diff for bugs, security holes, and drift from the surrounding code's conventions. Use PROACTIVELY after finishing a chunk of work and before opening a PR. In-model and free - reach for this first; `codex-reviewer` spends the Codex budget and is for cross-model second opinions only.
+description: Reviews a diff for bugs, security holes, and drift from the surrounding code's conventions. Use PROACTIVELY after finishing a chunk of work and before opening a PR. In-model and free - reach for this first; for a genuinely independent opinion, pin a reviewer to a different model family than the one that wrote the code.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 color: red

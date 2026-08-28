@@ -4,7 +4,10 @@
 # Options: auto, claude, codex, rovodev, opencode, pi, copilot, acp:<target>
 # "auto" detects the first available native agent on your system
 # Use acp:<target> to run an optional user-installed acpx target, for example acp:gemini
-agent: codex
+#
+# Was `codex` until 2026-08-28, when that harness was retired and its CLI
+# uninstalled. Left on codex this would fail at spawn with a missing binary.
+agent: claude
 
 # Optional path to the user-installed acpx binary for acp:<target> agents
 # acpx_path: acpx
@@ -28,16 +31,12 @@ log_level: info
 # Override native agent binary paths (optional)
 # agent_path_override:
 #   claude: /usr/local/bin/claude
-#   codex: /opt/codex
 
 # Extra native agent CLI flags (optional, global only)
-# Pin the codex model and reasoning effort.
-agent_args_override:
-  codex:
-    - -m
-    - gpt-5.6-luna
-    - -c
-    - model_reasoning_effort="high"
+# The codex model/effort pin was removed with the codex harness on 2026-08-28.
+# agent_args_override:
+#   claude:
+#     - --some-flag
 #
 # Maximum follow-up auto-fix attempts per step (0 = disabled after the initial pass)
 # Document fixes are attempted during the initial document pass.

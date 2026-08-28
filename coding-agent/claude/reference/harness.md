@@ -26,13 +26,12 @@ The Bash sandbox is on, and three edges bite regularly.
   Retry those specific commands with the sandbox disabled, then re-verify the symlinks - a half-applied checkout has deleted `~/.claude/CLAUDE.md` before.
 - Network is allowlisted to github.com, githubusercontent, registry.npmjs.org, pypi.org, files.pythonhosted.org, api.anthropic.com, api.openai.com.
   Anything else needs the sandbox off.
-  `codex` is excluded from the sandbox by design; its own `--sandbox read-only` is the containment layer.
 - Unix domain sockets are refused outright, so **every `herdr` command needs the sandbox off**.
   The `herdr` CLI is a thin client over `~/.config/herdr/herdr.sock`, and the connect fails with `Operation not permitted` before herdr runs at all - a bare `socket.connect()` to that path fails identically, so it is the socket, not the binary.
   Four settings were tested against it on 2026-08-10 and **none** work: `sandbox.excludedCommands: ["herdr"]`, `sandbox.allowUnixSockets: ["<path>"]`, `sandbox.allowAllUnixSockets: true`, and `sandbox.filesystem.allowWrite`.
   Those socket settings are documented around the Linux seccomp filter; macOS Seatbelt denies the connect regardless.
   The unsandboxed auto-retry is model-driven and not guaranteed: Opus retries and recovers, a Haiku session tested on 2026-08-10 just reported the error and stopped.
-  So do not rely on it - run herdr with the sandbox off deliberately, the same way `codex` is handled.
+  So do not rely on it - run herdr with the sandbox off deliberately.
   Read-only `herdr` subcommands are in `permissions.allow` so the unsandboxed run does not also prompt when the retry does happen; mutating ones (`agent prompt`, `agent send-keys`, `pane split`, anything `close`) deliberately are not, and neither are the blocking waits (`agent wait`, `pane wait-output`), which can hang a session.
 
 ## Config layout

@@ -24,12 +24,10 @@ Anything whose output you would never re-read belongs in a subagent's context, n
 - `ultrathink` buys one deep turn without changing the session effort level.
 - claude-mem's PostToolUse hook fires on *every* subagent tool call, and each one becomes a background Haiku compression billed to this subscription.
   A wide fan-out multiplies that invisibly, so delegation is no longer the automatically cheaper choice.
-- The Codex budget is a $20 ChatGPT Plus plan, reserved for review.
-  All coding goes to `worker`, never to the `codex` CLI.
 - `code-reviewer` is the in-model reviewer and costs nothing extra; reach for it first.
-  `codex-reviewer` spends the Codex budget, so use it only where a cross-model opinion is worth that: an ungated repo, a mid-development second opinion, or someone else's PR.
-- The `/code-review` skill runs its Standards and Spec passes as sub-agents; `codex-reviewer` is the separate cross-model opinion.
-  Run the gate alone; spawning `codex-reviewer` first reviews the same diff twice on that budget.
+  For a genuinely independent opinion, spawn a reviewer pinned to a different model family than the one that wrote the code - a same-family second pass is not independent review.
+- The `/code-review` skill runs its Standards and Spec passes as sub-agents.
+  Run it alone; a separate cross-model pass on the same diff reviews it twice for the same signal.
 - Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root.
   Commit them on the feature branch and ship them through the gate with the rest of the change.
 
@@ -43,5 +41,4 @@ Anything whose output you would never re-read belongs in a subagent's context, n
 | `code-reviewer` | Sonnet | Reviews a diff for bugs, security, and convention drift. In-model, free. |
 | `test-runner` | Sonnet | Runs the test suite and fixes failures. Touches nothing else. |
 | `evidence-verifier` | Sonnet | Drives the real product flow and captures evidence. |
-| `codex-reviewer` | Sonnet + Codex CLI | Cross-model review. Spends the Codex budget. |
 | `okf-writer` | Sonnet | Documentation as OKF bundles. |

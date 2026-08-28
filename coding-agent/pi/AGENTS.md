@@ -53,10 +53,8 @@ Run via the `@tintinweb/pi-subagents` extension, declared under `packages` in `~
 - Foreground agents block and return inline. Pass `run_in_background: true` to run concurrently and collect results later with `get_subagent_result`.
 - Redirect a running agent with `steer_subagent` rather than restarting it. Inspect them all with `/agents`.
 - Frontmatter is authoritative: a pinned `model` or `thinking` overrides anything the caller passes.
-- `codex-reviewer` here runs natively on an OpenAI Codex model, not through the `codex` CLI.
 
 Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one. Hands-on implementation goes to `worker`.
 
-- The Codex budget is a $20 ChatGPT Plus plan, reserved for review. All coding goes to `worker`, never to the `codex` CLI.
-- `codex-reviewer` is the cross-model review pass. Run it once per diff: on an ungated repo, for a mid-development opinion, or on someone else's PR.
+- For a cross-model review pass, pin the reviewing agent to a different model family than the one that wrote the code, and run it once per diff: on an ungated repo, for a mid-development opinion, or on someone else's PR.
 - Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch with the rest of the change.
