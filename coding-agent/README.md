@@ -88,14 +88,13 @@ from scratch, so pi is a single-session harness: there is no `Agent` tool.
 What replaced them:
 
 - **Delegation** goes to jcode's `swarm`, or a second pi session.
-- **Cross-model review** is now a real tool, `cross_model_review`, registered by
-  `.pi/agent/extensions/cross-model-review/`. It shells out to a sessionless
-  `pi --print` pinned to `openai-codex/gpt-5.6-luna`, so the reviewer is genuinely a
-  different model family. Verified working: it found a planted auth bypass and a timing
-  attack in a test file.
-- **Safety guards** are a real extension too, `.pi/agent/extensions/guards/`, which hooks
+- **Safety guards** are an extension, `.pi/agent/extensions/guards/`, which hooks
   `tool_call` and delegates to the same shell guards jcode uses, so one ruleset covers
   all three harnesses.
+
+For a cross-model second opinion, run pi against a different family explicitly:
+`pi --print --model openai-codex/gpt-5.6-luna` (verified working). That is a deliberate
+per-invocation choice, not something the agent reaches for on its own.
 
 Old definitions are recoverable from git history and `~/pi-backup-2026-08-28/`.
 

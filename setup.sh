@@ -66,10 +66,10 @@ done
 # symlink there. Stow creates the anthropic-subscription-fix.ts link (it is a
 # tracked file), but the directory-style extensions are not tracked as symlinks,
 # so link them here. Without this a fresh machine silently runs pi with NO
-# safety guards and no cross-model review tool.
+# safety guards.
 echo "Linking pi extensions..."
 mkdir -p ~/.pi/agent/extensions
-for ext in guards cross-model-review; do
+for ext in guards; do
   ln -sfn "$DOTFILES/.pi/agent/extensions/$ext" ~/.pi/agent/extensions/"$ext"
 done
 
