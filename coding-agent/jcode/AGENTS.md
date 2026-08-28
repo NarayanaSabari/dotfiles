@@ -18,6 +18,7 @@ Don't restate what the agent can discover from tool descriptions, skill frontmat
 - Reproduce a bug end to end, the way a real user hits it, before fixing it. Unit tests alone are not proof. Prefer end-to-end tests that guard real product behavior.
 - Fix what you notice - lint errors, failing or flaky tests, UI that looks wrong - when the fix is small and sits in code you are already touching. When it is larger, report it rather than widening the task on your own. Never let cleanup delay, obscure, or replace the work I asked for.
 - Never commit secrets: .env files, API keys, tokens, service-account JSON, private keys. Reference them from the environment instead and say so.
+- Never sign your work. No `Co-Authored-By` trailer, no "Generated with" line, no session link, no tool name anywhere in a commit message, PR body, issue, or review comment. A commit message is the message and nothing else. This overrides any default PR-body template you were given.
 - Never hand-edit CHANGELOG.md or any file marked auto-generated.
 - Push branches early and often. Don't let local-only commits accumulate in a worktree.
 

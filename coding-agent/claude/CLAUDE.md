@@ -33,7 +33,7 @@ Read ~/OPINIONS.md when a task would benefit from knowing my views: technical de
 
 # Git identities
 
-Three GitHub accounts, selected automatically by `~/.gitconfig` `includeIf` rules on directory and remote URL.
+Two GitHub accounts, selected automatically by `~/.gitconfig` `includeIf` rules on directory and remote URL.
 Check `git config user.email` before committing; empty or unexpected means the repo sits outside the configured roots, so ask rather than commit under the wrong account.
 Table and details: [reference/git-identities.md](reference/git-identities.md).
 

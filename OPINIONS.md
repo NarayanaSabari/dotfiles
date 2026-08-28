@@ -46,7 +46,7 @@ Stale caches, dead hooks pointing at deleted apps, and orphaned configs are brok
 ## Working with clients and projects
 
 **Separate identities per client, enforced mechanically.**
-Three GitHub accounts with per-directory gitconfigs; the tooling verifies `user.email` before commit, because discipline by memory fails.
+Separate GitHub accounts with per-directory gitconfigs; the tooling verifies `user.email` before commit, because discipline by memory fails.
 
 ---
 
