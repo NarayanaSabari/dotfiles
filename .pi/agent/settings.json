@@ -3,7 +3,9 @@
   "defaultModel": "claude-opus-5",
   "defaultThinkingLevel": "high",
   "showCacheMissNotices": true,
-  "packages": [],
+  "packages": [
+    "git:github.com/NarayanaSabari/herdr-subagents"
+  ],
   "theme": "dark",
   "tuiMode": "regular",
   "showHardwareCursor": true,
