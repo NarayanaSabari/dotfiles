@@ -247,10 +247,7 @@
         "api.anthropic.com",
         "api.openai.com"
       ]
-    },
-    "excludedCommands": [
-      "codex"
-    ]
+    }
   },
   "effortLevel": "medium",
   "tui": "fullscreen",
