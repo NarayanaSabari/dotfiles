@@ -15,8 +15,7 @@ coding-agent/
 │   ├── agents/        # Claude-format sub-agents
 │   └── commands/      # Claude Code slash commands
 └── pi/
-    ├── AGENTS.md      # pi instructions
-    └── agents/        # pi-format sub-agents
+    └── AGENTS.md      # pi instructions
 ```
 
 ## How it maps into the live tools
@@ -30,7 +29,6 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 | `~/.agents/mattpocock-skills/skills/*/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills/<name>` (per skill) |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `claude/commands/` | `~/.claude/commands` | -- |
-| `pi/agents/` | -- | `~/.pi/agent/agents` |
 
 pi discovers skills natively from `~/.pi/agent/skills`, so no `skills` entry is needed in pi settings.
 Every skills directory is a real directory shared with other skill sources (for example `chrome-devtools-axi` and `gh-axi`), so skills are linked one by one.
@@ -81,22 +79,25 @@ Each command is a `<name>.md` file whose body is the prompt, with optional `desc
 Sub-agents run in isolated sessions with their own tools, model, and system prompt.
 The two tools use different frontmatter formats, so agents are defined per tool.
 
-### pi agents (`pi/agents/`)
+### pi: no sub-agents
 
-Powered by the [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) extension (declared under `packages` in `../.pi/agent/settings.json`).
-Spawn with the `Agent` tool: `Agent({ subagent_type: "<name>", description: "<3-5 words>", prompt: "<task>" })`.
-Manage running agents with `/agents`.
+pi has none as of 2026-08-28. The `@tintinweb/pi-subagents` package and its three agent
+definitions (`worker`, `evidence-verifier`, `okf-writer`) were removed when pi was rebuilt
+from scratch, so pi is a single-session harness: there is no `Agent` tool.
 
-| Agent | Model | Thinking | Tools | Purpose |
-|-------|-------|----------|-------|---------|
-| `worker` | `anthropic/claude-sonnet-5` | high | all 7 | Hands-on coding: implement features, fixes, refactors end to end |
-| `evidence-verifier` | `claude-sonnet-4-5` | inherit | read, grep, find, ls, bash | End-to-end verification with captured evidence |
-| `okf-writer` | `anthropic/claude-sonnet-5` | high | all 7 | Writes docs as [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) bundles - general knowledge docs and full codebase wikis (quickstart + section pages), modeled on [LangChain OpenWiki](https://github.com/langchain-ai/openwiki) code mode |
+What replaced them:
 
-Built-in pi agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
+- **Delegation** goes to jcode's `swarm`, or a second pi session.
+- **Cross-model review** is now a real tool, `cross_model_review`, registered by
+  `.pi/agent/extensions/cross-model-review/`. It shells out to a sessionless
+  `pi --print` pinned to `openai-codex/gpt-5.6-luna`, so the reviewer is genuinely a
+  different model family. Verified working: it found a planted auth bypass and a timing
+  attack in a test file.
+- **Safety guards** are a real extension too, `.pi/agent/extensions/guards/`, which hooks
+  `tool_call` and delegates to the same shell guards jcode uses, so one ruleset covers
+  all three harnesses.
 
-Common pi frontmatter fields: `description`, `display_name`, `model` (`provider/modelId` or fuzzy name), `thinking` (off, minimal, low, medium, high, xhigh, max), `tools`, `max_turns`, `prompt_mode` (`replace` or `append`), `memory` (project, local, user).
-Frontmatter is authoritative: a pinned `model` or `thinking` overrides anything the caller passes.
+Old definitions are recoverable from git history and `~/pi-backup-2026-08-28/`.
 
 ### Claude Code agents (`claude/agents/`)
 
@@ -112,12 +113,11 @@ Claude Code sub-agent definitions in Claude's own format (`tools: Bash, Read, Gl
 
 Built-in Claude Code agent types also exist without files: `general-purpose`, `Explore`, `Plan`.
 Keep this table in sync with the `Available agent types` list in `claude/CLAUDE.md` - every agent named there must have a definition in `claude/agents/`, or the delegation rule points at an agent type that does not exist.
-The same invariant holds between `pi/AGENTS.md` and `pi/agents/`, independently.
 
 ### Add a new agent
 
-- **pi:** create `pi/agents/<name>.md`; the filename is the agent type. Re-run `../setup.sh` if the `~/.pi/agent/agents` link is missing (edits to existing files need no relink).
 - **Claude Code:** create `claude/agents/<name>.md` in Claude's format.
+- **pi:** not applicable - pi has no sub-agent system. Add capability as an extension in `../.pi/agent/extensions/` and register it in the `extensions` array of `../.pi/agent/settings.json`.
 
 ## Models
 
@@ -145,6 +145,6 @@ From the dotfiles root:
 ./setup.sh
 ```
 
-This clones and links the skills into every tool and installs the pi-subagents extension.
+This clones and links the skills into every tool.
 The `.claude`/`.pi` instruction and agent symlinks are committed in the repo and recreated by `stow .`.
 See the root [README](../README.md) for the full machine setup.

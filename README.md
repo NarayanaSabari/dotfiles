@@ -127,8 +127,7 @@ coding-agent/
 │   ├── agents/        # Claude-format sub-agents
 │   └── commands/      # Claude Code slash commands (/ship, /harness-check)
 └── pi/
-    ├── AGENTS.md      # pi instructions
-    └── agents/        # pi-format sub-agents (worker, evidence-verifier, ...)
+    └── AGENTS.md      # pi instructions
 ```
 
 How it maps into the live tools (all handled by `setup.sh`):
@@ -140,9 +139,9 @@ How it maps into the live tools (all handled by `setup.sh`):
 | `common/skills/` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `claude/commands/` | `~/.claude/commands` | -- |
-| `pi/agents/` | -- | `~/.pi/agent/agents` |
 
-The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills and installs the pi [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) extension.
+The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills.
+pi's own extensions (guards, cross-model review) live in `.pi/agent/extensions/` and are loaded by absolute path from its `settings.json`, so they are version-controlled rather than installed as packages.
 
 **To change agent behavior:** edit `coding-agent/claude/CLAUDE.md` (Claude Code) or `coding-agent/pi/AGENTS.md` (pi). Everything above each file's `Tooling` heading is shared verbatim, so mirror those edits into both. **To add a shared skill:** drop a `<name>/SKILL.md` under `coding-agent/common/skills/` and re-run `setup.sh`.
 

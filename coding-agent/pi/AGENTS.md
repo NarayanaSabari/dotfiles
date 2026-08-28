@@ -42,19 +42,26 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 - GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`. Never a GitHub MCP server.
 - Browser work: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
-- Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
-- Skills: `~/.pi/agent/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit. The old local set (ponytail, no-mistakes, herdr, lavish) is retired; snapshot in `~/.skills-backup-2026-08-27/`.
+- Shipping: run `/code-review` on the diff, then `cross_model_review` on anything security- or data-sensitive, then commit and push. There is no automated ship gate.
+- Skills: `~/.pi/agent/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. pi also reads `~/.agents/skills/` directly, which is where the standalone CLIs live. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit.
+- pi ships its full documentation locally at `/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/docs/` (34 files, `extensions.md` is the big one). Read those rather than guessing or searching online.
 
-# Subagents
+# This machine's pi
 
-Run via the `@tintinweb/pi-subagents` extension, declared under `packages` in `~/.pi/agent/settings.json`. Each agent's frontmatter description says what it is for, so this file doesn't repeat them. What those descriptions don't tell you:
+Rebuilt from scratch on 2026-08-28. Configuration is `~/.pi/agent/settings.json`, symlinked from this repo; extensions are loaded by absolute path from its `extensions` array rather than being installed as packages, so everything pi runs is version-controlled here.
 
-- A subagent cannot see this conversation. The prompt you pass is everything it gets, so make it self-contained.
-- Foreground agents block and return inline. Pass `run_in_background: true` to run concurrently and collect results later with `get_subagent_result`.
-- Redirect a running agent with `steer_subagent` rather than restarting it. Inspect them all with `/agents`.
-- Frontmatter is authoritative: a pinned `model` or `thinking` overrides anything the caller passes.
+- **Models.** Anthropic `claude-opus-5` at `high` thinking by default, on the Claude Max plan. `claude-sonnet-5` and `claude-haiku-4-5` are available for cheaper work; all four were verified working. Switch per-run with `--model`, or Ctrl+P in the TUI.
+- **`anthropic-subscription-fix.ts` is load-bearing, not cosmetic.** Without it every Anthropic model returns `400 "You're out of extra usage"` and the session cannot start. Do not remove or "clean up" that extension without understanding it first.
+- **No subagents.** The `@tintinweb/pi-subagents` package and its three agent definitions were removed. pi has no `Agent` tool now: it is a single-session harness. Delegate by opening another pi session, or use jcode's `swarm` when you want fan-out.
+- **Guards block destructive commands.** The `guards` extension hooks `tool_call` and shells out to the same scripts jcode uses (`coding-agent/jcode/hooks/git-identity-guard.sh`, then `git-guardrails.sh`), so one ruleset covers all three harnesses. It refuses `reset --hard`, `clean -f`, `checkout .`, `branch -D`, force-push to main, and commits under the wrong git identity. When one blocks you, fix the cause it names instead of rephrasing the command to slip past.
 
-Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one. Hands-on implementation goes to `worker`.
+# Cross-model review
 
-- For a cross-model review pass, pin the reviewing agent to a different model family than the one that wrote the code, and run it once per diff: on an ungated repo, for a mid-development opinion, or on someone else's PR.
-- Project docs go to `okf-writer` as OKF bundles, defaulting to `openwiki/` at the repo root. Commit them on the feature branch with the rest of the change.
+`cross_model_review` is a real tool here, not a convention. It spawns a fresh sessionless `pi --print` pinned to `openai-codex/gpt-5.6-luna`, so the reviewer is genuinely a different model family and cannot inherit this session's context or its conclusions. It is read-only (`read,grep,find,bash`) and reads the repo itself, so pass a target and context, not a pasted diff.
+
+- Use it before opening a PR, and on anything touching auth, permissions, money, migrations, or data loss.
+- Once per diff. A second pass on the same change costs the same and returns the same signal.
+- Verify every finding against the real code before acting. Cross-model reviewers hallucinate too, and you are the filter.
+- If it reports that it produced no verdict, say so. Never substitute your own review as if it were the second opinion - a same-family pass reported as independent is worse than no review.
+
+This is worth protecting: jcode's `swarm` cannot currently do it. Probes on 2026-08-28 showed its `model` pin being ignored, with every "cross-model" worker silently running the coordinator's own model. pi is the harness on this machine with a verified independent reviewer.
