@@ -17,14 +17,45 @@
 # Remote-URL-based identity (git >= 2.36): follows the REPO, not the directory,
 # so tool-managed clones/worktrees (no-mistakes, herdr, CI helpers) commit with
 # the right account. Listed after the gitdir rules so remote evidence wins.
-# To map a new org/owner, add one https line pointing at the account's file.
+#
+# Four patterns per owner, because git matches these with wildmatch, where a
+# single `*` does NOT cross a `/` and the pattern must cover the WHOLE URL:
+#
+#   https://github.com/OWNER/r    scp-style  git@github.com:OWNER/r
+#   ssh://git@github.com/OWNER/r  alias host git@github-nick:OWNER/r
+#
+# The earlier `github-rentai:**` / `github-narayana:**` forms silently matched
+# nothing: no leading `*` to absorb the `git@` userinfo, and a trailing `**`
+# that cannot span the `OWNER/repo` slash. Every scp-style and alias-host
+# remote therefore fell through to the [user] default above - which is the
+# NarayanaSabari identity, so a Sabari-RentAI repo cloned outside
+# ~/Developer/rentai/ would have committed under the wrong account.
+#
+# To map a new org/owner, copy all four lines of a block and swap the owner.
+# Verify with: cd <repo> && git config --show-origin user.email
 [includeIf "hasconfig:remote.*.url:https://*github.com/renatainow/**"]
 	path = ~/.gitconfig-rentai
-[includeIf "hasconfig:remote.*.url:github-rentai:**"]
+[includeIf "hasconfig:remote.*.url:ssh://*github.com/renatainow/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github.com:renatainow/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github-rentai:renatainow/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:https://*github.com/Sabari-RentAI/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:ssh://*github.com/Sabari-RentAI/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github.com:Sabari-RentAI/**"]
+	path = ~/.gitconfig-rentai
+[includeIf "hasconfig:remote.*.url:*github-rentai:Sabari-RentAI/**"]
 	path = ~/.gitconfig-rentai
 [includeIf "hasconfig:remote.*.url:https://*github.com/NarayanaSabari/**"]
 	path = ~/.gitconfig-narayana
-[includeIf "hasconfig:remote.*.url:github-narayana:**"]
+[includeIf "hasconfig:remote.*.url:ssh://*github.com/NarayanaSabari/**"]
+	path = ~/.gitconfig-narayana
+[includeIf "hasconfig:remote.*.url:*github.com:NarayanaSabari/**"]
+	path = ~/.gitconfig-narayana
+[includeIf "hasconfig:remote.*.url:*github-narayana:NarayanaSabari/**"]
 	path = ~/.gitconfig-narayana
 [url "git@github-narayana:NarayanaSabari/"]
 	insteadOf = git@github.com:NarayanaSabari/
