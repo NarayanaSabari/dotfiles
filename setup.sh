@@ -62,6 +62,29 @@ for target in ~/.claude/skills ~/.jcode/skills ~/.pi/agent/skills; do
   done
 done
 
+# Standalone skills that ship as their own upstream repo, cloned next to the
+# mattpocock set and linked the same way. Each entry is pipe-separated:
+# "repo-url|clone-dir|skill-subdir", where skill-subdir is the folder holding
+# SKILL.md and also names the symlink in each harness's skills dir.
+echo "Linking standalone skills..."
+STANDALONE_SKILLS=(
+  "https://github.com/tt-a1i/archify.git|$HOME/.agents/archify|archify"
+)
+
+for entry in "${STANDALONE_SKILLS[@]}"; do
+  IFS='|' read -r repo_url clone_dir skill_subdir <<< "$entry"
+  if [ ! -d "$clone_dir/.git" ]; then
+    mkdir -p "$HOME/.agents"
+    git clone --depth 1 "$repo_url" "$clone_dir"
+  fi
+  skill_dir="$clone_dir/$skill_subdir"
+  [ -f "$skill_dir/SKILL.md" ] || { echo "  skipped: no SKILL.md in $skill_dir"; continue; }
+  for target in ~/.claude/skills ~/.jcode/skills ~/.pi/agent/skills; do
+    mkdir -p "$target"
+    ln -sfn "$skill_dir" "$target/$(basename "$skill_dir")"
+  done
+done
+
 # pi's agent definitions and extensions live in coding-agent/pi/ like every
 # other harness's behaviour files, and .pi/agent/{agents,extensions} are
 # committed symlinks into them, so `stow .` reproduces the wiring. Nothing to

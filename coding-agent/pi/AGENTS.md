@@ -43,7 +43,7 @@ Check `git config user.email` against this before committing. Empty or wrong mea
 - Browser work: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
 - Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate.
-- Skills: `~/.pi/agent/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. pi also reads `~/.agents/skills/` directly, which is where the standalone CLIs live. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit.
+- Skills: `~/.pi/agent/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, plus standalone skills cloned under `~/.agents/<name>` (currently `archify`, for interactive HTML architecture/workflow/sequence/dataflow/lifecycle diagrams and Mermaid conversion). pi also reads `~/.agents/skills/` directly, which is where the standalone CLIs live. Update with `git -C ~/.agents/mattpocock-skills pull`, and `git -C ~/.agents/archify pull` for archify. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit.
 - pi ships its full documentation locally at `/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/docs/` (34 files, `extensions.md` is the big one). Read those rather than guessing or searching online.
 
 # This machine's pi

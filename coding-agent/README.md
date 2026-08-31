@@ -31,6 +31,7 @@ Everything below is created by `../setup.sh` (Stow reproduces the committed `.cl
 | `pi/agents/` | -- | `~/.pi/agent/agents` |
 | `pi/extensions/` | -- | `~/.pi/agent/extensions` |
 | `~/.agents/mattpocock-skills/skills/*/<name>` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills/<name>` (per skill) |
+| `~/.agents/archify/archify` | `~/.claude/skills/archify` | `~/.pi/agent/skills/archify` |
 | `claude/agents/` | `~/.claude/agents` | -- |
 | `claude/commands/` | `~/.claude/commands` | -- |
 
@@ -63,6 +64,17 @@ The repo is the source of truth; this dotfiles repo does not vendor them.
 - **Per repo:** run `/setup-matt-pocock-skills` once to choose the issue tracker, triage labels, and docs location.
 - **Router:** `/ask-matt` picks the right skill when you are unsure.
 - **Daily loop:** `/grill-with-docs` to align before a change, `/to-spec` and `/to-tickets` to break it down, `/implement` and `/tdd` to build, `/diagnosing-bugs` when stuck, `/code-review` before commit.
+
+### Standalone skills
+
+Skills that ship as their own upstream repo are listed in `STANDALONE_SKILLS` in `../setup.sh`, cloned under `~/.agents/<name>` and linked into all three harnesses the same way.
+Add one by appending a `repo-url|clone-dir|skill-subdir` entry and re-running `../setup.sh`.
+
+- **archify** ([tt-a1i/archify](https://github.com/tt-a1i/archify)) - turns a codebase or system description into a self-contained interactive HTML architecture, workflow, sequence, data-flow, or lifecycle diagram, and converts pasted Mermaid.
+  Pure Node (>=18), no install step; the `devDependencies` in its `package.json` are only for its own build and tests.
+  Verify with `node ~/.agents/archify/archify/bin/archify.mjs doctor`, update with `git -C ~/.agents/archify pull`.
+
+The older `~/.agents/skills/` root (`bb-cli`, `chrome-devtools-axi`, `gh-axi`) is read by pi and jcode but not Claude Code, so new standalone skills go through the per-harness links above instead.
 
 `common/skills/` holds the previous local set (`ponytail*`, `no-mistakes`, `herdr`, `brainstorming`, `debugging`, `grilling`, `handoff`, `receiving-review`, `tdd`).
 It is retired and no longer linked anywhere; kept in git so anything worth salvaging can be pulled back.

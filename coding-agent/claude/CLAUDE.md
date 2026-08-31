@@ -43,7 +43,7 @@ Table and details: [reference/git-identities.md](reference/git-identities.md).
 - Browser work: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
 - Shipping: run `/code-review` on the diff before committing, then push. There is no automated ship gate any more.
-- Skills: `~/.claude/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, the only set installed on this machine. Update with `git -C ~/.agents/mattpocock-skills pull`. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit. The old local set (ponytail, no-mistakes, herdr, lavish) is retired; snapshot in `~/.skills-backup-2026-08-27/`.
+- Skills: `~/.claude/skills/` symlinks into `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`, plus standalone skills cloned under `~/.agents/<name>` (currently `archify`, for interactive HTML architecture/workflow/sequence/dataflow/lifecycle diagrams and Mermaid conversion). Update with `git -C ~/.agents/mattpocock-skills pull`, and `git -C ~/.agents/archify pull` for archify. Run `/setup-matt-pocock-skills` once per repo; `/ask-matt` routes when unsure. `/grill-with-docs` before non-trivial changes, `/tdd` while building, `/diagnosing-bugs` on hard bugs, `/code-review` before commit. The old local set (ponytail, no-mistakes, herdr, lavish) is retired; snapshot in `~/.skills-backup-2026-08-27/`.
 - Memory: claude-mem captures every tool call, unencrypted, into one shared DB, and its scoping is fail-open. Wrap secrets in `<private>` tags.
 
 # This machine's harness
