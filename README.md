@@ -114,51 +114,63 @@ brew leaves > ~/dotfiles/homebrew/leaves.txt
 
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
-## Coding Agents (Claude Code + pi)
+## Coding agents (Claude Code + jcode)
 
-Instructions, skills, and sub-agent definitions for [Claude Code](https://claude.com/claude-code) and [pi](https://pi.dev) live under a single `coding-agent/` directory and are symlinked into both tools. Skills are shared; instructions and sub-agents are per harness, because the two tools expose different agent tooling and different agent rosters.
+Both harnesses share one source tree, `coding-agent/`, and **one set of instructions**.
+`coding-agent/AGENTS.md` is the single source; Claude Code reads it through an import and adds only its own handful of rules.
+pi was retired on 2026-09-01.
 
 ```
 coding-agent/
-├── common/            # shared by BOTH tools
-│   └── skills/        #   shared skills (brainstorming, debugging, tdd, ...)
+├── AGENTS.md          # THE instructions. Both harnesses read this.
+├── hooks/             # every guard, shared by both
 ├── claude/
-│   ├── CLAUDE.md      # Claude Code instructions
-│   ├── agents/        # Claude-format sub-agents
-│   └── commands/      # Claude Code slash commands (/ship, /harness-check)
-└── pi/
-    └── AGENTS.md      # pi instructions
+│   ├── CLAUDE.md      #   an @import of AGENTS.md + Claude-only rules
+│   ├── agents/        #   sub-agent definitions
+│   ├── commands/      #   slash commands (/harness-check)
+│   └── settings.json, keybindings.json, statusline.sh, themes/
+├── jcode/
+│   └── swarm-prompt.md
+├── reference/         # evidence behind the one-line rules in AGENTS.md
+└── verify.sh          # every mechanical assertion about the above
 ```
 
-How it maps into the live tools (all handled by `setup.sh`):
+How it maps into the live tools:
 
-| Source | Claude Code | pi |
-|--------|-------------|-----|
+| Source | Claude Code | jcode |
+|--------|-------------|-------|
+| `AGENTS.md` | via the import in `CLAUDE.md` | `~/AGENTS.md` |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
-| `pi/AGENTS.md` | -- | `~/.pi/agent/AGENTS.md` |
-| `common/skills/` | `~/.claude/skills/<name>` (per skill) | `~/.pi/agent/skills` |
-| `claude/agents/` | `~/.claude/agents` | -- |
-| `claude/commands/` | `~/.claude/commands` | -- |
+| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- |
+| `hooks/` | named by absolute path in `settings.json` | `~/.jcode/hooks` |
+| `jcode/swarm-prompt.md` | -- | `~/.jcode/swarm-prompt.md` |
+| skills | `~/.claude/skills/<name>` | `~/.jcode/skills/<name>` |
 
-The `.claude/` and `.pi/` symlinks are committed in the repo and recreated by `stow .`; `setup.sh` additionally links the shared skills.
-pi's own extensions live in `.pi/agent/extensions/` and are symlinked into `~/.pi/agent/extensions/` by `setup.sh`, so they are version-controlled rather than installed as packages.
+`dotfiles/.claude/` and `dotfiles/.jcode/` contain **nothing but symlinks** into `coding-agent/`; they are only the stow shim.
+Those links are committed and recreated by `stow .`. `setup.sh` additionally links the skills, whose sources live outside this repo.
 
-**To change agent behavior:** edit `coding-agent/claude/CLAUDE.md` (Claude Code) or `coding-agent/pi/AGENTS.md` (pi). Everything above each file's `Tooling` heading is shared verbatim, so mirror those edits into both. **To add a shared skill:** drop a `<name>/SKILL.md` under `coding-agent/common/skills/` and re-run `setup.sh`.
+**To change agent behaviour:** edit `coding-agent/AGENTS.md`. That is the only file, for both tools.
+Put a rule in `claude/CLAUDE.md` only if it is genuinely Claude Code specific.
+
+**After any change under `coding-agent/`, run `bash coding-agent/verify.sh`.**
+Most of what can break here breaks silently: a symlink that stops resolving, a hook that no longer runs, an import that loads nothing.
+The suite is the only thing that reports those.
 
 ## Repo Structure
 
 ```
 ~/dotfiles/
-├── .claude/            # Claude Code config (symlinks into coding-agent/)
+├── .claude/            # Claude Code stow shim (symlinks only)
+├── .jcode/             # jcode stow shim (symlinks only)
 ├── .config/
 │   └── nvim/           # Neovim configuration (Lua)
-├── .pi/                # pi config (settings, extensions, symlinks into coding-agent/)
 ├── .gitignore
 ├── .p10k.zsh           # Powerlevel10k prompt config
 ├── .stowrc             # GNU Stow settings (ignores coding-agent/)
-├── .wezterm.lua         # WezTerm terminal config
+├── .wezterm.lua        # WezTerm terminal config
 ├── .zshrc              # Zsh shell config
-├── coding-agent/       # Shared Claude Code + pi instructions, skills, agents
+├── AGENTS.md           # -> coding-agent/AGENTS.md
+├── coding-agent/       # everything both coding agents read
 ├── homebrew/
 │   └── leaves.txt      # Homebrew package list
 ├── setup.sh            # Automated setup script

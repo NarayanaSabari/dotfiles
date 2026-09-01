@@ -470,6 +470,26 @@ else
   fail "~/AGENTS.md is missing, so jcode has no instructions"
 fi
 
+# ============================================================ STEP 16
+# The stow shims must contain nothing but symlinks.
+#
+# One rule holds the layout together: everything the agents read lives in
+# coding-agent/, and dotfiles/.claude and dotfiles/.jcode only point there. A
+# real file appearing in a shim means something wrote outside that structure,
+# and it will be read in preference to the file you think you are editing.
+for shim in "$REPO/.claude" "$REPO/.jcode"; do
+  [ -d "$shim" ] || continue
+  for entry in "$shim"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    case "$(basename "$entry")" in .cc-writes) continue ;; esac
+    if [ -L "$entry" ]; then
+      [ -e "$entry" ] && pass || fail "${entry#$REPO/} is a broken symlink -> $(readlink "$entry")"
+    else
+      fail "${entry#$REPO/} is a real file; the shim must contain only symlinks into coding-agent/"
+    fi
+  done
+done
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
   printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2

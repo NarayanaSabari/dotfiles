@@ -1,61 +1,96 @@
 # This machine's harness
 
-## PreToolUse guardrails
+Evidence behind the one-line rules in [AGENTS.md](/Users/sabari/dotfiles/coding-agent/AGENTS.md).
+Nothing here is loaded into context automatically, so anything that must change behaviour belongs there, not in this file.
 
-Three `PreToolUse` hooks run on every Bash call, plus one on writes.
-They are guardrails: when one blocks you, fix the cause it names rather than rephrasing the command to slip past.
+## Layout
 
-- `git-identity-guard.sh` blocks commits and pushes whose identity doesn't match the account table.
-  It checks the cwd plus every `git -C <path>` in the command, and resolves linked worktrees to their main repo.
-  See [git-identities.md](git-identities.md).
-- `git-guardrails.sh` blocks work-destroying operations: `reset --hard`, `clean -f`, `checkout .`, `restore .`, `branch -D`, and force-pushing to main.
-  Plain `push` and plain `branch -d` are deliberately allowed.
-  If one of the blocked ones is genuinely needed, ask me to run it.
-- `worktree-adopt-guard.sh` catches `git worktree remove` before claude-mem observations are orphaned.
-  See [subagents.md](subagents.md).
-- `credential-guard.sh` blocks writes to credential files (`.env`, `*.pem`, `*.key`, service-account JSON) and writes whose content carries a live-looking API key.
-  It also blocks `git add`/`git commit` of those paths.
-  If a match is a false positive, tell me and I will run it.
+Everything both agents read lives in `coding-agent/`.
+`dotfiles/.claude/` is only the stow shim that points there.
+
+| Path | Holds |
+|---|---|
+| `coding-agent/AGENTS.md` | the shared instructions, read by both harnesses |
+| `coding-agent/claude/` | `CLAUDE.md` (an import plus Claude-only rules), `agents/`, `commands/`, and Claude Code's app config |
+| `coding-agent/jcode/` | `swarm-prompt.md` |
+| `coding-agent/hooks/` | every guard, shared by both harnesses |
+| `coding-agent/reference/` | this directory |
+| `coding-agent/verify.sh` | every mechanical assertion about the above |
+
+## The instruction import
+
+`~/.claude/CLAUDE.md` is one `@` import of `coding-agent/AGENTS.md` plus a short Claude-only section.
+The import **must be an absolute path to the real file**.
+Two spellings look correct, and both fail silently: the session starts with no instructions and nothing anywhere says so.
+
+Seven probes on 2026-09-01, Claude Code 2.1.252:
+
+| Spelling | Target | Result |
+|---|---|---|
+| `@./extra.md` | real file, same dir | loads |
+| `@/abs/path/file.md` | real file, outside the project | loads |
+| `@/abs/path/file.md`, importer is a symlink | real file | loads |
+| `@~/AGENTS.md` | a symlink | **silently loads nothing** |
+| `@/Users/sabari/AGENTS.md` | a symlink | **silently loads nothing** |
+| `@AGENTS.md`, importer is a symlink | real file beside the importer | **silently loads nothing** |
+| `@./link.md` | a symlink | **silently loads nothing** |
+
+Two rules:
+
+- The imported file must be a real file. Claude Code does not follow a symlink import. This is why `@~/AGENTS.md` fails: stow makes `~/AGENTS.md` a symlink.
+- A relative import resolves against the directory of the path it was loaded through, not the real file's directory. `~/.claude/CLAUDE.md` is a symlink, so `@AGENTS.md` looks in `~/.claude/`.
+
+`verify.sh` STEP 15 asserts the import is absolute, is not a symlink, exists, and is the shared file.
+
+## Guardrails
+
+Both harnesses run the same scripts from `coding-agent/hooks/`.
+jcode chains four of them through `pre-tool.sh`, because it supports only one `pre_tool` command.
+`worktree-adopt-guard.sh` is Claude Code only: jcode has native memory and no claude-mem observations to orphan.
+
+| Guard | Blocks |
+|---|---|
+| `git-identity-guard.sh` | `commit`/`push`/`cherry-pick`/`revert`/`merge`/`rebase`/`am` when the identity does not match the repo's account. Resolves `git -C`, a leading `cd`, and linked worktrees. |
+| `git-guardrails.sh` | `reset --hard`, `clean -f`, `checkout .`, `restore .`, `branch -D`, force-push to main, and the recovery-destroying set: `reflog expire/delete`, `update-ref -d`, `filter-branch`, `prune`, `gc --prune=now`, `stash clear`, `git rm -rf .`. Plain `push` and `branch -d` are deliberately allowed. |
+| `credential-guard.sh` | writes to credential-shaped paths, content carrying a live-looking key, and `git add` sweeping an untracked `.env`. |
+| `commit-signature-guard.sh` | tool-attribution trailers. Trailers only, never prose: an earlier version blocked the commit that introduced it by matching its own message. |
+
+### Two payload shapes
+
+Claude Code sends `{"tool_name":..., "cwd":..., "tool_input":{"command":...}}`.
+jcode sends the raw tool input, `{"command":...}`, with the tool name and cwd in `JCODE_HOOK_TOOL_NAME` and `JCODE_HOOK_CWD`.
+Each guard detects which and normalises tool names onto Claude Code's spelling, so everything below the shim is contract-agnostic.
+
+Parsing fails **closed**. A missing `jq` or an unparseable payload refuses the command.
+The code this replaced sent jq's errors to `/dev/null` and read an empty command as nothing to check, so a payload-shape change would have disarmed every guard with no error anywhere and the whole suite still green.
+
+Until 2026-09-01 each harness had its own copy of two of these, with a comment in both saying keep them in sync.
+They were not in sync, and the drift was one-directional: every hardening landed on the Claude Code copy.
+jcode's copy matched only the bare word `git`, so `/usr/bin/git reset --hard` bypassed it entirely, and it had no `cd` resolution, so `cd <repo> && git commit` committed under an unchecked identity.
+That is why `verify.sh` runs the corpus through both shapes: prose asking for sync did not hold, and nothing failed while it was untrue.
 
 ## Sandbox edges
 
-The Bash sandbox is on, and three edges bite regularly.
+- Writes are confined to the working directory and `$TMPDIR`. Much of `~/.claude/**` and parts of `coding-agent/` are write-denied even through the dotfiles symlink, so `git mv`, `git rm` and file writes there fail with `Operation not permitted` and **can half-apply**. Retry those specific commands with the sandbox off, then re-verify with `verify.sh`. A half-applied checkout has deleted `~/.claude/CLAUDE.md` before.
+- Network is allowlisted. `git push` over the `github-narayana` SSH alias needs the sandbox off; it fails with `ssh_dispatch_run_fatal: Connection to UNKNOWN port 65535`.
+- Unix sockets are refused outright, so **every `herdr` command needs the sandbox off**. Four settings were tested against this on 2026-08-10 and none work: `sandbox.excludedCommands`, `sandbox.allowUnixSockets`, `sandbox.allowAllUnixSockets`, `sandbox.filesystem.allowWrite`. Those are documented around the Linux seccomp filter; macOS Seatbelt denies the connect regardless. The unsandboxed auto-retry is model-driven and not guaranteed: Opus recovers, a Haiku session tested the same day just reported the error and stopped.
 
-- Writes are confined to the working directory and `$TMPDIR`.
-  Claude Code's own config under `~/.claude/**` is write-denied even when it lives in `~/dotfiles` behind a symlink, so git operations touching those paths fail with `Operation not permitted` and can half-apply, leaving a merge stuck partway.
-  Retry those specific commands with the sandbox disabled, then re-verify the symlinks - a half-applied checkout has deleted `~/.claude/CLAUDE.md` before.
-- Network is allowlisted to github.com, githubusercontent, registry.npmjs.org, pypi.org, files.pythonhosted.org, api.anthropic.com, api.openai.com.
-  Anything else needs the sandbox off.
-- Unix domain sockets are refused outright, so **every `herdr` command needs the sandbox off**.
-  The `herdr` CLI is a thin client over `~/.config/herdr/herdr.sock`, and the connect fails with `Operation not permitted` before herdr runs at all - a bare `socket.connect()` to that path fails identically, so it is the socket, not the binary.
-  Four settings were tested against it on 2026-08-10 and **none** work: `sandbox.excludedCommands: ["herdr"]`, `sandbox.allowUnixSockets: ["<path>"]`, `sandbox.allowAllUnixSockets: true`, and `sandbox.filesystem.allowWrite`.
-  Those socket settings are documented around the Linux seccomp filter; macOS Seatbelt denies the connect regardless.
-  The unsandboxed auto-retry is model-driven and not guaranteed: Opus retries and recovers, a Haiku session tested on 2026-08-10 just reported the error and stopped.
-  So do not rely on it - run herdr with the sandbox off deliberately.
-  Read-only `herdr` subcommands are in `permissions.allow` so the unsandboxed run does not also prompt when the retry does happen; mutating ones (`agent prompt`, `agent send-keys`, `pane split`, anything `close`) deliberately are not, and neither are the blocking waits (`agent wait`, `pane wait-output`), which can hang a session.
+## Open: `~/.claude/hooks` does not stay put
 
-## Config layout
+On 2026-09-01 a symlink at `~/.claude/hooks` was observed disappearing three times.
+Each time it was recreated and verified present, then found gone entirely, not dangling, a few commands later.
+`~/.jcode/hooks`, pointing at the same directory, survived throughout, as did `~/.claude/agents`, `commands` and `settings.json`.
+Ruled out: `claude -d -p` startup, idle time, and the sandbox hiding it, since sandboxed and unsandboxed views agreed it was absent.
+Cause not established.
 
-Claude Code's config in `~/.claude` is symlinked from `~/dotfiles`.
-Edit the dotfiles copy so changes are version-controlled.
-
-| `~/.claude/...` | resolves to |
-|---|---|
-| `CLAUDE.md` | `dotfiles/coding-agent/claude/CLAUDE.md` |
-| `settings.json` | `dotfiles/.claude/settings.json` |
-| `agents/` | `dotfiles/coding-agent/claude/agents/` |
-| `commands/` | `dotfiles/coding-agent/claude/commands/` |
-| `hooks/` | `dotfiles/.claude/hooks/` |
-| `keybindings.json`, `statusline.sh`, `themes/` | `dotfiles/.claude/` |
-
-Run `/harness-check` to verify every one of these still resolves.
-
-`teammateMode` is deliberately unset so teammate panes stay in-process.
-Never set it to `tmux` or `iterm2`; herdr owns parallel sessions.
+`settings.json` therefore names the hooks by their real repo path rather than going through that link, and `verify.sh` STEP 14 asserts every hook path in `settings.json` resolves to an executable.
+A hook path that stops resolving is silent: the guard simply never runs.
 
 ## Memory
 
 claude-mem captures every tool call into `~/.claude-mem/claude-mem.db`, unencrypted, all projects in one file.
 Scope is `CLAUDE_MEM_EXCLUDED_PROJECTS` in `~/.claude-mem/settings.json`, an exclude-list with no allow-list, so it is fail-open: a newly cloned client repo is captured from its first session until it is named there.
 Patterns compile anchored, so excluding a repo needs both `path` and `path/**`.
-Nothing is redacted automatically - wrap secrets in `<private>` tags.
+Nothing is redacted automatically. Wrap secrets in `<private>` tags.
+
+jcode does not use it. jcode's memory is native, per-turn and local.
