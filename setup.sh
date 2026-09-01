@@ -83,10 +83,12 @@ done
 # SKILL.md and also names the symlink in each harness's skills dir.
 echo "Linking standalone skills..."
 STANDALONE_SKILLS=(
-  "https://github.com/tt-a1i/archify.git|$HOME/.agents/archify|archify"
+  # (none currently; archify was removed on 2026-09-01)
 )
 
-for entry in "${STANDALONE_SKILLS[@]}"; do
+# ${arr[@]+...} because an empty array under bash 3.2, which is what macOS
+# ships, expands to an unbound-variable error rather than to nothing.
+for entry in ${STANDALONE_SKILLS[@]+"${STANDALONE_SKILLS[@]}"}; do
   IFS='|' read -r repo_url clone_dir skill_subdir <<< "$entry"
   if [ ! -d "$clone_dir/.git" ]; then
     mkdir -p "$HOME/.agents"
