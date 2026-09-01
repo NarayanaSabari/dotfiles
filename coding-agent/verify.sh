@@ -526,6 +526,31 @@ if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
     || fail "superpowers version skew: Claude Code has $PLUGIN_VER, jcode's clone has $CLONE_VER (claude plugin update; git -C $SP_CLONE pull)"
 fi
 
+# ============================================================ STEP 19
+# Every jcode prompt input must be version-controlled.
+#
+# jcode composes its system prompt from more files than its docs mention:
+# system-prompt.md, prompt-overlay.md and preferred-tools.md, each global and
+# per-project, none of them documented. A real file in any of those slots is
+# text going into every session that nothing tracks and nobody reviews.
+#
+# One was found on 2026-09-01: a five-day-old Docker-teardown notice still being
+# injected into every session, whose own last line asked for it to be deleted.
+# Absent is fine. Present-and-a-symlink-into-the-repo is fine. Present as a real
+# file is not.
+for slot in system-prompt.md prompt-overlay.md preferred-tools.md; do
+  f="$HOME/.jcode/$slot"
+  [ -e "$f" ] || { pass; continue; }
+  if [ ! -L "$f" ]; then
+    fail "~/.jcode/$slot is a real file: it goes into every jcode session and is not version-controlled"
+  else
+    case "$(realpath "$f" 2>/dev/null)" in
+      "$REPO"/*) pass ;;
+      *) fail "~/.jcode/$slot resolves outside the repo, so its content is untracked" ;;
+    esac
+  fi
+done
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
   printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2

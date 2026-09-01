@@ -100,6 +100,22 @@ rm .claude/settings.json
 ln -sfn ../coding-agent/claude/settings.json .claude/settings.json
 ```
 
+## jcode composes its prompt from more files than the docs say
+
+`jcode.sh/docs` lists `~/AGENTS.md` and `./AGENTS.md`, and says both are loaded in every session that runs in that scope. It does not mention the other three slots, which the binary reads under labelled headings ("Global Prompt Overlay", "Project Preferred Tools"):
+
+| Slot | Global | Per-project |
+|---|---|---|
+| Full system-prompt override | `~/.jcode/system-prompt.md` | -- |
+| Prompt overlay | `~/.jcode/prompt-overlay.md` | `./.jcode/prompt-overlay.md` |
+| Preferred tools | `~/.jcode/preferred-tools.md` | `./.jcode/preferred-tools.md` |
+
+None of these is version-controlled by default, so anything dropped in one is text entering every session that nothing tracks.
+
+One was found on 2026-09-01: a Docker-teardown notice from five days earlier, still being injected, whose own closing line asked for it to be deleted once sessions had caught up. Removed, and `verify.sh` STEP 19 now fails on any real file in those slots. Absent is fine; a symlink into this repo is fine.
+
+The base prompt itself is compiled into the binary, so it cannot be edited, only overridden. Its identity block reads: "Your name is Jcode. You are a maximally proactive coding agent and assistant." Separate built-in prompts exist for the swarm coordinator, the task planner, and ambient mode.
+
 ## Skills
 
 Superpowers, from github.com/obra/superpowers. The two harnesses get it by different routes.
