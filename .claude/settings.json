@@ -146,7 +146,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/notify.sh attention",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/notify.sh attention",
             "timeout": 10
           }
         ]
@@ -167,7 +167,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/credential-guard.sh",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/credential-guard.sh",
             "timeout": 10
           }
         ]
@@ -177,22 +177,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/git-identity-guard.sh",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/git-identity-guard.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/git-guardrails.sh",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/git-guardrails.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/worktree-adopt-guard.sh",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/worktree-adopt-guard.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/commit-signature-guard.sh",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/commit-signature-guard.sh",
             "timeout": 10
           }
         ]
@@ -223,7 +223,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash '/Users/sabari/.claude/hooks/herdr-agent-state.sh' session",
+            "command": "bash '/Users/sabari/dotfiles/coding-agent/hooks/herdr-agent-state.sh' session",
             "timeout": 10
           }
         ]
@@ -243,7 +243,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/sabari/.claude/hooks/notify.sh done",
+            "command": "/Users/sabari/dotfiles/coding-agent/hooks/notify.sh done",
             "timeout": 10
           }
         ]

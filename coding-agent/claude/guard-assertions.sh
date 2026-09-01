@@ -18,7 +18,14 @@
 # Exit 0 = all assertions held. Exit 1 = at least one failed, named on stderr.
 
 set -u
-HOOKS="${HOOKS_DIR:-$HOME/.claude/hooks}"
+# The hooks live in the repo and settings.json points straight at them.
+# They were reached through a ~/.claude/hooks symlink until 2026-09-01,
+# when that link was observed vanishing repeatedly: recreated, verified,
+# then gone again a few commands later, while ~/.jcode/hooks with the same
+# target survived every time. Cause not established; something prunes a
+# symlink at that specific path. Referencing the real directory removes
+# the dependency rather than relying on a link that does not stay put.
+HOOKS="${HOOKS_DIR:-$HOME/dotfiles/coding-agent/hooks}"
 ROOT=$(cd "${TMPDIR:-/tmp}" && pwd -P)/harness-check-guards.$$
 FAKEHOME="$ROOT/home"
 FAILED=0
@@ -267,6 +274,106 @@ ELAPSED=$(( $(date +%s) - START ))
 if [ "$ELAPSED" -le 3 ]; then pass
 else fail "credential-guard took ${ELAPSED}s on 5000 untracked files (budget 3s, hook timeout 10s)"; fi
 
+# ============================================================ STEP 11g
+# The jcode payload contract.
+#
+# The guards are shared by both harnesses, but the two send different shapes:
+# Claude Code wraps the tool input and passes tool name and cwd as JSON
+# fields, jcode sends the raw tool input with both in the environment. Every
+# assertion above exercises only the Claude Code shape, which is exactly how
+# the jcode copies of these guards drifted for months without anything
+# failing. These run the same corpus through the other contract.
+jcode_json() { # jcode_json <command>
+  local esc
+  esc=$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+        | awk 'BEGIN{ORS=""} NR>1{print "\\n"} {print}')
+  printf '{"command":"%s"}' "$esc"
+}
+# jassert <expect> <hook> <name> <cwd> <command>
+jassert() {
+  local expect="$1" hook="$2" name="$3" cwd="$4" cmd="$5" rc
+  if [ ! -x "$HOOKS/$hook" ]; then fail "$name: $HOOKS/$hook missing or not executable"; return; fi
+  printf '%s' "$(jcode_json "$cmd")" \
+    | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$cwd" "$HOOKS/$hook" >/dev/null 2>&1
+  rc=$?
+  if [ "$expect" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$name: expected BLOCK, hook exited $rc"
+  elif [ "$expect" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$name: expected ALLOW, hook blocked"
+  else pass; fi
+}
+
+# --- guardrails, jcode contract. The path-qualified forms are the ones the old
+# jcode copy missed entirely: it matched only the bare word `git`.
+for c in "$G reset --hard" "$G clean -fd" "$G checkout ." "$G branch -D x" \
+         "$G push --force origin main" "/usr/bin/$G reset --hard" "./$G clean -fd" \
+         "$G reflog expire --expire=now --all" "$G filter-branch --force --all" \
+         "$G gc --prune=now" "$G stash clear" "$G rm -rf ." "$G prune"; do
+  jassert BLOCK git-guardrails.sh "jcode guardrails blocks: $c" "$CLEANREPO" "$c"
+done
+for c in "$G status" "$G push origin feature" "$G branch -d x" "$G stash pop" \
+         "$G gc" "$G rm oldfile.txt" "ls -la"; do
+  jassert ALLOW git-guardrails.sh "jcode guardrails allows: $c" "$CLEANREPO" "$c"
+done
+
+# --- identity, jcode contract. IDREPO's identity was corrected in step 11b, so
+# put it back to the mismatched one for these.
+( cd "$IDREPO" && $G config user.email wrong@example.com ) >/dev/null 2>&1
+for c in "$G commit -m x" "$G push" "/usr/bin/$G commit -m x" \
+         "$G cherry-pick abc" "$G rebase main" "$G merge --no-ff f"; do
+  jassert BLOCK git-identity-guard.sh "jcode identity blocks: $c" "$IDREPO" "$c"
+done
+for c in "$G status" "$G fetch origin" "$G rebase --abort"; do
+  jassert ALLOW git-identity-guard.sh "jcode identity allows: $c" "$IDREPO" "$c"
+done
+# cd resolution must work on this contract too; the old jcode copy had no
+# effective_cwd at all, so `cd <repo> && git commit` was invisible to it.
+jassert BLOCK git-identity-guard.sh "jcode identity resolves: cd <repo> && git commit" \
+  "$OTHERWD" "cd $IDREPO && $G commit -m x"
+jassert ALLOW git-identity-guard.sh "jcode identity falls back when cd is unresolvable" \
+  "$OTHERWD" "cd \$REPO && $G commit -m x"
+
+# --- credential guard, jcode contract. CREDREPO still holds an untracked .env.
+jassert BLOCK credential-guard.sh "jcode cred blocks git add -A sweeping .env" "$CREDREPO" "$G add -A"
+jassert BLOCK credential-guard.sh "jcode cred blocks named git add .env"       "$CREDREPO" "$G add .env"
+jassert ALLOW credential-guard.sh "jcode cred allows explicit safe path"       "$CREDREPO" "$G add src/app.py"
+jassert ALLOW credential-guard.sh "jcode cred allows git add -u"               "$CREDREPO" "$G add -u"
+# Write-shaped payload, jcode spelling: flat fields and a lowercase tool name.
+jw() { printf '{"file_path":"%s","content":"%s"}' "$1" "$2"; }
+jw_assert() { # jw_assert <expect> <name> <json>
+  local rc
+  printf '%s' "$3" | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=write \
+    "$HOOKS/credential-guard.sh" >/dev/null 2>&1
+  rc=$?
+  if [ "$1" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$2: expected BLOCK, exited $rc"
+  elif [ "$1" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$2: expected ALLOW, blocked"
+  else pass; fi
+}
+jw_assert BLOCK "jcode cred blocks write to .env"       "$(jw /x/.env A=1)"
+jw_assert BLOCK "jcode cred blocks live key in body"    "$(jw /x/n.txt "k=$AWSKEY")"
+jw_assert ALLOW "jcode cred allows .env.example"        "$(jw /x/.env.example A=1)"
+jw_assert ALLOW "jcode cred allows an ordinary file"    "$(jw /x/notes.md hello)"
+
+# --- commit-signature, jcode contract.
+jassert BLOCK commit-signature-guard.sh "jcode signature blocks a real trailer" "$CLEANREPO" \
+  "$G commit -m \"fix
+
+$CAB: Claude <x@y.z>\""
+jassert ALLOW commit-signature-guard.sh "jcode signature allows prose about it" "$CLEANREPO" \
+  "$G commit -m \"hooks: forbid the $CAB trailer\""
+
+# ============================================================ STEP 11h
+# Fail-closed parsing.
+#
+# The code these guards replaced swallowed jq errors and then read an empty
+# command as "nothing to check". A payload-shape change on either harness would
+# have disarmed every guard with no error anywhere and this whole suite still
+# green. Unparseable input must now refuse the command, not wave it through.
+for hook in git-guardrails.sh git-identity-guard.sh credential-guard.sh commit-signature-guard.sh; do
+  for payload in '' 'not json' '{"tool_input":' '[]garbage'; do
+    printf '%s' "$payload" | HOME="$FAKEHOME" "$HOOKS/$hook" >/dev/null 2>&1
+    [ $? -eq 2 ] && pass || fail "$hook accepted an unparseable payload instead of refusing: '${payload:0:12}'"
+  done
+done
+
 # ============================================================ STEP 12
 # notify.sh must never hang or fail, whatever it is handed
 for payload in '' 'not json' '{"message":{"a":1}}' '{"message":[1,2]}' \
@@ -284,6 +391,38 @@ else fail "notify.sh failed on a 20KB message"; fi
 if command -v claude >/dev/null 2>&1; then
   WARN=$(cd "$ROOT" && claude -d -p 2>&1 | grep -c "Permission deny rule")
   [ "$WARN" = 0 ] && pass || fail "startup prints $WARN permission-rule warning(s); run 'claude -d -p' to see them"
+fi
+
+# ============================================================ STEP 14
+# Every hook command in settings.json must resolve to an executable file.
+#
+# This is the assertion that would have caught the ~/.claude/hooks symlink
+# disappearing. A hook path that no longer resolves is not an error Claude Code
+# reports: the guard simply never runs, and the session carries on unguarded.
+SETTINGS="$HOME/.claude/settings.json"
+if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+  jq -r '.hooks // {} | to_entries[] | .value[]? | .hooks[]? | .command // empty' "$SETTINGS" \
+  | while IFS= read -r hookcmd; do
+      [ -n "$hookcmd" ] || continue
+      # Third-party hooks are not ours to assert on. Matched on the whole
+      # command, before tokenising: their paths contain a space
+      # ("Application Support"), so a token-split test never matches.
+      case "$hookcmd" in *"/Xirp/"*) continue ;; esac
+      # Quoted path first, since that form can contain spaces; otherwise the
+      # first absolute-looking token.
+      hookpath=$(printf '%s' "$hookcmd" | sed -nE "s/.*'([^']+)'.*/\\1/p")
+      [ -n "$hookpath" ] || hookpath=$(printf '%s' "$hookcmd" \
+        | awk '{for(i=1;i<=NF;i++) if($i ~ /^\//){print $i; exit}}')
+      [ -n "$hookpath" ] || continue
+      if [ -x "$hookpath" ]; then printf 'PASSLINE\n'
+      else printf 'FAILLINE %s\n' "$hookpath"; fi
+    done > "$ROOT/hookpaths.txt"
+  while IFS= read -r line; do
+    case "$line" in
+      PASSLINE) pass ;;
+      FAILLINE*) fail "settings.json names a hook that is missing or not executable: ${line#FAILLINE }" ;;
+    esac
+  done < "$ROOT/hookpaths.txt"
 fi
 
 # ---------------------------------------------------------------------- report
