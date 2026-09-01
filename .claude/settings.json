@@ -150,6 +150,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/sabari/Library/Application Support/Xirp/xirp-external/hook-scripts/claude/notification.cjs'"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -187,6 +196,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/sabari/Library/Application Support/Xirp/xirp-external/hook-scripts/claude/preToolUse.cjs'"
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -209,6 +227,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/sabari/Library/Application Support/Xirp/xirp-external/hook-scripts/claude/sessionStart.cjs'"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -220,6 +247,26 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/sabari/Library/Application Support/Xirp/xirp-external/hook-scripts/claude/stop.cjs'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/sabari/Library/Application Support/Xirp/xirp-external/hook-scripts/claude/permissionRequest.cjs'"
+          }
+        ]
       }
     ]
   },
@@ -228,7 +275,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "/Users/sabari/.claude/statusline.sh"
+    "command": "/Users/sabari/.claude/xirp-statusline-wrapper.sh"
   },
   "enabledPlugins": {
     "claude-mem@thedotmack": true
@@ -249,7 +296,7 @@
       ]
     }
   },
-  "effortLevel": "medium",
+  "effortLevel": "xhigh",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,

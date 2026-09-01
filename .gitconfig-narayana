@@ -3,3 +3,19 @@
 	email = sabarinarayanakg@proton.me
 [core]
 	sshCommand = "ssh -i ~/.ssh/id_ed25519_narayana -o IdentitiesOnly=yes"
+
+# Route this account's HTTPS remotes over its own SSH key.
+#
+# `gh auth setup-git` installs ONE credential helper for all of github.com, and
+# `gh` keeps the active account in a single global hosts.yml. So when any other
+# agent session works in a Sabari-RentAI repo, it flips the active account and
+# every HTTPS push from a NarayanaSabari repo starts failing with
+# "Repository not found" - which is a 404 for "you are authenticated as someone
+# who cannot see this", not a missing repo.
+#
+# This rewrite makes auth follow the REPO instead of that global state: these
+# URLs resolve to the github-narayana SSH host, which pins IdentityFile to this
+# account's key. It only applies inside this includeIf, so rentai repos are
+# untouched and keep using the helper.
+[url "github-narayana:NarayanaSabari/"]
+	insteadOf = https://github.com/NarayanaSabari/

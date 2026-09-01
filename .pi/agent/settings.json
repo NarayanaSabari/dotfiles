@@ -4,7 +4,8 @@
   "defaultThinkingLevel": "high",
   "showCacheMissNotices": true,
   "packages": [
-    "npm:pi-subagents"
+    "npm:pi-subagents",
+    "npm:pi-todo"
   ],
   "theme": "dark",
   "tuiMode": "fullscreen",
@@ -35,6 +36,9 @@
       "maxRetryDelayMs": 60000
     }
   },
-  "lastChangelogVersion": "0.84.3",
-  "treeFilterMode": "default"
+  "lastChangelogVersion": "0.84.4",
+  "treeFilterMode": "default",
+  "markdown": {
+    "mermaid": "streaming"
+  }
 }
