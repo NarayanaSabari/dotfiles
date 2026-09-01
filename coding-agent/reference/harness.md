@@ -86,6 +86,37 @@ Cause not established.
 `settings.json` therefore names the hooks by their real repo path rather than going through that link, and `verify.sh` STEP 14 asserts every hook path in `settings.json` resolves to an executable.
 A hook path that stops resolving is silent: the guard simply never runs.
 
+## `claude plugin install` breaks the settings shim
+
+The installer writes `settings.json` with an atomic rename. It resolves `~/.claude/settings.json` one hop to `dotfiles/.claude/settings.json` and renames onto **that** path, which replaces the symlink with a regular file and orphans the tracked copy in `coding-agent/claude/`.
+
+Observed installing Superpowers on 2026-09-01. Nothing reports it: the settings still work, they are simply no longer the file the repo tracks, so every later edit to `coding-agent/claude/settings.json` is silently ignored.
+
+`verify.sh` STEP 16 catches it, and `setup.sh` repairs it automatically after an install. Expect it after any `claude plugin install`, `enable` or `disable`, and repair with:
+
+```sh
+cp .claude/settings.json coding-agent/claude/settings.json
+rm .claude/settings.json
+ln -sfn ../coding-agent/claude/settings.json .claude/settings.json
+```
+
+## Skills
+
+Superpowers, from github.com/obra/superpowers. The two harnesses get it by different routes.
+
+Claude Code has it as a **plugin**, which is upstream's supported path and the only one carrying its `SessionStart` hook. That hook injects the `using-superpowers` skill, which is what makes the other thirteen fire on their own; symlinking the skill files alone gives you the content without the thing that invokes them. So `~/.claude/skills/` is deliberately empty.
+
+jcode has no plugin system, so `setup.sh` symlinks the same skills into `~/.jcode/skills/` from a plain clone at `~/.agents/superpowers`. Deliberately from a clone and not from the plugin cache, because that path is version-pinned (`.../superpowers/6.3.0/`), so links into it break on every plugin update with nothing reporting it.
+
+The two update separately, so they can drift. `verify.sh` STEP 18 compares the versions and reports skew. Update both:
+
+```sh
+claude plugin update
+git -C ~/.agents/superpowers pull
+```
+
+The previous set (mattpocock/skills, 25 skills) was removed on 2026-09-01.
+
 ## Memory
 
 claude-mem captures every tool call into `~/.claude-mem/claude-mem.db`, unencrypted, all projects in one file.

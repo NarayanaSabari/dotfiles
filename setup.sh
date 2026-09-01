@@ -57,49 +57,41 @@ stow .
 # This section fills the one gap Stow does not manage: the skill symlinks, whose
 # sources live outside this repo so they can be updated with a plain `git pull`.
 # ---------------------------------------------------------------------------
-SKILL_TARGETS=(~/.claude/skills ~/.jcode/skills)
-
-echo "Linking coding-agent skills..."
-SKILLS_REPO="$HOME/.agents/mattpocock-skills"
-
-if [ ! -d "$SKILLS_REPO/.git" ]; then
-  mkdir -p "$HOME/.agents"
-  git clone --depth 1 https://github.com/mattpocock/skills.git "$SKILLS_REPO"
+# Claude Code gets Superpowers as a plugin, which is upstream's supported path
+# and the only one that brings its SessionStart hook. That hook injects the
+# using-superpowers skill, which is what makes the rest of them fire; symlinking
+# the skills alone gives you the files without the thing that invokes them.
+echo "Installing the Superpowers plugin for Claude Code..."
+if ! claude plugin list 2>/dev/null | grep -q 'superpowers@claude-plugins-official'; then
+  claude plugin install superpowers@claude-plugins-official
 fi
 
-# Each agent reads a flat skills dir, so link every skill individually into each
-# one (these dirs are shared with other skill sources).
-for target in "${SKILL_TARGETS[@]}"; do
-  mkdir -p "$target"
-  for skill in "$SKILLS_REPO"/skills/engineering/*/ "$SKILLS_REPO"/skills/productivity/*/; do
-    [ -f "$skill/SKILL.md" ] || continue
-    ln -sfn "${skill%/}" "$target/$(basename "$skill")"
-  done
-done
+# NOTE: `claude plugin install` writes settings.json with an atomic rename, which
+# REPLACES .claude/settings.json - a symlink into coding-agent/ - with a real
+# file, silently orphaning the tracked copy. Repair it afterwards. verify.sh
+# STEP 16 catches this, and it is why that assertion exists.
+if [ ! -L "$DOTFILES/.claude/settings.json" ] && [ -f "$DOTFILES/.claude/settings.json" ]; then
+  echo "  repairing the settings.json shim that the plugin installer replaced"
+  cp "$DOTFILES/.claude/settings.json" "$DOTFILES/coding-agent/claude/settings.json"
+  rm "$DOTFILES/.claude/settings.json"
+  ln -sfn ../coding-agent/claude/settings.json "$DOTFILES/.claude/settings.json"
+fi
 
-# Standalone skills that ship as their own upstream repo, cloned next to the
-# mattpocock set and linked the same way. Each entry is pipe-separated:
-# "repo-url|clone-dir|skill-subdir", where skill-subdir is the folder holding
-# SKILL.md and also names the symlink in each harness's skills dir.
-echo "Linking standalone skills..."
-STANDALONE_SKILLS=(
-  # (none currently; archify was removed on 2026-09-01)
-)
+# jcode reads a flat skills directory and has no plugin system, so it gets the
+# same skills by symlink. Deliberately from a plain clone rather than from the
+# plugin cache: that path is version-pinned (.../superpowers/6.3.0/), so links
+# into it break on every plugin update, with nothing reporting it.
+echo "Linking Superpowers skills for jcode..."
+SUPERPOWERS="$HOME/.agents/superpowers"
+if [ ! -d "$SUPERPOWERS/.git" ]; then
+  mkdir -p "$HOME/.agents"
+  git clone --depth 1 https://github.com/obra/superpowers.git "$SUPERPOWERS"
+fi
 
-# ${arr[@]+...} because an empty array under bash 3.2, which is what macOS
-# ships, expands to an unbound-variable error rather than to nothing.
-for entry in ${STANDALONE_SKILLS[@]+"${STANDALONE_SKILLS[@]}"}; do
-  IFS='|' read -r repo_url clone_dir skill_subdir <<< "$entry"
-  if [ ! -d "$clone_dir/.git" ]; then
-    mkdir -p "$HOME/.agents"
-    git clone --depth 1 "$repo_url" "$clone_dir"
-  fi
-  skill_dir="$clone_dir/$skill_subdir"
-  [ -f "$skill_dir/SKILL.md" ] || { echo "  skipped: no SKILL.md in $skill_dir"; continue; }
-  for target in "${SKILL_TARGETS[@]}"; do
-    mkdir -p "$target"
-    ln -sfn "$skill_dir" "$target/$(basename "$skill_dir")"
-  done
+mkdir -p ~/.jcode/skills
+for skill in "$SUPERPOWERS"/skills/*/; do
+  [ -f "$skill/SKILL.md" ] || continue
+  ln -sfn "${skill%/}" ~/.jcode/skills/"$(basename "$skill")"
 done
 
 # Prove the wiring rather than assuming it. This is fast, and every failure it

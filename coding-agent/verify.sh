@@ -523,6 +523,42 @@ if [ -f "$CHAIN" ]; then
   chain_assert ALLOW "chain allows an ordinary command" '{"command":"'"$G"' status"}'
 fi
 
+# ============================================================ STEP 18
+# Skills reach both harnesses.
+#
+# The two get them by different routes, so each fails differently and neither
+# says anything when it does. Claude Code has Superpowers as a plugin; jcode has
+# no plugin system and gets the same skills symlinked from a plain clone.
+SP_CLONE="$HOME/.agents/superpowers"
+if [ -d "$SP_CLONE/skills" ]; then
+  # Every skill in the clone must be linked into jcode and resolve.
+  for skill in "$SP_CLONE"/skills/*/; do
+    [ -f "$skill/SKILL.md" ] || continue
+    name=$(basename "$skill")
+    link="$HOME/.jcode/skills/$name"
+    if [ ! -L "$link" ]; then fail "jcode is missing the $name skill link"
+    elif [ ! -f "$link/SKILL.md" ]; then fail "~/.jcode/skills/$name does not resolve to a dir holding SKILL.md"
+    else pass; fi
+  done
+else
+  fail "$SP_CLONE is missing, so jcode has no skills"
+fi
+# The plugin must be enabled, or Claude Code has none: its skills come only from
+# there now, and ~/.claude/skills is deliberately empty.
+if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
+  jq -e '.enabledPlugins["superpowers@claude-plugins-official"] == true' \
+     "$HOME/.claude/settings.json" >/dev/null 2>&1 \
+    && pass || fail "the superpowers plugin is not enabled, so Claude Code has no skills at all"
+fi
+# The plugin and the clone update separately. Drift is not an error, but it
+# means the two harnesses are running different skills, which is worth knowing.
+PLUGIN_VER=$(ls -1 "$HOME/.claude/plugins/cache/claude-plugins-official/superpowers" 2>/dev/null | head -1)
+CLONE_VER=$(jq -r '.version // empty' "$SP_CLONE/.claude-plugin/plugin.json" 2>/dev/null)
+if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
+  [ "$PLUGIN_VER" = "$CLONE_VER" ] && pass \
+    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, jcode's clone has $CLONE_VER (claude plugin update; git -C $SP_CLONE pull)"
+fi
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
   printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2

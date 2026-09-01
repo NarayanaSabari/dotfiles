@@ -54,9 +54,9 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 - GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`. Never a GitHub MCP server.
 - Browser: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`. It is a CLI, not a registered skill, so call it with Bash.
 - Parallel sessions: herdr. tmux and treehouse are retired. Every `herdr` command needs the sandbox off, because it talks over a unix socket.
-- Skills come from `~/.agents/mattpocock-skills` plus standalone clones under `~/.agents/<name>`, linked into each harness by `setup.sh`. Update with `git -C ~/.agents/mattpocock-skills pull`.
-- `/grill-with-docs` before a non-trivial change, `/tdd` while building, `/diagnosing-bugs` on a hard bug, `/code-review` before committing. `/ask-matt` routes when unsure.
-- Shipping: `/code-review` the diff, then push. There is no automated ship gate.
+- Skills are Superpowers (github.com/obra/superpowers). Claude Code has it as a plugin, which is what supplies the SessionStart hook that makes the skills fire on their own. jcode has no plugin system, so `setup.sh` symlinks the same skills into `~/.jcode/skills` from a plain clone at `~/.agents/superpowers`. Update with `claude plugin update` and `git -C ~/.agents/superpowers pull`; both, or the two harnesses drift apart in version.
+- The workflow the skills expect: `brainstorming` to get a spec out of the conversation, `writing-plans`, then `executing-plans` or `subagent-driven-development` to work through it, with `test-driven-development` throughout. `systematic-debugging` on a hard bug. `requesting-code-review` before committing, `verification-before-completion` before calling anything done.
+- Shipping: review the diff, then push. There is no automated ship gate.
 
 # jcode only
 

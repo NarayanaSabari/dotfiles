@@ -278,7 +278,8 @@
     "command": "/Users/sabari/.claude/xirp-statusline-wrapper.sh"
   },
   "enabledPlugins": {
-    "claude-mem@thedotmack": true
+    "claude-mem@thedotmack": true,
+    "superpowers@claude-plugins-official": true
   },
   "sandbox": {
     "enabled": true,

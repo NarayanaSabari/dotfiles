@@ -14,10 +14,13 @@ assertion. **Do not "fix" a failure by editing the assertion.**
 Then check the things that need judgment rather than a comparison, and report
 only what is wrong plus a one-line all-clear for the rest:
 
-1. **Skills.** Every skill under `~/.agents/mattpocock-skills/skills/{engineering,productivity}/`
-   plus each standalone clone should be linked into `~/.claude/skills/` and
-   `~/.jcode/skills/`, and each link should resolve to a directory holding a
-   `SKILL.md`. pi is retired; nothing should still link into `~/.pi/`.
+1. **Skills.** Claude Code gets Superpowers as a plugin, so `~/.claude/skills/`
+   is expected to be empty; check `claude plugin list` shows
+   `superpowers@claude-plugins-official` enabled. jcode gets the same skills by
+   symlink, so every directory under `~/.agents/superpowers/skills/` should be
+   linked into `~/.jcode/skills/` and resolve to a dir holding a `SKILL.md`.
+   Compare the two versions: the plugin and the clone update separately and can
+   drift. pi is retired; nothing should still link into `~/.pi/`.
 
 2. **Broken links.** `find ~/.claude ~/.jcode -maxdepth 3 -type l ! -exec test -e {} \; -print`
 
