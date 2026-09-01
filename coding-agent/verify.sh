@@ -1,9 +1,15 @@
 #!/bin/bash
-# Adversarial assertions for the PreToolUse guards, run by /harness-check.
+# Everything mechanically checkable about this machine's agent harness.
 #
 # Why this exists: reading a hook tells you what its author believed. Only
 # feeding it its real stdin tells you what it does. Every gap fixed in this
-# repo was found by running the hook, not by reading it.
+# repo was found by running the hook, not by reading it. The same applies to
+# the wiring: a symlink or an import that stopped resolving reports nothing at
+# all, it just silently stops working, so those are assertions too.
+#
+# Covers: both harnesses' guards against both payload shapes, fail-closed
+# parsing, hook paths named in settings.json, and the CLAUDE.md -> AGENTS.md
+# import. /harness-check runs this and then judges what is left over.
 #
 # Design rules, learned the hard way:
 #   - Never touch a live repo. Everything runs in a scratch tree under a
@@ -425,9 +431,48 @@ if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
   done < "$ROOT/hookpaths.txt"
 fi
 
+# ============================================================ STEP 15
+# The CLAUDE.md -> AGENTS.md import must resolve.
+#
+# This is the highest-consequence check here. Claude Code's instructions are one
+# import line; if it stops resolving, the session starts with NO instructions
+# and says nothing about it. Three spellings fail, all silently (2026-09-01,
+# seven probes):
+#   - a relative import resolves against ~/.claude/, not the real file's dir
+#   - an import whose target is a symlink is not followed at all
+#   - therefore @~/AGENTS.md fails too, since ~/AGENTS.md is a stow symlink
+# Structural rather than a model probe: deterministic, and it runs in ms.
+REPO="$HOME/dotfiles"
+CLAUDEMD="$REPO/coding-agent/claude/CLAUDE.md"
+SHARED="$REPO/coding-agent/AGENTS.md"
+if [ -f "$CLAUDEMD" ]; then
+  IMPORT=$(grep -m1 '^@' "$CLAUDEMD" | sed 's/^@//' | tr -d '[:space:]')
+  if [ -z "$IMPORT" ]; then
+    fail "CLAUDE.md has no @import line, so it carries no instructions at all"
+  else
+    case "$IMPORT" in
+      /*) pass ;;
+      *)  fail "CLAUDE.md import '$IMPORT' is not absolute; a relative import resolves against ~/.claude/ and silently loads nothing" ;;
+    esac
+    if [ -L "$IMPORT" ]; then
+      fail "CLAUDE.md imports '$IMPORT', which is a symlink; Claude Code does not follow symlink imports and will load nothing"
+    elif [ -f "$IMPORT" ]; then pass
+    else fail "CLAUDE.md imports '$IMPORT', which does not exist"; fi
+    [ "$IMPORT" = "$SHARED" ] && pass || fail "CLAUDE.md imports '$IMPORT', expected the shared file $SHARED"
+  fi
+fi
+# jcode reads the same content through ~/AGENTS.md. It is allowed to be a
+# symlink here: jcode follows them, only Claude Code's importer does not.
+if [ -e "$HOME/AGENTS.md" ]; then
+  RESOLVED=$(cd "$(dirname "$HOME/AGENTS.md")" && realpath "$HOME/AGENTS.md" 2>/dev/null)
+  [ "$RESOLVED" = "$SHARED" ] && pass || fail "~/AGENTS.md resolves to '$RESOLVED', expected $SHARED"
+else
+  fail "~/AGENTS.md is missing, so jcode has no instructions"
+fi
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
-  printf '\nguard assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2
+  printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2
   exit 1
 fi
-printf 'guard assertions: %d passed, 0 failed\n' "$PASSED"
+printf 'harness assertions: %d passed, 0 failed\n' "$PASSED"

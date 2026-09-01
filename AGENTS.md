@@ -1,1 +1,1 @@
-coding-agent/jcode/AGENTS.md
+coding-agent/AGENTS.md
