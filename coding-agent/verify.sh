@@ -490,6 +490,39 @@ for shim in "$REPO/.claude" "$REPO/.jcode"; do
   done
 done
 
+# ============================================================ STEP 17
+# jcode's pre_tool chain.
+#
+# jcode allows exactly one pre_tool command, so pre-tool.sh chains the guards
+# itself. That means jcode's guard coverage is whatever this one file lists, and
+# a guard dropped from the list disappears silently: nothing in jcode reports a
+# shorter chain. Until 2026-09-01 it chained two of the four, so credential
+# writes and attribution trailers were unguarded on the harness that also runs
+# ambient mode unattended.
+CHAIN="$REPO/coding-agent/hooks/pre-tool.sh"
+if [ -f "$CHAIN" ]; then
+  for guard in git-identity-guard.sh git-guardrails.sh credential-guard.sh commit-signature-guard.sh; do
+    grep -q "$guard" "$CHAIN" && pass || fail "pre-tool.sh no longer chains $guard, so jcode runs without it"
+  done
+  # And it must actually block through the chain, not merely name the files.
+  CHAINREPO="$ROOT/chainrepo"; mkdir -p "$CHAINREPO"
+  ( cd "$CHAINREPO" && $G init -q . ) >/dev/null 2>&1
+  echo "SECRET=x" > "$CHAINREPO/.env"
+  chain_assert() { # chain_assert <expect> <name> <json>
+    local rc
+    printf '%s' "$3" | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=bash \
+      JCODE_HOOK_CWD="$CHAINREPO" "$CHAIN" >/dev/null 2>&1
+    rc=$?
+    if [ "$1" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$2: expected BLOCK, exited $rc"
+    elif [ "$1" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$2: expected ALLOW, blocked"
+    else pass; fi
+  }
+  chain_assert BLOCK "chain blocks destructive git"     '{"command":"'"$G"' reset --hard"}'
+  chain_assert BLOCK "chain blocks a credential sweep"  '{"command":"'"$G"' add -A"}'
+  chain_assert BLOCK "chain blocks an unparseable payload" 'garbage'
+  chain_assert ALLOW "chain allows an ordinary command" '{"command":"'"$G"' status"}'
+fi
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
   printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2
