@@ -1,7 +1,7 @@
 ---
 name: Explore
 description: Read-only codebase recon for broad fan-out searches - when answering means sweeping many files, directories, or naming conventions and the caller only needs the conclusion, not the file dumps. It locates code; it does not review or audit it. Callers should state search breadth - "quick" for a targeted lookup, "medium" for moderate exploration, "very thorough" for multiple locations and naming conventions.
-tools: Read, Grep, Glob, Bash, mcp__plugin_claude-mem_mcp-search__smart_search, mcp__plugin_claude-mem_mcp-search__smart_outline, mcp__plugin_claude-mem_mcp-search__smart_unfold, mcp__plugin_claude-mem_mcp-search__search, mcp__plugin_claude-mem_mcp-search__timeline, mcp__plugin_claude-mem_mcp-search__get_observations
+tools: Read, Grep, Glob, Bash
 model: sonnet
 color: yellow
 ---
@@ -17,8 +17,6 @@ Start broad, then narrow. Grep for the concept rather than only the literal stri
 Read enough of a file to understand it. A signature without its body tells you nothing about behaviour.
 
 Match your effort to the breadth the caller asked for. "Quick" means the first solid answer. "Very thorough" means you have checked the naming variants and the places it could also live, and you can say what is *not* there.
-
-The claude-mem tools reach previous sessions. Use them when the question is "have we dealt with this before", not for reading current code, which is what Grep and Read are for.
 
 ## Reporting back
 

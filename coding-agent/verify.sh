@@ -196,39 +196,6 @@ assert BLOCK credential-guard.sh "cred fallback still checks the session cwd" \
 STAGED=$( cd "$CREDREPO" && $G diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')
 [ "$STAGED" = 0 ] && pass || fail "cred check mutated the index ($STAGED files staged)"
 
-# ============================================================ STEP 11d
-# worktree-adopt-guard.sh - real worktree + seeded DB, DB contents the only variable
-if command -v sqlite3 >/dev/null 2>&1; then
-  PARENT="$ROOT/parentrepo"; mkdir -p "$PARENT"
-  ( cd "$PARENT" && $G init -q . && $G config user.email t@t.t && $G config user.name T &&
-    echo x > f && $G add f && $G commit -qm init &&
-    $G worktree add -q -b agent-test "$ROOT/parentrepo-wt" ) >/dev/null 2>&1
-  WT="$ROOT/parentrepo-wt"
-  mkdir -p "$ROOT/mem"
-  seed() {
-    rm -f "$ROOT/mem/claude-mem.db"
-    sqlite3 "$ROOT/mem/claude-mem.db" \
-      "CREATE TABLE observations (project TEXT, merged_into_project TEXT);
-       INSERT INTO observations VALUES ('parentrepo/parentrepo-wt', $1);" 2>/dev/null
-  }
-  wt_assert() { # wt_assert <expect> <name> <cmd>
-    local rc
-    printf '%s' "$(bash_json "$PARENT" "$3")" \
-      | CLAUDE_MEM_DATA_DIR="$ROOT/mem" HOME="$FAKEHOME" "$HOOKS/worktree-adopt-guard.sh" >/dev/null 2>&1
-    rc=$?
-    if [ "$1" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$2: expected BLOCK, exited $rc"
-    elif [ "$1" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$2: expected ALLOW, blocked"
-    else pass; fi
-  }
-  seed NULL
-  wt_assert BLOCK "worktree blocks removal with unadopted memories" "$G worktree remove $WT"
-  wt_assert ALLOW "worktree honours SKIP_ADOPT_GUARD=1" "SKIP_ADOPT_GUARD=1 $G worktree remove $WT"
-  seed "'parentrepo'"
-  wt_assert ALLOW "worktree allows removal once adopted" "$G worktree remove $WT"
-else
-  printf 'SKIP  worktree assertions (sqlite3 not installed)\n' >&2
-fi
-
 # ============================================================ STEP 11e
 # commit-signature-guard.sh - trailers must block, prose about them must not.
 SESS="https://claude.ai/code/session_0123456789abcdef"

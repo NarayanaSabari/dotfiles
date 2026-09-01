@@ -8,10 +8,6 @@
 #
 # The guards themselves are shared with Claude Code and detect which harness
 # called them, so there is nothing jcode-specific below this line.
-#
-# worktree-adopt-guard.sh is deliberately absent: it protects claude-mem
-# observations from being orphaned by `git worktree remove`, and jcode has
-# native memory, so there is nothing here for it to protect.
 
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

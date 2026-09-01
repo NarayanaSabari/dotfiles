@@ -55,6 +55,7 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 - Browser: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`. It is a CLI, not a registered skill, so call it with Bash.
 - Parallel sessions: herdr. tmux and treehouse are retired. Every `herdr` command needs the sandbox off, because it talks over a unix socket.
 - Skills are Superpowers (github.com/obra/superpowers). Claude Code has it as a plugin, which is what supplies the SessionStart hook that makes the skills fire on their own. jcode has no plugin system, so `setup.sh` symlinks the same skills into `~/.jcode/skills` from a plain clone at `~/.agents/superpowers`. Update with `claude plugin update` and `git -C ~/.agents/superpowers pull`; both, or the two harnesses drift apart in version.
+- jcode loads from two roots, not one: `~/.jcode/skills/` and `~/.agents/skills/` (the `gh-axi` and `chrome-devtools-axi` CLIs, which jcode registers as skills even though Claude Code does not). Removing a skill from one root leaves it showing up from the other.
 - The workflow the skills expect: `brainstorming` to get a spec out of the conversation, `writing-plans`, then `executing-plans` or `subagent-driven-development` to work through it, with `test-driven-development` throughout. `systematic-debugging` on a hard bug. `requesting-code-review` before committing, `verification-before-completion` before calling anything done.
 - Shipping: review the diff, then push. There is no automated ship gate.
 

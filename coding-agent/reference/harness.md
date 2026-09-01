@@ -45,8 +45,8 @@ Two rules:
 ## Guardrails
 
 Both harnesses run the same scripts from `coding-agent/hooks/`.
-jcode chains four of them through `pre-tool.sh`, because it supports only one `pre_tool` command.
-`worktree-adopt-guard.sh` is Claude Code only: jcode has native memory and no claude-mem observations to orphan.
+jcode chains all four through `pre-tool.sh`, because it supports only one `pre_tool` command.
+Both harnesses therefore run the same set.
 
 | Guard | Blocks |
 |---|---|
@@ -119,9 +119,7 @@ The previous set (mattpocock/skills, 25 skills) was removed on 2026-09-01.
 
 ## Memory
 
-claude-mem captures every tool call into `~/.claude-mem/claude-mem.db`, unencrypted, all projects in one file.
-Scope is `CLAUDE_MEM_EXCLUDED_PROJECTS` in `~/.claude-mem/settings.json`, an exclude-list with no allow-list, so it is fail-open: a newly cloned client repo is captured from its first session until it is named there.
-Patterns compile anchored, so excluding a repo needs both `path` and `path/**`.
-Nothing is redacted automatically. Wrap secrets in `<private>` tags.
+Claude Code has none. claude-mem was removed on 2026-09-01, taking 10,644 observations across 25 projects with it, so nothing carries between sessions.
 
+jcode's memory is native, per-turn and local, and is unaffected.
 jcode does not use it. jcode's memory is native, per-turn and local.

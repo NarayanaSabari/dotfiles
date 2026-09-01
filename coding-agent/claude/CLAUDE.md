@@ -22,6 +22,6 @@ will tell you when it stops.
 # Claude Code only
 
 - Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one.
-- Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. Tiers, cost traps and the claude-mem worktree trap: [reference/subagents.md](/Users/sabari/dotfiles/coding-agent/reference/subagents.md).
-- Memory is claude-mem: one unencrypted DB shared across projects, scoping is fail-open. Wrap secrets in `<private>` tags.
+- Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. Tiers and traps: [reference/subagents.md](/Users/sabari/dotfiles/coding-agent/reference/subagents.md).
+- No cross-session memory. claude-mem was removed on 2026-09-01, so nothing carries between sessions; say so rather than implying you remember earlier work.
 - Config in `~/.claude` is symlinked from `~/dotfiles`. Edit the dotfiles copy so changes are version-controlled, then run `/harness-check`.

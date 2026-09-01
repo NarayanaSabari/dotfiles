@@ -101,7 +101,6 @@
       "Bash(rm -rf /Users/sabari/dotfiles*)",
       "Bash(rm -rf /Users/sabari/Developer*)",
       "Bash(rm -rf /Users/sabari/.ssh*)",
-      "Bash(rm -rf /Users/sabari/.claude-mem*)",
       "Bash(terraform destroy*)",
       "Bash(terraform apply -auto-approve*)",
       "Bash(pulumi destroy*)",
@@ -183,11 +182,6 @@
           {
             "type": "command",
             "command": "/Users/sabari/dotfiles/coding-agent/hooks/git-guardrails.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "/Users/sabari/dotfiles/coding-agent/hooks/worktree-adopt-guard.sh",
             "timeout": 10
           },
           {
@@ -278,7 +272,6 @@
     "command": "/Users/sabari/.claude/xirp-statusline-wrapper.sh"
   },
   "enabledPlugins": {
-    "claude-mem@thedotmack": true,
     "superpowers@claude-plugins-official": true
   },
   "sandbox": {
