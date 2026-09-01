@@ -10,8 +10,49 @@
 
 set -uo pipefail
 
+# ------------------------------------------------------------------- payload
+# One implementation, two harnesses. Claude Code wraps the tool input and
+# passes the tool name and cwd as JSON fields; jcode passes the raw tool input
+# and puts the tool name and cwd in the environment. JCODE_HOOK_TOOL_NAME is
+# set only by jcode, so it is the discriminator. Tool names are normalised onto
+# Claude Code's spelling so everything below this block is contract-agnostic.
+#
+# Fail CLOSED. The code this replaced sent jq's errors to /dev/null and then
+# read an empty command as "nothing to check", so a payload-shape change on
+# either harness would have disarmed the guard silently: no error anywhere, and
+# every assertion still green. Refusing loudly is the safe direction.
+#
+# This block is duplicated verbatim across the guards rather than sourced.
+# These hooks are standalone by design - one missing library file would break
+# all of them at once - and guard-assertions.sh runs every guard against BOTH
+# payload shapes, so a copy that is fixed here and missed there fails the suite.
+hook_bail() {
+  printf '%s: %s; refusing to let the command run unguarded\n' "${0##*/}" "$1" >&2
+  exit 2
+}
+command -v jq >/dev/null 2>&1 || hook_bail "jq not found"
 INPUT=$(cat)
-TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+printf '%s' "$INPUT" | jq -e . >/dev/null 2>&1 || hook_bail "unparseable hook payload"
+hook_field() { # hook_field <jcode-filter> <claude-filter>
+  if [ -n "${JCODE_HOOK_TOOL_NAME:-}" ]
+  then printf '%s' "$INPUT" | jq -r "$1"
+  else printf '%s' "$INPUT" | jq -r "$2"; fi
+}
+if [ -n "${JCODE_HOOK_TOOL_NAME:-}" ]; then
+  HOOK_TOOL="$JCODE_HOOK_TOOL_NAME"
+  HOOK_CWD="${JCODE_HOOK_CWD:-}"
+else
+  HOOK_TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+  HOOK_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+fi
+HOOK_CMD=$(hook_field '.command // empty' '.tool_input.command // empty')
+case "$HOOK_TOOL" in
+  bash|Bash)                   HOOK_TOOL=Bash ;;
+  write|Write)                 HOOK_TOOL=Write ;;
+  edit|Edit|str_replace*)      HOOK_TOOL=Edit ;;
+  notebook_edit|NotebookEdit)  HOOK_TOOL=NotebookEdit ;;
+esac
+TOOL="$HOOK_TOOL"
 
 block() {
   printf 'BLOCKED by credential-guard: %s\n' "$1" >&2
@@ -66,8 +107,10 @@ has_secret_material() {
 
 case "$TOOL" in
   Write|Edit|NotebookEdit)
-    FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
-    BODY=$(printf '%s' "$INPUT" | jq -r '[.tool_input.content, .tool_input.new_string, .tool_input.new_source] | map(select(. != null)) | join("\n")')
+    FILE=$(hook_field '.file_path // .notebook_path // empty' \
+                      '.tool_input.file_path // .tool_input.notebook_path // empty')
+    BODY=$(hook_field '[.content, .new_string, .new_source] | map(select(. != null)) | join("\n")' \
+                      '[.tool_input.content, .tool_input.new_string, .tool_input.new_source] | map(select(. != null)) | join("\n")')
 
     if [[ -n "$FILE" ]] && is_credential_path "$FILE"; then
       block "$FILE is a credential file. Writing secrets to disk is not something I do unattended."
@@ -78,7 +121,7 @@ case "$TOOL" in
     ;;
 
   Bash)
-    CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+    CMD="$HOOK_CMD"
 
     # Only inspect commands that stage or record files in git.
     if printf '%s' "$CMD" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]+([^;&|]*[[:space:]])?(add|commit)([[:space:]]|$)'; then
@@ -90,7 +133,7 @@ case "$TOOL" in
       #   2. require the token to resolve to a real file
       # A quoted path (`git add ".env"`) is therefore not caught here; the
       # sweep check below and the Write/Edit path check still cover it.
-      CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+      CWD="$HOOK_CWD"
       CMD_PATHS=$(printf '%s' "$CMD" | sed -e "s/\"[^\"]*\"/ /g" -e "s/'[^']*'/ /g")
       for tok in $CMD_PATHS; do
         case "$tok" in
@@ -137,7 +180,7 @@ case "$TOOL" in
           case "$_t" in /*) ;; *) _t="$_w/$_t" ;; esac
           if [ -d "$_t" ]; then printf '%s' "$_t"; else printf '%s' "$_w"; fi
         }
-        CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+        CWD="$HOOK_CWD"
         CWD=$(effective_cwd "$CMD" "$CWD")
         if [ -n "$CWD" ] && command -v git >/dev/null 2>&1 &&
            git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
