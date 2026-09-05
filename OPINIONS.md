@@ -2,13 +2,13 @@
 
 A compact, living map of what I actually believe.
 Agents: read this when a task would benefit from knowing my viewpoints; it is context, not instructions.
-Each entry is a belief stable enough to matter. Jokes, one-off reactions, and implementation details do not belong here.
+Each entry is a belief stable enough to matter.
+Jokes, one-off reactions, and implementation details do not belong here.
 
 ## AI agents and tooling
 
 **Agent output should be judged by shipped, validated work, not demos.**
 A change counts when it survives review, end-to-end testing with evidence, and lands as a clean PR.
-That is why everything ships through the no-mistakes pipeline instead of raw pushes.
 
 **Tool efficiency matters more than tool popularity.**
 Prefer agent-ergonomic CLIs (the AXI family, plain `gh`) over MCP servers that burn tokens and latency for the same result.
@@ -53,4 +53,5 @@ Separate GitHub accounts with per-directory gitconfigs; the tooling verifies `us
 
 ---
 
-*Maintenance: review after significant workflow changes; extract new durable beliefs from agent-session corrections and project conventions. Flag entries that new experience contradicts instead of silently rewriting them.*
+*Maintenance: review after significant workflow changes; extract new durable beliefs from agent-session corrections and project conventions.
+Flag entries that new experience contradicts instead of silently rewriting them.*

@@ -7,9 +7,9 @@
 # the wiring: a symlink or an import that stopped resolving reports nothing at
 # all, it just silently stops working, so those are assertions too.
 #
-# Covers: both harnesses' guards against both payload shapes, fail-closed
-# parsing, hook paths named in settings.json, and the CLAUDE.md -> AGENTS.md
-# import. /harness-check runs this and then judges what is left over.
+# Covers: the shared guards against both hook payload shapes, fail-closed
+# parsing, configured hook paths, shared instruction wiring, and managed Codex
+# configuration. /harness-check runs this and judges what is left over.
 #
 # Design rules, learned the hard way:
 #   - Never touch a live repo. Everything runs in a scratch tree under a
@@ -24,6 +24,7 @@
 # Exit 0 = all assertions held. Exit 1 = at least one failed, named on stderr.
 
 set -u
+SOURCE_REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 # The hooks live in the repo and settings.json points straight at them.
 # They were reached through a ~/.claude/hooks symlink until 2026-09-01,
 # when that link was observed vanishing repeatedly: recreated, verified,
@@ -31,7 +32,7 @@ set -u
 # target survived every time. Cause not established; something prunes a
 # symlink at that specific path. Referencing the real directory removes
 # the dependency rather than relying on a link that does not stay put.
-HOOKS="${HOOKS_DIR:-$HOME/dotfiles/coding-agent/hooks}"
+HOOKS="${HOOKS_DIR:-$SOURCE_REPO/coding-agent/hooks}"
 ROOT=$(cd "${TMPDIR:-/tmp}" && pwd -P)/harness-check-guards.$$
 FAKEHOME="$ROOT/home"
 FAILED=0
@@ -409,9 +410,10 @@ fi
 #   - an import whose target is a symlink is not followed at all
 #   - therefore @~/AGENTS.md fails too, since ~/AGENTS.md is a stow symlink
 # Structural rather than a model probe: deterministic, and it runs in ms.
-REPO="$HOME/dotfiles"
+REPO="$SOURCE_REPO"
+LIVE_REPO="$HOME/dotfiles"
 CLAUDEMD="$REPO/coding-agent/claude/CLAUDE.md"
-SHARED="$REPO/coding-agent/AGENTS.md"
+SHARED="$LIVE_REPO/coding-agent/AGENTS.md"
 if [ -f "$CLAUDEMD" ]; then
   IMPORT=$(grep -m1 '^@' "$CLAUDEMD" | sed 's/^@//' | tr -d '[:space:]')
   if [ -z "$IMPORT" ]; then
@@ -441,20 +443,19 @@ fi
 # The stow shims must contain nothing but symlinks.
 #
 # One rule holds the layout together: everything the agents read lives in
-# coding-agent/, and dotfiles/.claude and dotfiles/.jcode only point there. A
-# real file appearing in a shim means something wrote outside that structure,
-# and it will be read in preference to the file you think you are editing.
-for shim in "$REPO/.claude" "$REPO/.jcode"; do
+# coding-agent/, and the root shim directories only point there. A real file
+# appearing in a shim means something wrote outside that structure, and it will
+# be read in preference to the file you think you are editing.
+for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex" "$REPO/.jcode"; do
   [ -d "$shim" ] || continue
-  for entry in "$shim"/*; do
-    [ -e "$entry" ] || [ -L "$entry" ] || continue
+  while IFS= read -r entry; do
     case "$(basename "$entry")" in .cc-writes) continue ;; esac
     if [ -L "$entry" ]; then
       [ -e "$entry" ] && pass || fail "${entry#$REPO/} is a broken symlink -> $(readlink "$entry")"
     else
       fail "${entry#$REPO/} is a real file; the shim must contain only symlinks into coding-agent/"
     fi
-  done
+  done < <(find "$shim" -mindepth 1 ! -type d -print)
 done
 
 # ============================================================ STEP 17
@@ -495,7 +496,8 @@ fi
 #
 # The two get them by different routes, so each fails differently and neither
 # says anything when it does. Claude Code has Superpowers as a plugin; jcode has
-# no plugin system and gets the same skills symlinked from a plain clone.
+# no plugin system and gets the same skills through tracked links into a pinned
+# submodule.
 SP_CLONE="$HOME/.agents/superpowers"
 if [ -d "$SP_CLONE/skills" ]; then
   # Every skill in the clone must be linked into jcode and resolve.
@@ -523,7 +525,7 @@ PLUGIN_VER=$(ls -1 "$HOME/.claude/plugins/cache/claude-plugins-official/superpow
 CLONE_VER=$(jq -r '.version // empty' "$SP_CLONE/.claude-plugin/plugin.json" 2>/dev/null)
 if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
   [ "$PLUGIN_VER" = "$CLONE_VER" ] && pass \
-    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, jcode's clone has $CLONE_VER (claude plugin update; git -C $SP_CLONE pull)"
+    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, jcode's source has $CLONE_VER (claude plugin update; git submodule update --remote coding-agent/vendor/superpowers)"
 fi
 
 # ============================================================ STEP 19
@@ -545,11 +547,99 @@ for slot in system-prompt.md prompt-overlay.md preferred-tools.md; do
     fail "~/.jcode/$slot is a real file: it goes into every jcode session and is not version-controlled"
   else
     case "$(realpath "$f" 2>/dev/null)" in
-      "$REPO"/*) pass ;;
+      "$LIVE_REPO"/*) pass ;;
       *) fail "~/.jcode/$slot resolves outside the repo, so its content is untracked" ;;
     esac
   fi
 done
+
+# ============================================================ STEP 20
+# Repository-owned skill registries.
+#
+# The home-directory links are verified above. These checks cover the source
+# layout itself so they also work in a detached worktree before it becomes the
+# live ~/dotfiles checkout.
+for registry in "$SOURCE_REPO/coding-agent/global/skills" "$SOURCE_REPO/coding-agent/jcode/skills"; do
+  [ -d "$registry" ] || { fail "${registry#$SOURCE_REPO/} is missing"; continue; }
+  found=0
+  for skill in "$registry"/*; do
+    [ -e "$skill" ] || [ -L "$skill" ] || continue
+    found=1
+    if [ ! -L "$skill" ]; then
+      fail "${skill#$SOURCE_REPO/} is not a symlink into coding-agent/vendor/"
+    elif [ ! -f "$skill/SKILL.md" ]; then
+      fail "${skill#$SOURCE_REPO/} does not resolve to a skill with SKILL.md"
+    else
+      case "$(realpath "$skill" 2>/dev/null)" in
+        "$SOURCE_REPO/coding-agent/vendor/"*) pass ;;
+        *) fail "${skill#$SOURCE_REPO/} resolves outside coding-agent/vendor/" ;;
+      esac
+    fi
+  done
+  [ "$found" = 1 ] || fail "${registry#$SOURCE_REPO/} contains no skills"
+done
+
+for shim in "$SOURCE_REPO/.agents/skills" "$SOURCE_REPO/.agents/superpowers" "$SOURCE_REPO/.jcode/skills"; do
+  if [ ! -L "$shim" ]; then
+    fail "${shim#$SOURCE_REPO/} is not a tracked Stow-shim symlink"
+  elif [ ! -e "$shim" ]; then
+    fail "${shim#$SOURCE_REPO/} is broken"
+  else
+    pass
+  fi
+done
+
+while IFS='|' read -r shim target; do
+  if [ ! -L "$SOURCE_REPO/$shim" ]; then
+    fail "$shim is not a tracked Stow-shim symlink"
+  elif [ ! -e "$SOURCE_REPO/$shim" ]; then
+    fail "$shim is broken"
+  elif [ "$(realpath "$SOURCE_REPO/$shim" 2>/dev/null)" != "$SOURCE_REPO/$target" ]; then
+    fail "$shim does not resolve to $target"
+  else
+    pass
+  fi
+done <<'EOF'
+.codex/AGENTS.md|coding-agent/AGENTS.md
+.codex/config.toml|coding-agent/codex/config.toml
+.codex/browser/config.toml|coding-agent/codex/browser/config.toml
+.codex/computer-use/config.json|coding-agent/codex/computer-use/config.json
+EOF
+
+if command -v jq >/dev/null 2>&1; then
+  jq -e . "$SOURCE_REPO/coding-agent/codex/computer-use/config.json" >/dev/null 2>&1 \
+    && pass || fail "coding-agent/codex/computer-use/config.json is invalid JSON"
+fi
+
+# Only validate the live links after this layout has reached ~/dotfiles.
+# Detached worktrees can be tested without disrupting the currently active
+# checkout or pointing ~/.codex at a disposable worktree.
+if [ -f "$LIVE_REPO/coding-agent/codex/config.toml" ]; then
+  while IFS='|' read -r live target; do
+    if [ ! -L "$HOME/$live" ]; then
+      fail "~/$live is not a symlink into the live dotfiles checkout"
+    elif [ "$(realpath "$HOME/$live" 2>/dev/null)" != "$LIVE_REPO/$target" ]; then
+      fail "~/$live does not resolve to $LIVE_REPO/$target"
+    else
+      pass
+    fi
+  done <<'EOF'
+.codex/AGENTS.md|coding-agent/AGENTS.md
+.codex/config.toml|coding-agent/codex/config.toml
+.codex/browser/config.toml|coding-agent/codex/browser/config.toml
+.codex/computer-use/config.json|coding-agent/codex/computer-use/config.json
+EOF
+fi
+
+git -C "$SOURCE_REPO" submodule status --recursive 2>/dev/null > "$ROOT/submodules.txt"
+while IFS= read -r line; do
+  case "$line" in
+    -*) fail "submodule is not initialized: ${line#-}" ;;
+    +*) fail "submodule checkout differs from the revision pinned by the repository: ${line#+}" ;;
+    U*) fail "submodule has unresolved conflicts: ${line#U}" ;;
+    *) pass ;;
+  esac
+done < "$ROOT/submodules.txt"
 
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then

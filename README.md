@@ -52,7 +52,8 @@ This installs: `eza`, `git`, `neovim`, `powerlevel10k`, `stow`, `zoxide`, `zsh-a
 
 ### 5. Install a Nerd Font
 
-WezTerm and Powerlevel10k require **MesloLGS Nerd Font**. Install it via Homebrew:
+WezTerm and Powerlevel10k require **MesloLGS Nerd Font**.
+Install it via Homebrew:
 
 ```bash
 brew install --cask font-meslo-lg-nerd-font
@@ -61,14 +62,17 @@ brew install --cask font-meslo-lg-nerd-font
 ### 6. Symlink dotfiles with Stow
 
 ```bash
+git submodule update --init --recursive
 stow .
 ```
 
-This creates symlinks in your home directory (`~`) for:
+This creates symlinks in your home directory (`~`) for the shell, editor, Git, and agent configuration, including:
 - `.zshrc` -- Zsh configuration
 - `.p10k.zsh` -- Powerlevel10k theme
 - `.wezterm.lua` -- WezTerm terminal config
 - `.config/nvim/` -- Neovim configuration
+- `.agents/skills` -- global agent skills
+- `.claude/`, `.codex/`, and `.jcode/` -- harness-specific entry points
 
 ### 7. Set up Git
 
@@ -112,44 +116,64 @@ To save your current Homebrew packages:
 brew leaves > ~/dotfiles/homebrew/leaves.txt
 ```
 
+To update the pinned third-party agent sources:
+
+```bash
+git -C ~/dotfiles submodule update --remote
+git -C ~/dotfiles diff --submodule
+```
+
+Review skill changes before committing the new submodule revisions.
+
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
-## Coding agents (Claude Code + jcode)
+## Coding agents (Claude Code + Codex + jcode)
 
-Both harnesses share one source tree, `coding-agent/`, and **one set of instructions**.
-`coding-agent/AGENTS.md` is the single source; Claude Code reads it through an import and adds only its own handful of rules.
+All three harnesses share one source tree, `coding-agent/`, and **one set of instructions**.
+`coding-agent/AGENTS.md` is the single source; Claude Code reads it through an import, Codex reads it through `~/.codex/AGENTS.md`, and jcode reads it through `~/AGENTS.md`.
 pi was retired on 2026-09-01.
 
 ```
 coding-agent/
-├── AGENTS.md          # THE instructions. Both harnesses read this.
-├── hooks/             # every guard, shared by both
+├── AGENTS.md          # THE instructions. All three harnesses read this.
+├── hooks/             # guards shared by Claude Code and jcode
+├── global/
+│   └── skills/        # curated registry exposed as ~/.agents/skills
 ├── claude/
 │   ├── CLAUDE.md      #   an @import of AGENTS.md + Claude-only rules
 │   ├── agents/        #   sub-agent definitions
 │   ├── commands/      #   slash commands (/harness-check)
 │   └── settings.json, keybindings.json, statusline.sh, themes/
+├── codex/
+│   ├── config.toml    # Codex user configuration
+│   └── browser/, computer-use/
 ├── jcode/
+│   ├── skills/        # Superpowers links for jcode
 │   └── swarm-prompt.md
 ├── reference/         # evidence behind the one-line rules in AGENTS.md
+├── vendor/            # pinned third-party Git submodules
 └── verify.sh          # every mechanical assertion about the above
 ```
 
 How it maps into the live tools:
 
-| Source | Claude Code | jcode |
-|--------|-------------|-------|
-| `AGENTS.md` | via the import in `CLAUDE.md` | `~/AGENTS.md` |
-| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
-| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- |
-| `hooks/` | named by absolute path in `settings.json` | `~/.jcode/hooks` |
-| `jcode/swarm-prompt.md` | -- | `~/.jcode/swarm-prompt.md` |
-| skills | `~/.claude/skills/<name>` | `~/.jcode/skills/<name>` |
+| Source | Claude Code | Codex | jcode |
+|--------|-------------|-------|-------|
+| `AGENTS.md` | via the import in `CLAUDE.md` | `~/.codex/AGENTS.md` | `~/AGENTS.md` |
+| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- | -- |
+| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- | -- |
+| `codex/` | -- | `~/.codex/...` | -- |
+| `hooks/` | named by absolute path in `settings.json` | -- | `~/.jcode/hooks` |
+| `jcode/swarm-prompt.md` | -- | -- | `~/.jcode/swarm-prompt.md` |
+| `global/skills/` | -- | discovered globally | `~/.agents/skills/<name>` |
+| `vendor/superpowers` | plugin installation | -- | `~/.jcode/skills/<name>` |
 
-`dotfiles/.claude/` and `dotfiles/.jcode/` contain **nothing but symlinks** into `coding-agent/`; they are only the stow shim.
-Those links are committed and recreated by `stow .`. `setup.sh` additionally links the skills, whose sources live outside this repo.
+`dotfiles/.agents/`, `dotfiles/.claude/`, `dotfiles/.codex/`, and `dotfiles/.jcode/` contain only symlinked files into `coding-agent/`; they are Stow shims.
+The links and their pinned sources are committed, and `setup.sh` initializes the submodules before Stow exposes them under your home directory.
+Mutable caches, credentials, sessions, and installer state stay outside the repository.
 
-**To change agent behaviour:** edit `coding-agent/AGENTS.md`. That is the only file, for both tools.
+**To change agent behaviour:** edit `coding-agent/AGENTS.md`.
+That is the only shared instruction file for all three tools.
 Put a rule in `claude/CLAUDE.md` only if it is genuinely Claude Code specific.
 
 **After any change under `coding-agent/`, run `bash coding-agent/verify.sh`.**
@@ -160,7 +184,9 @@ The suite is the only thing that reports those.
 
 ```
 ~/dotfiles/
+├── .agents/           # global-agent stow shim (symlinks only)
 ├── .claude/            # Claude Code stow shim (symlinks only)
+├── .codex/             # Codex stow shim (managed files only)
 ├── .jcode/             # jcode stow shim (symlinks only)
 ├── .config/
 │   └── nvim/           # Neovim configuration (Lua)
@@ -170,7 +196,7 @@ The suite is the only thing that reports those.
 ├── .wezterm.lua        # WezTerm terminal config
 ├── .zshrc              # Zsh shell config
 ├── AGENTS.md           # -> coding-agent/AGENTS.md
-├── coding-agent/       # everything both coding agents read
+├── coding-agent/       # instructions, hooks, skills, harness config, vendors
 ├── homebrew/
 │   └── leaves.txt      # Homebrew package list
 ├── setup.sh            # Automated setup script

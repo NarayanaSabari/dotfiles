@@ -1,8 +1,10 @@
 <!--
-Claude Code's entry point. Nearly everything lives in the shared file imported
+Claude Code's entry point.
+Nearly everything lives in the shared file imported
 below, which jcode also reads; only Claude-specific rules are in this file.
 
-The import MUST be an absolute path to the REAL file. Two spellings that look
+The import MUST be an absolute path to the REAL file.
+Two spellings that look
 correct both fail SILENTLY, leaving the session with no instructions at all and
 no warning anywhere:
 
@@ -21,7 +23,10 @@ will tell you when it stops.
 
 # Claude Code only
 
-- Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating. Anything whose output you would never re-read belongs in a subagent's context, not this one.
-- Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`. Tiers and traps: [reference/subagents.md](/Users/sabari/dotfiles/coding-agent/reference/subagents.md).
+- Delegate anything self-contained, parallelizable, or context-heavy, and keep the main session orchestrating.
+  Anything whose output you would never re-read belongs in a subagent's context, not this one.
+- Route by tier, not habit: fully specified mechanical work to `sweeper` (Haiku), everything hands-on to `worker`.
+  Tiers and traps: [reference/subagents.md](/Users/sabari/dotfiles/coding-agent/reference/subagents.md).
 - No cross-session memory. claude-mem was removed on 2026-09-01, so nothing carries between sessions; say so rather than implying you remember earlier work.
-- Config in `~/.claude` is symlinked from `~/dotfiles`. Edit the dotfiles copy so changes are version-controlled, then run `/harness-check`.
+- Config in `~/.claude` is symlinked from `~/dotfiles`.
+  Edit the dotfiles copy so changes are version-controlled, then run `/harness-check`.

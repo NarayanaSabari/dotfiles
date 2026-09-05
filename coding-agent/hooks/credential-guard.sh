@@ -6,7 +6,6 @@
 #   2. File content, or a `git add`/`git commit` payload, carrying a live-looking API key.
 #
 # Exit 0 = allow, exit 2 = block with the message on stderr.
-# Deliberately fast: pure bash, no subprocess beyond one jq read.
 
 set -uo pipefail
 
@@ -216,10 +215,9 @@ case "$TOOL" in
             block "this sweeps the whole worktree and $HIT is a credential file. Stage the paths you mean explicitly, or add $HIT to .gitignore first."
           fi
         fi
-        # Not a repo, or no git: nothing can be staged from here, so allow. A
-        # `cd <repo> && git add -A` is checked against the wrong directory and
-        # is a known gap; blocking it instead would false-positive on a common
-        # and harmless pattern.
+        # Not a repo, or no git: nothing can be staged from here, so allow.
+        # effective_cwd above resolves `cd <repo> && git add -A` before this
+        # check, so repository-relative credential paths are still covered.
       fi
     fi
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 # PreToolUse guard: block git operations that silently destroy uncommitted work
 # or rewrite shared history. Adapted from mattpocock/skills git-guardrails.
-# Deliberately does NOT block normal `git push` (this machine pushes early and
-# often; no-mistakes is the push gate). Exit 0 = allow, exit 2 = block.
+# Deliberately does NOT block normal `git push` because this machine pushes
+# early and often. Exit 0 = allow, exit 2 = block.
 #
 # Parses each command segment and inspects the actual git subcommand, so text
 # in commit messages ("fixes the reset --hard bug") cannot false-positive.

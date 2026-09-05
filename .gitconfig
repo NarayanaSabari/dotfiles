@@ -15,7 +15,7 @@
 	path = ~/.gitconfig-narayana
 
 # Remote-URL-based identity (git >= 2.36): follows the REPO, not the directory,
-# so tool-managed clones/worktrees (no-mistakes, herdr, CI helpers) commit with
+# so tool-managed clones/worktrees (herdr, CI helpers) commit with
 # the right account. Listed after the gitdir rules so remote evidence wins.
 #
 # Four patterns per owner, because git matches these with wildmatch, where a
@@ -52,7 +52,7 @@
 # Client-owned org: the repo lives under the client's GitHub org, not either of
 # my accounts, but the work is RentAI's. Without this it resolves to the
 # personal default whenever the clone sits outside ~/Developer/rentai/ (herdr
-# and no-mistakes worktrees do).
+# worktrees do).
 [includeIf "hasconfig:remote.*.url:https://*github.com/TAMIRATECH-PRIVATE-LIMITED/**"]
 	path = ~/.gitconfig-rentai
 [includeIf "hasconfig:remote.*.url:ssh://*github.com/TAMIRATECH-PRIVATE-LIMITED/**"]

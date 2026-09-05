@@ -47,5 +47,6 @@ The rewrite lives inside the `includeIf`, so rentai repos are untouched and keep
 It checks the session cwd, every `git -C <path>` in the command, and a leading literal `cd`, and it resolves linked worktrees to their main repo.
 `--abort`, `--quit` and `--skip` are exempt: unwinding a stopped rebase creates no commits, and a guard that stops you abandoning a conflicted rebase is one you would route around.
 
-It is a backstop. Check the identity yourself.
+It is a backstop.
+Check the identity yourself.
 See [harness.md](/Users/sabari/dotfiles/coding-agent/reference/harness.md).

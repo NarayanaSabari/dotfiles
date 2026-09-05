@@ -1,0 +1,20 @@
+[submodule "mattpocock-skills"]
+	path = coding-agent/vendor/mattpocock-skills
+	url = https://github.com/mattpocock/skills.git
+	shallow = true
+[submodule "gh-axi"]
+	path = coding-agent/vendor/gh-axi
+	url = https://github.com/kunchenguid/gh-axi.git
+	shallow = true
+[submodule "chrome-devtools-axi"]
+	path = coding-agent/vendor/chrome-devtools-axi
+	url = https://github.com/kunchenguid/chrome-devtools-axi.git
+	shallow = true
+[submodule "vercel-skills"]
+	path = coding-agent/vendor/vercel-skills
+	url = https://github.com/vercel-labs/skills.git
+	shallow = true
+[submodule "superpowers"]
+	path = coding-agent/vendor/superpowers
+	url = https://github.com/obra/superpowers.git
+	shallow = true
