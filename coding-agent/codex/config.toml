@@ -1,6 +1,7 @@
 notify = ["/Users/sabari/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 model = "gpt-5.6-sol"
 model_reasoning_effort = "medium"
+service_tier = "default"
 
 [desktop]
 followUpQueueMode = "steer"
@@ -77,6 +78,20 @@ args = ["mcp"]
 cwd = "."
 enabled = false
 
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+
+[mcp_servers.todoist]
+url = "https://ai.todoist.net/mcp"
+
+[mcp_servers.obsidian]
+command = "npx"
+args = ["mcp-remote@latest", "https://127.0.0.1:27124/mcp/", "--header", "Authorization:${AUTH_HEADER}"]
+env_vars = ["AUTH_HEADER"]
+
+[mcp_servers.obsidian.env]
+NODE_TLS_REJECT_UNAUTHORIZED = "0"
+
 [projects."/Users/sabari/Developer/rentai/aesthatiq-by-tamira"]
 trust_level = "trusted"
 
@@ -90,6 +105,15 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/sabari/Developer/freelancing/Blacklight"]
+trust_level = "trusted"
+
+[projects."/Users/sabari"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/PersonalBranding"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Developer/narayana/velvet-otter-lab"]
 trust_level = "trusted"
 
 [tui.model_availability_nux]
