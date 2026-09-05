@@ -51,9 +51,18 @@ mkdir -p \
   "$HOME/.ssh"
 
 backup_root=""
+managed_link_source() {
+  local path="$1" link parent
+  [ -L "$path" ] || return 1
+  link=$(readlink "$path")
+  case "$link" in /*) return 1 ;; esac
+  parent=$(cd "$(dirname "$path")/$(dirname "$link")" 2>/dev/null && pwd -P) || return 1
+  printf '%s/%s\n' "$parent" "$(basename "$link")"
+}
+
 prepare_managed_slot() {
-  local path="$1" expected="$2" name
-  if [ -L "$path" ] && [ "$(realpath "$path" 2>/dev/null || true)" = "$(realpath "$expected")" ]; then
+  local path="$1" stow_source="$2" name
+  if [ "$(managed_link_source "$path" 2>/dev/null || true)" = "$stow_source" ]; then
     return
   fi
   if [ -e "$path" ] || [ -L "$path" ]; then
@@ -68,13 +77,16 @@ prepare_managed_slot() {
   fi
 }
 
-prepare_managed_slot "$HOME/.agents/skills" "$DOTFILES/coding-agent/global/skills"
-prepare_managed_slot "$HOME/.agents/superpowers" "$DOTFILES/coding-agent/vendor/superpowers"
-prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/coding-agent/AGENTS.md"
-prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/coding-agent/codex/config.toml"
-prepare_managed_slot "$HOME/.codex/browser/config.toml" "$DOTFILES/coding-agent/codex/browser/config.toml"
-prepare_managed_slot "$HOME/.codex/computer-use/config.json" "$DOTFILES/coding-agent/codex/computer-use/config.json"
-prepare_managed_slot "$HOME/.jcode/skills" "$DOTFILES/coding-agent/jcode/skills"
+prepare_managed_slot "$HOME/AGENTS.md" "$DOTFILES/AGENTS.md"
+prepare_managed_slot "$HOME/.agents/skills" "$DOTFILES/.agents/skills"
+prepare_managed_slot "$HOME/.agents/superpowers" "$DOTFILES/.agents/superpowers"
+prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/.codex/AGENTS.md"
+prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/.codex/config.toml"
+prepare_managed_slot "$HOME/.codex/browser/config.toml" "$DOTFILES/.codex/browser/config.toml"
+prepare_managed_slot "$HOME/.codex/computer-use/config.json" "$DOTFILES/.codex/computer-use/config.json"
+prepare_managed_slot "$HOME/.jcode/hooks" "$DOTFILES/.jcode/hooks"
+prepare_managed_slot "$HOME/.jcode/skills" "$DOTFILES/.jcode/skills"
+prepare_managed_slot "$HOME/.jcode/swarm-prompt.md" "$DOTFILES/.jcode/swarm-prompt.md"
 
 # Stow dotfiles to home directory
 echo "Symlinking dotfiles..."
