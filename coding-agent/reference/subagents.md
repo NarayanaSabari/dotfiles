@@ -36,5 +36,3 @@ Adding one back is a single file; carrying three that are never reached is not f
 - `code-reviewer` is in-model and costs nothing extra; reach for it first.
   For a genuinely independent opinion, pin a reviewer to a different model family than the one that wrote the code.
   A same-family second pass is not independent review.
-- The `/code-review` skill runs its Standards and Spec passes as sub-agents.
-  Run it alone; a separate cross-model pass on the same diff reviews it twice for the same signal.
