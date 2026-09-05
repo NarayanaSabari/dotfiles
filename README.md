@@ -148,7 +148,6 @@ coding-agent/
 │   ├── config.toml    # Codex user configuration
 │   └── browser/, computer-use/
 ├── jcode/
-│   ├── skills/        # Superpowers links for jcode
 │   └── swarm-prompt.md
 ├── reference/         # evidence behind the one-line rules in AGENTS.md
 ├── vendor/            # pinned third-party Git submodules
@@ -165,8 +164,8 @@ How it maps into the live tools:
 | `codex/` | -- | `~/.codex/...` | -- |
 | `hooks/` | named by absolute path in `settings.json` | -- | `~/.jcode/hooks` |
 | `jcode/swarm-prompt.md` | -- | -- | `~/.jcode/swarm-prompt.md` |
-| `global/skills/` | -- | discovered globally | `~/.agents/skills/<name>` |
-| `vendor/superpowers` | plugin installation | -- | `~/.jcode/skills/<name>` |
+| `global/skills/` | -- | `~/.agents/skills/<name>` | `~/.agents/skills/<name>` |
+| `vendor/superpowers` | plugin installation | via the global registry | via the global registry |
 
 `dotfiles/.agents/`, `dotfiles/.claude/`, `dotfiles/.codex/`, and `dotfiles/.jcode/` contain only symlinked files into `coding-agent/`; they are Stow shims.
 The links and their pinned sources are committed, and `setup.sh` initializes the submodules before Stow exposes them under your home directory.

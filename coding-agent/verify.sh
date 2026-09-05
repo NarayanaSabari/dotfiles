@@ -494,23 +494,27 @@ fi
 # ============================================================ STEP 18
 # Skills reach both harnesses.
 #
-# The two get them by different routes, so each fails differently and neither
-# says anything when it does. Claude Code has Superpowers as a plugin; jcode has
-# no plugin system and gets the same skills through tracked links into a pinned
-# submodule.
+# The harnesses get them by different routes, so each fails differently and
+# none says anything when it does. Claude Code has Superpowers as a plugin;
+# Codex and jcode get the same skills through the tracked global registry.
 SP_CLONE="$HOME/.agents/superpowers"
 if [ -d "$SP_CLONE/skills" ]; then
-  # Every skill in the clone must be linked into jcode and resolve.
+  # Every skill in the clone must be linked globally and resolve.
   for skill in "$SP_CLONE"/skills/*/; do
     [ -f "$skill/SKILL.md" ] || continue
     name=$(basename "$skill")
-    link="$HOME/.jcode/skills/$name"
-    if [ ! -L "$link" ]; then fail "jcode is missing the $name skill link"
-    elif [ ! -f "$link/SKILL.md" ]; then fail "~/.jcode/skills/$name does not resolve to a dir holding SKILL.md"
+    link="$HOME/.agents/skills/$name"
+    if [ ! -L "$link" ]; then fail "the global registry is missing the $name skill link"
+    elif [ ! -f "$link/SKILL.md" ]; then fail "~/.agents/skills/$name does not resolve to a dir holding SKILL.md"
     else pass; fi
   done
 else
-  fail "$SP_CLONE is missing, so jcode has no skills"
+  fail "$SP_CLONE is missing, so the global Superpowers source is unavailable"
+fi
+if [ -e "$HOME/.jcode/skills" ] || [ -L "$HOME/.jcode/skills" ]; then
+  fail "~/.jcode/skills still exists and can duplicate globally discovered skills"
+else
+  pass
 fi
 # The plugin must be enabled, or Claude Code has none: its skills come only from
 # there now, and ~/.claude/skills is deliberately empty.
@@ -525,7 +529,7 @@ PLUGIN_VER=$(ls -1 "$HOME/.claude/plugins/cache/claude-plugins-official/superpow
 CLONE_VER=$(jq -r '.version // empty' "$SP_CLONE/.claude-plugin/plugin.json" 2>/dev/null)
 if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
   [ "$PLUGIN_VER" = "$CLONE_VER" ] && pass \
-    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, jcode's source has $CLONE_VER (claude plugin update; git submodule update --remote coding-agent/vendor/superpowers)"
+    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, the global source has $CLONE_VER (claude plugin update; git submodule update --remote coding-agent/vendor/superpowers)"
 fi
 
 # ============================================================ STEP 19
@@ -559,7 +563,7 @@ done
 # The home-directory links are verified above. These checks cover the source
 # layout itself so they also work in a detached worktree before it becomes the
 # live ~/dotfiles checkout.
-for registry in "$SOURCE_REPO/coding-agent/global/skills" "$SOURCE_REPO/coding-agent/jcode/skills"; do
+for registry in "$SOURCE_REPO/coding-agent/global/skills"; do
   [ -d "$registry" ] || { fail "${registry#$SOURCE_REPO/} is missing"; continue; }
   found=0
   for skill in "$registry"/*; do
@@ -579,11 +583,19 @@ for registry in "$SOURCE_REPO/coding-agent/global/skills" "$SOURCE_REPO/coding-a
   [ "$found" = 1 ] || fail "${registry#$SOURCE_REPO/} contains no skills"
 done
 
-for shim in "$SOURCE_REPO/.agents/skills" "$SOURCE_REPO/.agents/superpowers" "$SOURCE_REPO/.jcode/skills"; do
+for shim in "$SOURCE_REPO/.agents/skills" "$SOURCE_REPO/.agents/superpowers"; do
   if [ ! -L "$shim" ]; then
     fail "${shim#$SOURCE_REPO/} is not a tracked Stow-shim symlink"
   elif [ ! -e "$shim" ]; then
     fail "${shim#$SOURCE_REPO/} is broken"
+  else
+    pass
+  fi
+done
+
+for legacy in "$SOURCE_REPO/coding-agent/jcode/skills" "$SOURCE_REPO/.jcode/skills"; do
+  if [ -e "$legacy" ] || [ -L "$legacy" ]; then
+    fail "${legacy#$SOURCE_REPO/} is a legacy skill registry and should be absent"
   else
     pass
   fi

@@ -14,7 +14,7 @@ Everything managed for Claude Code, Codex, and jcode lives in `coding-agent/`.
 | `coding-agent/claude/` | `CLAUDE.md` (an import plus Claude-only rules), `agents/`, `commands/`, and Claude Code's app config |
 | `coding-agent/codex/` | Codex user, browser, and computer-use configuration |
 | `coding-agent/global/` | the curated global skill registry exposed as `~/.agents/skills` |
-| `coding-agent/jcode/` | `swarm-prompt.md` and the Superpowers links jcode loads |
+| `coding-agent/jcode/` | `swarm-prompt.md` |
 | `coding-agent/hooks/` | every guard, shared by both harnesses |
 | `coding-agent/reference/` | this directory |
 | `coding-agent/vendor/` | pinned upstream skill repositories |
@@ -148,14 +148,15 @@ You are a maximally proactive coding agent and assistant." Separate built-in pro
 ## Skills
 
 The skill sources are pinned Git submodules under `coding-agent/vendor/`.
-The curated links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/`, while Superpowers is exposed separately to each harness.
+The curated links and Superpowers links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/`.
 
 Claude Code has it as a **plugin**, which is upstream's supported path and the only one carrying its `SessionStart` hook.
 That hook injects the `using-superpowers` skill, which is what makes the other thirteen fire on their own; symlinking the skill files alone gives you the content without the thing that invokes them.
 So `~/.claude/skills/` is deliberately empty.
 
-jcode has no plugin system, so `~/.jcode/skills/` points to tracked links under `coding-agent/jcode/skills/`.
+Codex and jcode discover Superpowers through the tracked global links under `~/.agents/skills/`.
 Those links resolve into the pinned `coding-agent/vendor/superpowers` submodule rather than a versioned plugin-cache path that changes on every update.
+They include `using-superpowers`, but neither harness receives Claude Code's SessionStart hook, so activation depends on native skill matching.
 
 The two update separately, so they can drift.
 `verify.sh` STEP 18 compares the versions and reports skew.
@@ -168,7 +169,7 @@ git -C ~/dotfiles diff --submodule
 ```
 
 Review the upstream changes before committing the new submodule revisions.
-Global skills from mattpocock/skills, the AXI repositories, and vercel-labs/skills remain separate from Superpowers so their names and invocation behavior are explicit.
+Global skills from mattpocock/skills, the AXI repositories, vercel-labs/skills, and Superpowers remain separate links in the same registry so their names and sources are explicit.
 
 ## Memory
 

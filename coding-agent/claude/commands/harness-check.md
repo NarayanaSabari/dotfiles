@@ -20,9 +20,9 @@ only what is wrong plus a one-line all-clear for the rest:
 1.
    **Skills.** Claude Code gets Superpowers as a plugin, so `~/.claude/skills/`
    is expected to be empty; check `claude plugin list` shows
-   `superpowers@claude-plugins-official` enabled. jcode gets Superpowers through
-   `~/.jcode/skills/`, and global skills through `~/.agents/skills/`; both must
-   resolve into pinned repositories under `coding-agent/vendor/`.
+   `superpowers@claude-plugins-official` enabled. Codex and jcode get
+   Superpowers and other global skills through `~/.agents/skills/`; every link
+   must resolve into a pinned repository under `coding-agent/vendor/`.
    Compare the
    Claude plugin and Superpowers submodule versions because they update
    separately and can drift. pi is retired; nothing should still link into

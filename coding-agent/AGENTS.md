@@ -76,12 +76,12 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
   It is a CLI, not a registered skill, so call it with Bash.
 - Parallel sessions: herdr. tmux and treehouse are retired.
   Every `herdr` command needs the sandbox off, because it talks over a unix socket.
-- Skills have two explicit registries under `coding-agent/`: global skills in `global/skills/`, exposed as `~/.agents/skills`, and Superpowers in `jcode/skills/`.
-  Their upstream repositories are pinned submodules under `vendor/`.
-  Claude Code installs Superpowers as a plugin because its SessionStart hook activates the skill set; jcode has no plugin system and reads the tracked links directly.
+- Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
+  Superpowers and the individually curated skills all link from there into pinned submodules under `vendor/`.
+  Claude Code installs Superpowers as a plugin because its SessionStart hook activates the skill set; Codex and jcode discover the tracked global links directly.
   Update with `claude plugin update` and `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- jcode loads from both `~/.jcode/skills/` and `~/.agents/skills/`.
-  Removing a skill from only one registry can leave another skill with similar behavior active.
+- Codex and jcode load user skills from `~/.agents/skills/`.
+  Removing a link from that registry disables the skill for both harnesses.
 - The workflow the skills expect: `brainstorming` to get a spec out of the conversation, `writing-plans`, then `executing-plans` or `subagent-driven-development` to work through it, with `test-driven-development` throughout.
   `systematic-debugging` on a hard bug.
   `requesting-code-review` before committing, `verification-before-completion` before calling anything done.
