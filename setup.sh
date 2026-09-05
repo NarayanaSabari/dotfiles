@@ -20,7 +20,12 @@ fi
 
 # Install packages from leaves.txt
 echo "Installing Homebrew packages..."
-xargs brew install < "$DOTFILES/homebrew/leaves.txt"
+while IFS= read -r formula; do
+  [ -n "$formula" ] || continue
+  if ! brew list --formula "$formula" >/dev/null 2>&1; then
+    brew install "$formula"
+  fi
+done < "$DOTFILES/homebrew/leaves.txt"
 
 # Install GNU Stow if not already installed (should be in leaves.txt)
 if ! command -v stow &> /dev/null; then
