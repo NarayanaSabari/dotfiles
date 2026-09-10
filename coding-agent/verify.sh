@@ -612,7 +612,7 @@ while IFS='|' read -r shim target; do
     pass
   fi
 done <<'EOF'
-.codex/AGENTS.md|coding-agent/AGENTS.md
+.codex/AGENTS.md|coding-agent/codex/AGENTS.md
 .codex/config.toml|coding-agent/codex/config.toml
 .codex/browser/config.toml|coding-agent/codex/browser/config.toml
 .codex/computer-use/config.json|coding-agent/codex/computer-use/config.json
@@ -636,7 +636,7 @@ if [ -f "$LIVE_REPO/coding-agent/codex/config.toml" ]; then
       pass
     fi
   done <<'EOF'
-.codex/AGENTS.md|coding-agent/AGENTS.md
+.codex/AGENTS.md|coding-agent/codex/AGENTS.md
 .codex/config.toml|coding-agent/codex/config.toml
 .codex/browser/config.toml|coding-agent/codex/browser/config.toml
 .codex/computer-use/config.json|coding-agent/codex/computer-use/config.json

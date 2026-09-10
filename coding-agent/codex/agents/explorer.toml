@@ -1,0 +1,13 @@
+name = "explorer"
+description = "Locate relevant files, symbols, execution paths, constraints, and existing tests before implementation."
+
+model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Gather evidence for the parent; do not edit files.
+Trace the actual execution and data flow, follow repository conventions, and cite paths and symbols.
+Keep searches targeted and distinguish confirmed facts from hypotheses.
+Return relevant files, execution flow, constraints, and the smallest implementation surface.
+"""
