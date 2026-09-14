@@ -26,11 +26,12 @@ The personal fork is `https://github.com/NarayanaSabari/jcode`.
 The checkout is separate from the pinned skill source under `coding-agent/vendor/jcode-skills`.
 The custom display preserves full model names, shows provider/auth and effort, and surfaces effort fallbacks and subsequent route changes.
 The footer below the composer shows context usage, model, effort, service tier, and cached subscription limits.
-The footer uses at most three colored rows: model/context, OpenAI, and Claude.
+The footer uses at most three colored rows: model/Git/context, OpenAI, and Claude.
+Git shows the branch and nonzero counts: M modified, S staged, ? untracked, ↑ ahead, and ↓ behind; ✓ means clean and synchronized.
 The input and footer stay at the bottom of the chat pane, with muted horizontal dividers above and below the input.
 A rounded workspace card at the top shows the project, branch, connected providers, skill/MCP counts, and help/resume hints.
 The card is capped at 65 columns and adapts to narrower terminals.
-Activity widgets stack in a reserved 36-column panel on the right: Todos, Swarm, Background tasks, Git, then Diagrams.
+Activity widgets stack in a reserved 36-column panel on the right: Todos, Swarm, Background tasks, then Diagrams.
 The panel appears only when activity data exists and the chat pane is at least 110 columns wide and 18 rows tall.
 Pinned diagrams stay in their existing pane; the activity panel does not duplicate them.
 Alt+I toggles the panel; duplicate model, context, and quota overlays are hidden.
