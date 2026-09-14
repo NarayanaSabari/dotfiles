@@ -35,6 +35,7 @@ Activity widgets stack in a reserved 36-column panel on the right: Todos, Swarm,
 The panel appears only when activity data exists and the chat pane is at least 110 columns wide and 18 rows tall.
 Pinned diagrams stay in their existing pane; the activity panel does not duplicate them.
 Alt+I toggles the panel; duplicate model, context, and quota overlays are hidden.
+Option+Q (Alt+Q) hides or reveals captured thinking in the current client without changing reasoning effort, generation settings, or the unsent input.
 The panel hides when a tall composer leaves insufficient room, and diagrams reserve preview space ahead of lower activity cards.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Claude shows reset countdowns beside its session and weekly percentages when space permits; narrower rows preserve both quotas and the account identity.
