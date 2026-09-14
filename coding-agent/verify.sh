@@ -7,7 +7,7 @@
 # the wiring: a symlink or an import that stopped resolving reports nothing at
 # all, it just silently stops working, so those are assertions too.
 #
-# Covers: the shared guards against both hook payload shapes, fail-closed
+# Covers: the Claude Code guards against their hook payload shape, fail-closed
 # parsing, configured hook paths, shared instruction wiring, and managed Codex
 # configuration. /harness-check runs this and judges what is left over.
 #
@@ -28,8 +28,7 @@ SOURCE_REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 # The hooks live in the repo and settings.json points straight at them.
 # They were reached through a ~/.claude/hooks symlink until 2026-09-01,
 # when that link was observed vanishing repeatedly: recreated, verified,
-# then gone again a few commands later, while ~/.jcode/hooks with the same
-# target survived every time. Cause not established; something prunes a
+# then gone again a few commands later. Cause not established; something prunes a
 # symlink at that specific path. Referencing the real directory removes
 # the dependency rather than relying on a link that does not stay put.
 HOOKS="${HOOKS_DIR:-$SOURCE_REPO/coding-agent/hooks}"
@@ -248,97 +247,11 @@ ELAPSED=$(( $(date +%s) - START ))
 if [ "$ELAPSED" -le 3 ]; then pass
 else fail "credential-guard took ${ELAPSED}s on 5000 untracked files (budget 3s, hook timeout 10s)"; fi
 
-# ============================================================ STEP 11g
-# The jcode payload contract.
-#
-# The guards are shared by both harnesses, but the two send different shapes:
-# Claude Code wraps the tool input and passes tool name and cwd as JSON
-# fields, jcode sends the raw tool input with both in the environment. Every
-# assertion above exercises only the Claude Code shape, which is exactly how
-# the jcode copies of these guards drifted for months without anything
-# failing. These run the same corpus through the other contract.
-jcode_json() { # jcode_json <command>
-  local esc
-  esc=$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
-        | awk 'BEGIN{ORS=""} NR>1{print "\\n"} {print}')
-  printf '{"command":"%s"}' "$esc"
-}
-# jassert <expect> <hook> <name> <cwd> <command>
-jassert() {
-  local expect="$1" hook="$2" name="$3" cwd="$4" cmd="$5" rc
-  if [ ! -x "$HOOKS/$hook" ]; then fail "$name: $HOOKS/$hook missing or not executable"; return; fi
-  printf '%s' "$(jcode_json "$cmd")" \
-    | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$cwd" "$HOOKS/$hook" >/dev/null 2>&1
-  rc=$?
-  if [ "$expect" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$name: expected BLOCK, hook exited $rc"
-  elif [ "$expect" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$name: expected ALLOW, hook blocked"
-  else pass; fi
-}
-
-# --- guardrails, jcode contract. The path-qualified forms are the ones the old
-# jcode copy missed entirely: it matched only the bare word `git`.
-for c in "$G reset --hard" "$G clean -fd" "$G checkout ." "$G branch -D x" \
-         "$G push --force origin main" "/usr/bin/$G reset --hard" "./$G clean -fd" \
-         "$G reflog expire --expire=now --all" "$G filter-branch --force --all" \
-         "$G gc --prune=now" "$G stash clear" "$G rm -rf ." "$G prune"; do
-  jassert BLOCK git-guardrails.sh "jcode guardrails blocks: $c" "$CLEANREPO" "$c"
-done
-for c in "$G status" "$G push origin feature" "$G branch -d x" "$G stash pop" \
-         "$G gc" "$G rm oldfile.txt" "ls -la"; do
-  jassert ALLOW git-guardrails.sh "jcode guardrails allows: $c" "$CLEANREPO" "$c"
-done
-
-# --- identity, jcode contract. IDREPO's identity was corrected in step 11b, so
-# put it back to the mismatched one for these.
-( cd "$IDREPO" && $G config user.email wrong@example.com ) >/dev/null 2>&1
-for c in "$G commit -m x" "$G push" "/usr/bin/$G commit -m x" \
-         "$G cherry-pick abc" "$G rebase main" "$G merge --no-ff f"; do
-  jassert BLOCK git-identity-guard.sh "jcode identity blocks: $c" "$IDREPO" "$c"
-done
-for c in "$G status" "$G fetch origin" "$G rebase --abort"; do
-  jassert ALLOW git-identity-guard.sh "jcode identity allows: $c" "$IDREPO" "$c"
-done
-# cd resolution must work on this contract too; the old jcode copy had no
-# effective_cwd at all, so `cd <repo> && git commit` was invisible to it.
-jassert BLOCK git-identity-guard.sh "jcode identity resolves: cd <repo> && git commit" \
-  "$OTHERWD" "cd $IDREPO && $G commit -m x"
-jassert ALLOW git-identity-guard.sh "jcode identity falls back when cd is unresolvable" \
-  "$OTHERWD" "cd \$REPO && $G commit -m x"
-
-# --- credential guard, jcode contract. CREDREPO still holds an untracked .env.
-jassert BLOCK credential-guard.sh "jcode cred blocks git add -A sweeping .env" "$CREDREPO" "$G add -A"
-jassert BLOCK credential-guard.sh "jcode cred blocks named git add .env"       "$CREDREPO" "$G add .env"
-jassert ALLOW credential-guard.sh "jcode cred allows explicit safe path"       "$CREDREPO" "$G add src/app.py"
-jassert ALLOW credential-guard.sh "jcode cred allows git add -u"               "$CREDREPO" "$G add -u"
-# Write-shaped payload, jcode spelling: flat fields and a lowercase tool name.
-jw() { printf '{"file_path":"%s","content":"%s"}' "$1" "$2"; }
-jw_assert() { # jw_assert <expect> <name> <json>
-  local rc
-  printf '%s' "$3" | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=write \
-    "$HOOKS/credential-guard.sh" >/dev/null 2>&1
-  rc=$?
-  if [ "$1" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$2: expected BLOCK, exited $rc"
-  elif [ "$1" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$2: expected ALLOW, blocked"
-  else pass; fi
-}
-jw_assert BLOCK "jcode cred blocks write to .env"       "$(jw /x/.env A=1)"
-jw_assert BLOCK "jcode cred blocks live key in body"    "$(jw /x/n.txt "k=$AWSKEY")"
-jw_assert ALLOW "jcode cred allows .env.example"        "$(jw /x/.env.example A=1)"
-jw_assert ALLOW "jcode cred allows an ordinary file"    "$(jw /x/notes.md hello)"
-
-# --- commit-signature, jcode contract.
-jassert BLOCK commit-signature-guard.sh "jcode signature blocks a real trailer" "$CLEANREPO" \
-  "$G commit -m \"fix
-
-$CAB: Claude <x@y.z>\""
-jassert ALLOW commit-signature-guard.sh "jcode signature allows prose about it" "$CLEANREPO" \
-  "$G commit -m \"hooks: forbid the $CAB trailer\""
-
 # ============================================================ STEP 11h
 # Fail-closed parsing.
 #
 # The code these guards replaced swallowed jq errors and then read an empty
-# command as "nothing to check". A payload-shape change on either harness would
+# command as "nothing to check". A payload-shape change would
 # have disarmed every guard with no error anywhere and this whole suite still
 # green. Unparseable input must now refuse the command, not wave it through.
 for hook in git-guardrails.sh git-identity-guard.sh credential-guard.sh commit-signature-guard.sh; do
@@ -430,13 +343,12 @@ if [ -f "$CLAUDEMD" ]; then
     [ "$IMPORT" = "$SHARED" ] && pass || fail "CLAUDE.md imports '$IMPORT', expected the shared file $SHARED"
   fi
 fi
-# jcode reads the same content through ~/AGENTS.md. It is allowed to be a
-# symlink here: jcode follows them, only Claude Code's importer does not.
+# The home-level instruction link must resolve to the shared source.
 if [ -e "$HOME/AGENTS.md" ]; then
   RESOLVED=$(cd "$(dirname "$HOME/AGENTS.md")" && realpath "$HOME/AGENTS.md" 2>/dev/null)
   [ "$RESOLVED" = "$SHARED" ] && pass || fail "~/AGENTS.md resolves to '$RESOLVED', expected $SHARED"
 else
-  fail "~/AGENTS.md is missing, so jcode has no instructions"
+  fail "~/AGENTS.md is missing"
 fi
 
 # ============================================================ STEP 16
@@ -446,7 +358,7 @@ fi
 # coding-agent/, and the root shim directories only point there. A real file
 # appearing in a shim means something wrote outside that structure, and it will
 # be read in preference to the file you think you are editing.
-for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex" "$REPO/.jcode"; do
+for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex"; do
   [ -d "$shim" ] || continue
   while IFS= read -r entry; do
     case "$(basename "$entry")" in .cc-writes) continue ;; esac
@@ -458,45 +370,12 @@ for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex" "$REPO/.jcode"; do
   done < <(find "$shim" -mindepth 1 ! -type d -print)
 done
 
-# ============================================================ STEP 17
-# jcode's pre_tool chain.
-#
-# jcode allows exactly one pre_tool command, so pre-tool.sh chains the guards
-# itself. That means jcode's guard coverage is whatever this one file lists, and
-# a guard dropped from the list disappears silently: nothing in jcode reports a
-# shorter chain. Until 2026-09-01 it chained two of the four, so credential
-# writes and attribution trailers were unguarded on the harness that also runs
-# ambient mode unattended.
-CHAIN="$REPO/coding-agent/hooks/pre-tool.sh"
-if [ -f "$CHAIN" ]; then
-  for guard in git-identity-guard.sh git-guardrails.sh credential-guard.sh commit-signature-guard.sh; do
-    grep -q "$guard" "$CHAIN" && pass || fail "pre-tool.sh no longer chains $guard, so jcode runs without it"
-  done
-  # And it must actually block through the chain, not merely name the files.
-  CHAINREPO="$ROOT/chainrepo"; mkdir -p "$CHAINREPO"
-  ( cd "$CHAINREPO" && $G init -q . ) >/dev/null 2>&1
-  echo "SECRET=x" > "$CHAINREPO/.env"
-  chain_assert() { # chain_assert <expect> <name> <json>
-    local rc
-    printf '%s' "$3" | HOME="$FAKEHOME" JCODE_HOOK_TOOL_NAME=bash \
-      JCODE_HOOK_CWD="$CHAINREPO" "$CHAIN" >/dev/null 2>&1
-    rc=$?
-    if [ "$1" = BLOCK ] && [ "$rc" -ne 2 ]; then fail "$2: expected BLOCK, exited $rc"
-    elif [ "$1" = ALLOW ] && [ "$rc" -eq 2 ]; then fail "$2: expected ALLOW, blocked"
-    else pass; fi
-  }
-  chain_assert BLOCK "chain blocks destructive git"     '{"command":"'"$G"' reset --hard"}'
-  chain_assert BLOCK "chain blocks a credential sweep"  '{"command":"'"$G"' add -A"}'
-  chain_assert BLOCK "chain blocks an unparseable payload" 'garbage'
-  chain_assert ALLOW "chain allows an ordinary command" '{"command":"'"$G"' status"}'
-fi
-
 # ============================================================ STEP 18
 # Skills reach both harnesses.
 #
 # The harnesses get them by different routes, so each fails differently and
 # none says anything when it does. Claude Code has Superpowers as a plugin;
-# Codex and jcode get the same skills through the tracked global registry.
+# Codex gets the same skills through the tracked global registry.
 SP_CLONE="$HOME/.agents/superpowers"
 if [ -d "$SP_CLONE/skills" ]; then
   # Every skill in the clone must be linked globally and resolve.
@@ -510,11 +389,6 @@ if [ -d "$SP_CLONE/skills" ]; then
   done
 else
   fail "$SP_CLONE is missing, so the global Superpowers source is unavailable"
-fi
-if [ -e "$HOME/.jcode/skills" ] || [ -L "$HOME/.jcode/skills" ]; then
-  fail "~/.jcode/skills still exists and can duplicate globally discovered skills"
-else
-  pass
 fi
 # The plugin must be enabled, or Claude Code has none: its skills come only from
 # there now, and ~/.claude/skills is deliberately empty.
@@ -531,31 +405,6 @@ if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
   [ "$PLUGIN_VER" = "$CLONE_VER" ] && pass \
     || fail "superpowers version skew: Claude Code has $PLUGIN_VER, the global source has $CLONE_VER (claude plugin update; git submodule update --remote coding-agent/vendor/superpowers)"
 fi
-
-# ============================================================ STEP 19
-# Every jcode prompt input must be version-controlled.
-#
-# jcode composes its system prompt from more files than its docs mention:
-# system-prompt.md, prompt-overlay.md and preferred-tools.md, each global and
-# per-project, none of them documented. A real file in any of those slots is
-# text going into every session that nothing tracks and nobody reviews.
-#
-# One was found on 2026-09-01: a five-day-old Docker-teardown notice still being
-# injected into every session, whose own last line asked for it to be deleted.
-# Absent is fine. Present-and-a-symlink-into-the-repo is fine. Present as a real
-# file is not.
-for slot in system-prompt.md prompt-overlay.md preferred-tools.md; do
-  f="$HOME/.jcode/$slot"
-  [ -e "$f" ] || { pass; continue; }
-  if [ ! -L "$f" ]; then
-    fail "~/.jcode/$slot is a real file: it goes into every jcode session and is not version-controlled"
-  else
-    case "$(realpath "$f" 2>/dev/null)" in
-      "$LIVE_REPO"/*) pass ;;
-      *) fail "~/.jcode/$slot resolves outside the repo, so its content is untracked" ;;
-    esac
-  fi
-done
 
 # ============================================================ STEP 20
 # Repository-owned skill registries.
@@ -588,14 +437,6 @@ for shim in "$SOURCE_REPO/.agents/skills" "$SOURCE_REPO/.agents/superpowers"; do
     fail "${shim#$SOURCE_REPO/} is not a tracked Stow-shim symlink"
   elif [ ! -e "$shim" ]; then
     fail "${shim#$SOURCE_REPO/} is broken"
-  else
-    pass
-  fi
-done
-
-for legacy in "$SOURCE_REPO/coding-agent/jcode/skills" "$SOURCE_REPO/.jcode/skills"; do
-  if [ -e "$legacy" ] || [ -L "$legacy" ]; then
-    fail "${legacy#$SOURCE_REPO/} is a legacy skill registry and should be absent"
   else
     pass
   fi

@@ -1,6 +1,6 @@
 # Subagents
 
-Claude Code only. jcode delegates through its native `swarm` tool and has no agent files.
+Claude Code only.
 
 Each agent's frontmatter says what it is for, so this file does not repeat it.
 What frontmatter cannot tell you:

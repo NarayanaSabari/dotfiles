@@ -11,21 +11,19 @@
 # - echo "git reset --hard" is blocked (quote-stripping false positive, safe side)
 
 # ------------------------------------------------------------------- payload
-# One implementation, two harnesses. Claude Code wraps the tool input and
-# passes the tool name and cwd as JSON fields; jcode passes the raw tool input
-# and puts the tool name and cwd in the environment. JCODE_HOOK_TOOL_NAME is
-# set only by jcode, so it is the discriminator. Tool names are normalised onto
-# Claude Code's spelling so everything below this block is contract-agnostic.
+# Claude Code wraps the tool input and passes the tool name and cwd as JSON
+# fields. Tool names are normalised below so the guard can handle the spellings
+# used by Claude Code's built-in tools.
 #
 # Fail CLOSED. The code this replaced sent jq's errors to /dev/null and then
-# read an empty command as "nothing to check", so a payload-shape change on
-# either harness would have disarmed the guard silently: no error anywhere, and
-# every assertion still green. Refusing loudly is the safe direction.
+# read an empty command as "nothing to check", so a payload-shape change would
+# have disarmed the guard silently: no error anywhere, and every assertion
+# still green. Refusing loudly is the safe direction.
 #
 # This block is duplicated verbatim across the guards rather than sourced.
 # These hooks are standalone by design - one missing library file would break
-# all of them at once - and guard-assertions.sh runs every guard against BOTH
-# payload shapes, so a copy that is fixed here and missed there fails the suite.
+# all of them at once - and verify.sh exercises the guard with valid and invalid
+# payloads.
 hook_bail() {
   printf '%s: %s; refusing to let the command run unguarded\n' "${0##*/}" "$1" >&2
   exit 2
@@ -33,19 +31,9 @@ hook_bail() {
 command -v jq >/dev/null 2>&1 || hook_bail "jq not found"
 INPUT=$(cat)
 printf '%s' "$INPUT" | jq -e . >/dev/null 2>&1 || hook_bail "unparseable hook payload"
-hook_field() { # hook_field <jcode-filter> <claude-filter>
-  if [ -n "${JCODE_HOOK_TOOL_NAME:-}" ]
-  then printf '%s' "$INPUT" | jq -r "$1"
-  else printf '%s' "$INPUT" | jq -r "$2"; fi
-}
-if [ -n "${JCODE_HOOK_TOOL_NAME:-}" ]; then
-  HOOK_TOOL="$JCODE_HOOK_TOOL_NAME"
-  HOOK_CWD="${JCODE_HOOK_CWD:-}"
-else
-  HOOK_TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
-  HOOK_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
-fi
-HOOK_CMD=$(hook_field '.command // empty' '.tool_input.command // empty')
+HOOK_TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+HOOK_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+HOOK_CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 case "$HOOK_TOOL" in
   bash|Bash)                   HOOK_TOOL=Bash ;;
   write|Write)                 HOOK_TOOL=Write ;;

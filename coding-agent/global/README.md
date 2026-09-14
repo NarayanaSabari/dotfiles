@@ -2,7 +2,7 @@
 
 This directory is the version-controlled source for resources exposed through `~/.agents/`.
 
-- `skills/` is the curated global skill registry used by jcode and any other harness that reads the Agent Skills convention.
+- `skills/` is the curated global skill registry used by Codex and any other harness that reads the Agent Skills convention.
 - `../vendor/` contains the pinned upstream repositories behind those links.
 - `~/.agents/.skill-lock.json` remains local runtime state and is deliberately not tracked here.
 

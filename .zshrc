@@ -46,3 +46,6 @@ export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 # ---- Zoxide (better cd) ---- (keep at end of .zshrc)
 eval "$(zoxide init zsh)"
 alias cd="z"
+
+# opencode
+export PATH=/Users/sabari/.opencode/bin:$PATH

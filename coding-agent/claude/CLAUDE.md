@@ -1,7 +1,7 @@
 <!--
 Claude Code's entry point.
 Nearly everything lives in the shared file imported
-below, which jcode also reads; only Claude-specific rules are in this file.
+below; only Claude-specific rules are in this file.
 
 The import MUST be an absolute path to the REAL file.
 Two spellings that look

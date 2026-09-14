@@ -199,16 +199,6 @@
     ],
     "SessionStart": [
       {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/Users/sabari/.local/bin/jcode' setup-hotkey --notify-cli-launch claude",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {

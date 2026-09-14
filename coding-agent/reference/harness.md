@@ -5,17 +5,16 @@ Nothing here is loaded into context automatically, so anything that must change 
 
 ## Layout
 
-Everything managed for Claude Code, Codex, and jcode lives in `coding-agent/`.
-`dotfiles/.agents/`, `dotfiles/.claude/`, `dotfiles/.codex/`, and `dotfiles/.jcode/` are only Stow shims that point there.
+Everything managed for Claude Code and Codex lives in `coding-agent/`.
+`dotfiles/.agents/`, `dotfiles/.claude/`, and `dotfiles/.codex/` are only Stow shims that point there.
 
 | Path | Holds |
 |---|---|
-| `coding-agent/AGENTS.md` | the shared instructions, read by all three harnesses |
+| `coding-agent/AGENTS.md` | shared Claude Code instructions |
 | `coding-agent/claude/` | `CLAUDE.md` (an import plus Claude-only rules), `agents/`, `commands/`, and Claude Code's app config |
 | `coding-agent/codex/` | Codex user, browser, and computer-use configuration |
 | `coding-agent/global/` | the curated global skill registry exposed as `~/.agents/skills` |
-| `coding-agent/jcode/` | `swarm-prompt.md` |
-| `coding-agent/hooks/` | every guard, shared by both harnesses |
+| `coding-agent/hooks/` | Claude Code guard scripts |
 | `coding-agent/reference/` | this directory |
 | `coding-agent/vendor/` | pinned upstream skill repositories |
 | `coding-agent/verify.sh` | every mechanical assertion about the above |
@@ -57,9 +56,7 @@ Two rules:
 
 ## Guardrails
 
-Both harnesses run the same scripts from `coding-agent/hooks/`.
-jcode chains all four through `pre-tool.sh`, because it supports only one `pre_tool` command.
-Both harnesses therefore run the same set.
+Claude Code runs the scripts from `coding-agent/hooks/` through its configured `PreToolUse` hooks.
 
 | Guard | Blocks |
 |---|---|
@@ -68,20 +65,12 @@ Both harnesses therefore run the same set.
 | `credential-guard.sh` | writes to credential-shaped paths, content carrying a live-looking key, and `git add` sweeping an untracked `.env`. |
 | `commit-signature-guard.sh` | tool-attribution trailers. Trailers only, never prose: an earlier version blocked the commit that introduced it by matching its own message. |
 
-### Two payload shapes
+### Hook payloads
 
 Claude Code sends `{"tool_name":..., "cwd":..., "tool_input":{"command":...}}`.
-jcode sends the raw tool input, `{"command":...}`, with the tool name and cwd in `JCODE_HOOK_TOOL_NAME` and `JCODE_HOOK_CWD`.
-Each guard detects which and normalises tool names onto Claude Code's spelling, so everything below the shim is contract-agnostic.
-
-Parsing fails **closed**.
-A missing `jq` or an unparseable payload refuses the command.
-The code this replaced sent jq's errors to `/dev/null` and read an empty command as nothing to check, so a payload-shape change would have disarmed every guard with no error anywhere and the whole suite still green.
-
-Until 2026-09-01 each harness had its own copy of two of these, with a comment in both saying keep them in sync.
-They were not in sync, and the drift was one-directional: every hardening landed on the Claude Code copy.
-jcode's copy matched only the bare word `git`, so `/usr/bin/git reset --hard` bypassed it entirely, and it had no `cd` resolution, so `cd <repo> && git commit` committed under an unchecked identity.
-That is why `verify.sh` runs the corpus through both shapes: prose asking for sync did not hold, and nothing failed while it was untrue.
+The guards read the tool name, working directory, and tool input from that payload.
+Parsing fails closed: missing `jq` or unparseable JSON refuses the command.
+The verifier exercises allowed commands, blocked commands, and malformed payloads.
 
 ## Sandbox edges
 
@@ -100,7 +89,7 @@ That is why `verify.sh` runs the corpus through both shapes: prose asking for sy
 
 On 2026-09-01 a symlink at `~/.claude/hooks` was observed disappearing three times.
 Each time it was recreated and verified present, then found gone entirely, not dangling, a few commands later.
-`~/.jcode/hooks`, pointing at the same directory, survived throughout, as did `~/.claude/agents`, `commands` and `settings.json`.
+`~/.claude/agents`, `commands` and `settings.json` survived throughout.
 Ruled out: `claude -d -p` startup, idle time, and the sandbox hiding it, since sandboxed and unsandboxed views agreed it was absent.
 Cause not established.
 
@@ -124,27 +113,6 @@ rm .claude/settings.json
 ln -sfn ../coding-agent/claude/settings.json .claude/settings.json
 ```
 
-## jcode composes its prompt from more files than the docs say
-
-`jcode.sh/docs` lists `~/AGENTS.md` and `./AGENTS.md`, and says both are loaded in every session that runs in that scope.
-It does not mention the other three slots, which the binary reads under labelled headings ("Global Prompt Overlay", "Project Preferred Tools"):
-
-| Slot | Global | Per-project |
-|---|---|---|
-| Full system-prompt override | `~/.jcode/system-prompt.md` | -- |
-| Prompt overlay | `~/.jcode/prompt-overlay.md` | `./.jcode/prompt-overlay.md` |
-| Preferred tools | `~/.jcode/preferred-tools.md` | `./.jcode/preferred-tools.md` |
-
-None of these is version-controlled by default, so anything dropped in one is text entering every session that nothing tracks.
-
-One was found on 2026-09-01: a Docker-teardown notice from five days earlier, still being injected, whose own closing line asked for it to be deleted once sessions had caught up.
-Removed, and `verify.sh` STEP 19 now fails on any real file in those slots.
-Absent is fine; a symlink into this repo is fine.
-
-The base prompt itself is compiled into the binary, so it cannot be edited, only overridden.
-Its identity block reads: "Your name is Jcode.
-You are a maximally proactive coding agent and assistant." Separate built-in prompts exist for the swarm coordinator, the task planner, and ambient mode.
-
 ## Skills
 
 The skill sources are pinned Git submodules under `coding-agent/vendor/`.
@@ -154,9 +122,9 @@ Claude Code has it as a **plugin**, which is upstream's supported path and the o
 That hook injects the `using-superpowers` skill, which is what makes the other thirteen fire on their own; symlinking the skill files alone gives you the content without the thing that invokes them.
 So `~/.claude/skills/` is deliberately empty.
 
-Codex and jcode discover Superpowers through the tracked global links under `~/.agents/skills/`.
+Codex discovers Superpowers through the tracked global links under `~/.agents/skills/`.
 Those links resolve into the pinned `coding-agent/vendor/superpowers` submodule rather than a versioned plugin-cache path that changes on every update.
-They include `using-superpowers`, but neither harness receives Claude Code's SessionStart hook, so activation depends on native skill matching.
+The links include `using-superpowers`, but Codex does not receive Claude Code's SessionStart hook, so activation depends on native skill matching.
 
 The two update separately, so they can drift.
 `verify.sh` STEP 18 compares the versions and reports skew.
@@ -174,5 +142,3 @@ Global skills from mattpocock/skills, the AXI repositories, vercel-labs/skills, 
 ## Memory
 
 Claude Code has none. claude-mem was removed on 2026-09-01, taking 10,644 observations across 25 projects with it, so nothing carries between sessions.
-
-jcode does not use claude-mem; its memory is native, per-turn, and local.

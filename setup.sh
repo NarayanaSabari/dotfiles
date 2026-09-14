@@ -47,7 +47,6 @@ mkdir -p \
   "$HOME/.codex/browser" \
   "$HOME/.codex/computer-use" \
   "$HOME/.config" \
-  "$HOME/.jcode" \
   "$HOME/.ssh"
 
 backup_root=""
@@ -84,9 +83,6 @@ prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/.codex/AGENTS.md"
 prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/.codex/config.toml"
 prepare_managed_slot "$HOME/.codex/browser/config.toml" "$DOTFILES/.codex/browser/config.toml"
 prepare_managed_slot "$HOME/.codex/computer-use/config.json" "$DOTFILES/.codex/computer-use/config.json"
-prepare_managed_slot "$HOME/.jcode/hooks" "$DOTFILES/.jcode/hooks"
-prepare_managed_slot "$HOME/.jcode/skills" "$DOTFILES/.jcode/skills"
-prepare_managed_slot "$HOME/.jcode/swarm-prompt.md" "$DOTFILES/.jcode/swarm-prompt.md"
 
 # Stow dotfiles to home directory
 echo "Symlinking dotfiles..."
@@ -95,23 +91,20 @@ stow --dir="$DOTFILES" --target="$HOME" .
 # ---------------------------------------------------------------------------
 # Coding agents
 #
-# Claude Code, Codex, and jcode share one source tree, coding-agent/, and one
-# set of instructions, coding-agent/AGENTS.md.
+# Claude Code and Codex share the coding-agent source tree.
+# Claude Code's shared instructions live in coding-agent/AGENTS.md.
 #
-#   ~/AGENTS.md              -> coding-agent/AGENTS.md      (jcode reads this)
+#   ~/AGENTS.md              -> coding-agent/AGENTS.md      (shared instructions)
 #   ~/.claude/CLAUDE.md      -> coding-agent/claude/CLAUDE.md, which is an
 #                               absolute @import of that same shared file
 #   ~/.claude/{agents,commands,settings.json,...}
 #                            -> coding-agent/claude/...
-#   ~/.codex/AGENTS.md       -> coding-agent/AGENTS.md
+#   ~/.codex/AGENTS.md       -> coding-agent/codex/AGENTS.md
 #   ~/.codex/config.toml     -> coding-agent/codex/config.toml
 #   ~/.codex/{browser,computer-use}/...
 #                            -> coding-agent/codex/...
 #   ~/.agents/skills         -> coding-agent/global/skills
 #   ~/.agents/superpowers    -> coding-agent/vendor/superpowers
-#   ~/.jcode/hooks           -> coding-agent/hooks
-#   ~/.jcode/{skills,swarm-prompt.md}
-#                            -> coding-agent/jcode/...
 #
 # All of those are symlinks committed in the repo, so `stow .` reproduces them
 # and there is nothing to do here.

@@ -1,12 +1,11 @@
 <!--
-The single source of agent instructions on this machine.
+Shared Claude Code instructions for this machine.
 
-jcode reads it as ~/AGENTS.md, a stow symlink to this file.
-Codex reads it as ~/.codex/AGENTS.md, another stow symlink to this file.
 Claude Code reads it because coding-agent/claude/CLAUDE.md imports it, and adds
 its own section below that import.
+Codex has separate global instructions in coding-agent/codex/AGENTS.md.
 
-So most of this file is read by all three harnesses.
+This file is shared by Claude Code and its subagents.
 Anything true of only one is under an explicit heading saying so.
 Do not add a third copy of a rule: if you
 are about to write the same sentence in two places, it belongs up here instead.
@@ -60,11 +59,11 @@ Table and the wildmatch gotcha that silently misrouted commits: [reference/git-i
 
 # Guardrails
 
-Claude Code and jcode run the same hook scripts from `coding-agent/hooks/`, so one ruleset covers both.
+Claude Code runs the hook scripts from `coding-agent/hooks/`.
 They block work-destroying git commands, identity mismatches, credential writes, and tool-attribution trailers.
 When one blocks you, fix the cause it names rather than rephrasing the command to slip past.
 They fail closed: an unparseable payload refuses the command rather than allowing it.
-`coding-agent/verify.sh` asserts the guard behavior and all three harnesses' configuration wiring.
+`coding-agent/verify.sh` asserts the guard behavior and the harness configuration wiring.
 Run it after touching anything in `coding-agent/`.
 Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/harness.md).
 
@@ -78,24 +77,12 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
   Every `herdr` command needs the sandbox off, because it talks over a unix socket.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
   Superpowers and the individually curated skills all link from there into pinned submodules under `vendor/`.
-  Claude Code installs Superpowers as a plugin because its SessionStart hook activates the skill set; Codex and jcode discover the tracked global links directly.
+  Claude Code installs Superpowers as a plugin because its SessionStart hook activates the skill set; Codex discovers the tracked global links directly.
   Update with `claude plugin update` and `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- Codex and jcode load user skills from `~/.agents/skills/`.
-  Removing a link from that registry disables the skill for both harnesses.
+- Codex loads user skills from `~/.agents/skills/`.
+  Removing a link from that registry disables its discovery by Codex.
 - The workflow the skills expect: `brainstorming` to get a spec out of the conversation, `writing-plans`, then `executing-plans` or `subagent-driven-development` to work through it, with `test-driven-development` throughout.
   `systematic-debugging` on a hard bug.
   `requesting-code-review` before committing, `verification-before-completion` before calling anything done.
 - Shipping: review the diff, then push.
   There is no automated ship gate.
-
-# jcode only
-
-- Delegation goes through the native `swarm` tool; there are no agent definition files.
-  Routing policy is a prompt: `~/.jcode/swarm-prompt.md`, sourced from `coding-agent/jcode/swarm-prompt.md`.
-- `swarm spawn` silently ignores a `model` it cannot route and hands back a worker on the coordinator's own model.
-  Measured on 2026-08-28: pinning was ignored for every route tried, including a same-provider control.
-  Assume any spawned reviewer is same-family and say so, unless a throwaway "which model are you?" spawn proves otherwise.
-- Memory is native and per-turn, consolidated by ambient mode. claude-mem does not apply here.
-  `session_search` reaches older sessions and other harnesses.
-- Ambient mode is on with `proactive_work`, so jcode acts on its own on `ambient/` branches between sessions.
-- Self-dev on jcode's own source needs a frontier model; the codebase is large and weaker models make subtle breaking changes.

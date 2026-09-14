@@ -11,7 +11,7 @@ default_subagent_reasoning_effort = "max"
 
 [desktop]
 followUpQueueMode = "steer"
-conversationDetailMode = "STEPS_COMMANDS"
+conversationDetailMode = "STEPS_PROSE"
 ambient-suggestions-enabled = false
 realtimeVoiceScreenContextEnabled = true
 
@@ -73,8 +73,8 @@ NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
 NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = ""
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.901.41600"
-NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/sabari/.codex/plugins/cache/openai-bundled/browser/26.901.41600/scripts/browser-service.mjs","sky":"@oai/sky/service"}'
+BROWSER_USE_CODEX_APP_VERSION = "26.908.40834"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/sabari/.codex/plugins/cache/openai-bundled/browser/26.908.40834/scripts/browser-service.mjs","sky":"@oai/sky/service"}'
 SKY_CUA_SERVICE_PATH = "/Users/sabari/.codex/computer-use/Codex Computer Use.app"
 CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
 
@@ -121,6 +121,43 @@ trust_level = "trusted"
 
 [projects."/Users/sabari/Developer/narayana/velvet-otter-lab"]
 trust_level = "trusted"
+
+[projects."/Users/sabari/Developer/narayana/jaga-portfoli"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Documents/Codex/2026-09-08/con"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Developer/narayana/pinloop-cli"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Developer/rentai/aesthatiq"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Documents/Codex/2026-09-09/thi"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Documents/Codex/2026-09-09/we-x20"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Documents/Codex/2026-09-09/anla"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/AndroidStudioProjects/MyApplication"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/Documents/Codex/2026-09-10/wha"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/AndroidStudioProjects/OneTake"]
+trust_level = "trusted"
+
+[projects."/Users/sabari/AndroidStudioProjects/one-take-expo"]
+trust_level = "trusted"
+
+[tui]
+pet = "codex"
+theme = "catppuccin-macchiato"
 
 [tui.model_availability_nux]
 gpt-6-astra = 4

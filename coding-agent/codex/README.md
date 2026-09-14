@@ -20,7 +20,7 @@ It may directly handle questions, small edits, focused analysis, routine command
 All five roles and generic subagents use Luna at max reasoning.
 Delegate when independent parallel work, substantial bounded implementation, specialized research, or separate review materially improves quality or speed enough to justify the overhead; do not require all roles or default delegation for every task.
 Child agents execute assigned work directly without automatic recursive delegation.
-The global context is Codex-specific; Claude Code and jcode retain their shared instructions.
+The global context is Codex-specific; Claude Code retains its shared instructions.
 Custom explorer and worker definitions override the built-in roles of those names.
 Permission settings remain subject to the parent session's runtime overrides.
 

@@ -7,8 +7,8 @@ Run them first:
 bash ~/dotfiles/coding-agent/verify.sh
 ```
 
-Exit 0 means every mechanical check held: the shared guards against both
-payload shapes, fail-closed parsing, every hook path named in settings.json, the
+Exit 0 means every mechanical check held: the Claude Code guards against their
+hook payload shape, fail-closed parsing, every hook path named in settings.json, the
 shared AGENTS.md wiring, and the managed Codex config.
 Non-zero names the failing
 assertion.
@@ -20,7 +20,7 @@ only what is wrong plus a one-line all-clear for the rest:
 1.
    **Skills.** Claude Code gets Superpowers as a plugin, so `~/.claude/skills/`
    is expected to be empty; check `claude plugin list` shows
-   `superpowers@claude-plugins-official` enabled. Codex and jcode get
+   `superpowers@claude-plugins-official` enabled. Codex gets
    Superpowers and other global skills through `~/.agents/skills/`; every link
    must resolve into a pinned repository under `coding-agent/vendor/`.
    Compare the
@@ -29,7 +29,7 @@ only what is wrong plus a one-line all-clear for the rest:
    `~/.pi/`.
 
 2.
-   **Broken links.** `find ~/.agents ~/.claude ~/.codex ~/.jcode -maxdepth 3 -type l ! -exec test -e {} \; -print`
+   **Broken links.** `find ~/.agents ~/.claude ~/.codex -maxdepth 3 -type l ! -exec test -e {} \; -print`
 
 3.
    **Settings sanity.** `~/.claude/settings.json` must be valid JSON.
@@ -55,8 +55,7 @@ only what is wrong plus a one-line all-clear for the rest:
    unfollowable.
 
 5.
-   **Real files in a Stow shim.** `dotfiles/.agents/`, `.claude/`, `.codex/`,
-   and `.jcode/` are only entry points; everything managed belongs in
+   **Real files in a Stow shim.** `dotfiles/.agents/`, `.claude/`, and `.codex/` are only entry points; everything managed belongs in
    `coding-agent/`.
    A real file appearing there means something wrote outside
    the repository's structure.

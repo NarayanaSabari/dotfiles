@@ -72,7 +72,7 @@ This creates symlinks in your home directory (`~`) for the shell, editor, Git, a
 - `.wezterm.lua` -- WezTerm terminal config
 - `.config/nvim/` -- Neovim configuration
 - `.agents/skills` -- global agent skills
-- `.claude/`, `.codex/`, and `.jcode/` -- harness-specific entry points
+- `.claude/` and `.codex/` -- harness-specific entry points
 
 ### 7. Set up Git
 
@@ -127,16 +127,16 @@ Review skill changes before committing the new submodule revisions.
 
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
-## Coding agents (Claude Code + Codex + jcode)
+## Coding agents (Claude Code + Codex)
 
-All three harnesses share one source tree, `coding-agent/`, and **one set of instructions**.
-`coding-agent/AGENTS.md` is the single source; Claude Code reads it through an import, Codex reads it through `~/.codex/AGENTS.md`, and jcode reads it through `~/AGENTS.md`.
+Claude Code and Codex use the same `coding-agent/` source tree with separate global instruction files.
+Claude Code imports `coding-agent/AGENTS.md`, while Codex reads `coding-agent/codex/AGENTS.md` through `~/.codex/AGENTS.md`.
 pi was retired on 2026-09-01.
 
 ```
 coding-agent/
-├── AGENTS.md          # THE instructions. All three harnesses read this.
-├── hooks/             # guards shared by Claude Code and jcode
+├── AGENTS.md          # Claude Code's shared instructions
+├── hooks/             # Claude Code guard scripts
 ├── global/
 │   └── skills/        # curated registry exposed as ~/.agents/skills
 ├── claude/
@@ -147,8 +147,6 @@ coding-agent/
 ├── codex/
 │   ├── config.toml    # Codex user configuration
 │   └── browser/, computer-use/
-├── jcode/
-│   └── swarm-prompt.md
 ├── reference/         # evidence behind the one-line rules in AGENTS.md
 ├── vendor/            # pinned third-party Git submodules
 └── verify.sh          # every mechanical assertion about the above
@@ -156,23 +154,24 @@ coding-agent/
 
 How it maps into the live tools:
 
-| Source | Claude Code | Codex | jcode |
-|--------|-------------|-------|-------|
-| `AGENTS.md` | via the import in `CLAUDE.md` | `~/.codex/AGENTS.md` | `~/AGENTS.md` |
-| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- | -- |
-| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- | -- |
-| `codex/` | -- | `~/.codex/...` | -- |
-| `hooks/` | named by absolute path in `settings.json` | -- | `~/.jcode/hooks` |
-| `jcode/swarm-prompt.md` | -- | -- | `~/.jcode/swarm-prompt.md` |
-| `global/skills/` | -- | `~/.agents/skills/<name>` | `~/.agents/skills/<name>` |
-| `vendor/superpowers` | plugin installation | via the global registry | via the global registry |
+| Source | Claude Code | Codex |
+|--------|-------------|-------|
+| `AGENTS.md` | via the import in `CLAUDE.md` | -- |
+| `codex/AGENTS.md` | -- | `~/.codex/AGENTS.md` |
+| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
+| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- |
+| `codex/` | -- | `~/.codex/...` |
+| `hooks/` | named by absolute path in `settings.json` | -- |
+| `global/skills/` | -- | `~/.agents/skills/<name>` |
+| `vendor/superpowers` | plugin installation | via the global registry |
 
-`dotfiles/.agents/`, `dotfiles/.claude/`, `dotfiles/.codex/`, and `dotfiles/.jcode/` contain only symlinked files into `coding-agent/`; they are Stow shims.
+`dotfiles/.agents/`, `dotfiles/.claude/`, and `dotfiles/.codex/` contain only symlinked files into `coding-agent/`; they are Stow shims.
 The links and their pinned sources are committed, and `setup.sh` initializes the submodules before Stow exposes them under your home directory.
 Mutable caches, credentials, sessions, and installer state stay outside the repository.
 
 **To change agent behaviour:** edit `coding-agent/AGENTS.md`.
-That is the only shared instruction file for all three tools.
+That is Claude Code's shared instruction file.
+Edit `coding-agent/codex/AGENTS.md` for Codex-specific guidance.
 Put a rule in `claude/CLAUDE.md` only if it is genuinely Claude Code specific.
 
 **After any change under `coding-agent/`, run `bash coding-agent/verify.sh`.**
@@ -186,7 +185,6 @@ The suite is the only thing that reports those.
 ├── .agents/           # global-agent stow shim (symlinks only)
 ├── .claude/            # Claude Code stow shim (symlinks only)
 ├── .codex/             # Codex stow shim (managed files only)
-├── .jcode/             # jcode stow shim (symlinks only)
 ├── .config/
 │   └── nvim/           # Neovim configuration (Lua)
 ├── .gitignore
