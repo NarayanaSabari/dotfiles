@@ -28,7 +28,8 @@ The custom display preserves full model names, shows provider/auth and effort, a
 The footer below the composer shows context usage, model, effort, service tier, and cached subscription limits.
 The footer uses at most three colored rows: model/context, OpenAI, and Claude.
 The input and footer stay at the bottom of the chat pane, with muted horizontal dividers above and below the input.
-A compact workspace header at the top shows the project, branch, connected providers, and skill/MCP counts.
+A rounded workspace card at the top shows the project, branch, connected providers, skill/MCP counts, and help/resume hints.
+The card is capped at 65 columns and adapts to narrower terminals.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Usage refreshes in the background; unavailable and stale results are labeled explicitly.
 Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
