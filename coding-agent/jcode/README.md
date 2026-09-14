@@ -27,6 +27,7 @@ The checkout is separate from the pinned skill source under `coding-agent/vendor
 The custom display preserves full model names, shows provider/auth and effort, and surfaces effort fallbacks and subsequent route changes.
 The footer below the composer shows context usage, model, effort, service tier, and cached subscription limits.
 The footer uses at most three colored rows: model/context, OpenAI, and Claude.
+The input and footer stay at the bottom of the chat pane, with a muted horizontal divider above the input.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Usage refreshes in the background; unavailable and stale results are labeled explicitly.
 Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
