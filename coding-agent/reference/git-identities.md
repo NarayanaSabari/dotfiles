@@ -38,8 +38,13 @@ Verify with `cd <repo> && git config --show-origin user.email`.
 So a session working in a Sabari-RentAI repo flips the active account, and HTTPS pushes from a NarayanaSabari repo then fail with `Repository not found`.
 That 404 means "you are authenticated as someone who cannot see this", not a missing repo.
 
-`.gitconfig-narayana` works around it by rewriting that account's HTTPS remotes onto the `github-narayana` SSH host, which pins `IdentityFile` to the right key.
-The rewrite lives inside the `includeIf`, so rentai repos are untouched and keep using the helper.
+Both account-specific Git configs rewrite their known owners' HTTPS remotes onto their own SSH alias.
+This keeps pushes independent of the global `gh` login.
+
+For API operations, use `gh-account narayana <gh arguments>` or `gh-account rentai <gh arguments>`.
+The wrapper gets the selected account's token from the existing gh credential store and supplies it only to that process.
+It overrides inherited `GH_TOKEN`/`GITHUB_TOKEN` without printing credentials or changing global login state.
+For example, `gh-account rentai api user --jq .login` verifies the selected identity.
 
 ## Enforcement
 
@@ -50,3 +55,11 @@ It checks the session cwd, every `git -C <path>` in the command, and a leading l
 It is a backstop.
 Check the identity yourself.
 See [harness.md](/Users/sabari/dotfiles/coding-agent/reference/harness.md).
+
+## Jcode integration
+
+Jcode calls `jcode-identity-guard.sh` with raw JSON and `JCODE_HOOK_TOOL_NAME`/`JCODE_HOOK_CWD` metadata.
+The adapter validates the payload and invokes the shared identity guard.
+Only the identity guard is connected here; this does not enable the other Claude guards in jcode.
+Adapter and guard failures return exit 2 to block.
+Jcode itself fails open on hook startup failure or timeout, so this is not a sandbox or an absolute enforcement boundary.

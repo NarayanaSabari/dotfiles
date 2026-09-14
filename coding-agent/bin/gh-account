@@ -1,0 +1,17 @@
+#!/bin/bash
+# Select a stored GitHub account for this process, never global gh state.
+set +x
+set -eu
+case "${1:-}" in
+  narayana|NarayanaSabari) account=NarayanaSabari ;;
+  rentai|Sabari-RentAI) account=Sabari-RentAI ;;
+  *) echo 'Usage: gh-account narayana|rentai <gh arguments...>' >&2; exit 2 ;;
+esac
+shift
+[ "$#" -gt 0 ] || { echo 'A gh command is required.' >&2; exit 2; }
+# Ignore inherited tokens when looking up the selected keyring account.
+account_token=$(env -u GH_TOKEN -u GITHUB_TOKEN gh auth token --hostname github.com --user "$account")
+[ -n "$account_token" ] || { echo 'Selected account has no stored token.' >&2; exit 2; }
+export GH_TOKEN="$account_token" GH_HOST=github.com
+unset GITHUB_TOKEN account_token
+exec gh "$@"

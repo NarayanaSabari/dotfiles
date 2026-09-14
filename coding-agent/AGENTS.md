@@ -1,5 +1,6 @@
 <!--
-Shared Claude Code instructions for this machine.
+Shared Claude Code and jcode instructions for this machine.
+jcode reads this file through ~/AGENTS.md.
 
 Claude Code reads it because coding-agent/claude/CLAUDE.md imports it, and adds
 its own section below that import.
@@ -76,13 +77,9 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 - Parallel sessions: herdr. tmux and treehouse are retired.
   Every `herdr` command needs the sandbox off, because it talks over a unix socket.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
-  Superpowers and the individually curated skills all link from there into pinned submodules under `vendor/`.
-  Claude Code installs Superpowers as a plugin because its SessionStart hook activates the skill set; Codex discovers the tracked global links directly.
-  Update with `claude plugin update` and `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- Codex loads user skills from `~/.agents/skills/`.
-  Removing a link from that registry disables its discovery by Codex.
-- The workflow the skills expect: `brainstorming` to get a spec out of the conversation, `writing-plans`, then `executing-plans` or `subagent-driven-development` to work through it, with `test-driven-development` throughout.
-  `systematic-debugging` on a hard bug.
-  `requesting-code-review` before committing, `verification-before-completion` before calling anything done.
+  The AXI and Ponytail skills link into pinned submodules under `vendor/`.
+  Codex and jcode discover the tracked links through `~/.agents/skills/`.
+  Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
+- Removing a skill link from the shared registry disables its discovery by Codex and jcode.
 - Shipping: review the diff, then push.
   There is no automated ship gate.

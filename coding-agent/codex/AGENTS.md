@@ -18,7 +18,7 @@ The canonical file is `~/dotfiles/coding-agent/codex/AGENTS.md`, exposed through
 - When delegating implementation, assign it to workers; resolve ambiguous or architectural decisions in the parent.
 - A Luna reviewer supplies a separate review pass, not cross-provider or cross-family independence.
 - Model settings live in TOML; report runtime model mismatches rather than claiming these instructions enforce the selected model.
-- No mandatory Superpowers workflow or orchestration skill is required by this context.
+- No mandatory orchestration skill is required by this context.
 
 ## Writing
 

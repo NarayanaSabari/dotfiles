@@ -1,0 +1,11 @@
+#!/bin/bash
+# Revoke future tool calls before requesting native swarm stop.
+set -eu
+sid=${1:-}
+case "$sid" in session_*) ;; *) echo 'Usage: jcode-revoke-worker <exact-session-id>' >&2; exit 2 ;; esac
+case "$sid" in *[!a-zA-Z0-9_-]*) echo 'Invalid session ID' >&2; exit 2 ;; esac
+state_dir="${JCODE_HOME:-$HOME/.jcode}/revoked-workers"
+umask 077
+mkdir -p "$state_dir"
+printf 'Revoked by coordinator\n' > "$state_dir/$sid"
+printf 'Revoked future tool calls for %s; now stop it through swarm and verify quiescence.\n' "$sid"

@@ -106,16 +106,54 @@ check_repo() {
     exit 2
   }
 
+  remote_account() {
+    _url=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+    case "$_url" in
+      https://*github.com/renatainow/*|ssh://git@github.com/renatainow/*|git@github.com:renatainow/*|git@github-rentai:renatainow/*|github-rentai:renatainow/*|https://*github.com/sabari-rentai/*|ssh://git@github.com/sabari-rentai/*|git@github.com:sabari-rentai/*|git@github-rentai:sabari-rentai/*|github-rentai:sabari-rentai/*|https://*github.com/tamiratech-private-limited/*|ssh://git@github.com/tamiratech-private-limited/*|git@github.com:tamiratech-private-limited/*|git@github-rentai:tamiratech-private-limited/*|github-rentai:tamiratech-private-limited/*)
+        printf '%s' rentai ;;
+      https://*github.com/narayanasabari/*|ssh://git@github.com/narayanasabari/*|git@github.com:narayanasabari/*|git@github-narayana:narayanasabari/*|github-narayana:narayanasabari/*)
+        printf '%s' narayana ;;
+    esac
+  }
+
+  # Remote owner rules are evaluated after directory rules in .gitconfig, so
+  # a recognized remote wins even when a clone or worktree lives elsewhere.
+  account=
   case "$maindir/" in
     "$HOME/Developer/rentai/"*)
-      [ "$email" = "sabarinarayanakg@rentai.now" ] || fail "repos under Developer/rentai must commit as Sabari-RentAI <sabarinarayanakg@rentai.now>" ;;
+      account=rentai ;;
     "$HOME/Developer/narayana/"*|"$HOME/Developer/neuskale/"*)
-      [ "$name" = "NarayanaSabari" ] || fail "repos under Developer/narayana and Developer/neuskale must commit as NarayanaSabari" ;;
+      account=narayana ;;
+  esac
+
+  remote_rentai=0
+  remote_narayana=0
+  for remote_url in $(git -C "$repodir" config --get-regexp '^remote\..*\.url$' 2>/dev/null | sed -E 's/^[^[:space:]]+[[:space:]]+//'); do
+    case "$(remote_account "$remote_url")" in
+      rentai) remote_rentai=1 ;;
+      narayana) remote_narayana=1 ;;
+    esac
+  done
+  # The Narayana block is later in .gitconfig than the RentAI block, so it
+  # wins if a repository has recognized remotes for both accounts.
+  if [ "$remote_narayana" -eq 1 ]; then
+    account=narayana
+  elif [ "$remote_rentai" -eq 1 ]; then
+    account=rentai
+  fi
+
+  case "$account" in
+    rentai)
+      [ "$name" = "Sabari-RentAI" ] && [ "$email" = "sabarinarayanakg@rentai.now" ] \
+        || fail "this repo must commit as Sabari-RentAI <sabarinarayanakg@rentai.now>" ;;
+    narayana)
+      [ "$name" = "NarayanaSabari" ] && [ "$email" = "sabarinarayanakg@proton.me" ] \
+        || fail "this repo must commit as NarayanaSabari <sabarinarayanakg@proton.me>" ;;
     *)
-      case "$email" in
-        "sabarinarayanakg@rentai.now")
-          fail "client identity <$email> is set on a repo outside its account directory" ;;
-      esac ;;
+      # Keep the legacy safety net for unrelated repositories: the client
+      # identity must never escape its mapped directory or remote owner.
+      [ "$email" = "sabarinarayanakg@rentai.now" ] \
+        && fail "client identity <$email> is set on a repo outside its account directory" ;;
   esac
   return 0
 }

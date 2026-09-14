@@ -3,3 +3,12 @@
 	email = sabarinarayanakg@rentai.now
 [core]
 	sshCommand = "ssh -i ~/.ssh/id_ed25519_rentai -o IdentitiesOnly=yes"
+
+[url "git@github-rentai:renatainow/"]
+	insteadOf = https://github.com/renatainow/
+
+[url "git@github-rentai:Sabari-RentAI/"]
+	insteadOf = https://github.com/Sabari-RentAI/
+
+[url "git@github-rentai:TAMIRATECH-PRIVATE-LIMITED/"]
+	insteadOf = https://github.com/TAMIRATECH-PRIVATE-LIMITED/

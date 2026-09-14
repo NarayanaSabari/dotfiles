@@ -18,15 +18,8 @@ Then check the things that need judgment rather than a comparison, and report
 only what is wrong plus a one-line all-clear for the rest:
 
 1.
-   **Skills.** Claude Code gets Superpowers as a plugin, so `~/.claude/skills/`
-   is expected to be empty; check `claude plugin list` shows
-   `superpowers@claude-plugins-official` enabled. Codex gets
-   Superpowers and other global skills through `~/.agents/skills/`; every link
-   must resolve into a pinned repository under `coding-agent/vendor/`.
-   Compare the
-   Claude plugin and Superpowers submodule versions because they update
-   separately and can drift. pi is retired; nothing should still link into
-   `~/.pi/`.
+   **Skills.** The shared registry contains gh-axi, chrome-devtools-axi, and ponytail.
+   Every link in `~/.agents/skills/` must resolve into a pinned repository under `coding-agent/vendor/`.
 
 2.
    **Broken links.** `find ~/.agents ~/.claude ~/.codex -maxdepth 3 -type l ! -exec test -e {} \; -print`

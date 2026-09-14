@@ -257,9 +257,7 @@
     "type": "command",
     "command": "/Users/sabari/.claude/xirp-statusline-wrapper.sh"
   },
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true
-  },
+  "enabledPlugins": {},
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,

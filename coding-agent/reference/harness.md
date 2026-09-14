@@ -115,29 +115,10 @@ ln -sfn ../coding-agent/claude/settings.json .claude/settings.json
 
 ## Skills
 
-The skill sources are pinned Git submodules under `coding-agent/vendor/`.
-The curated links and Superpowers links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/`.
-
-Claude Code has it as a **plugin**, which is upstream's supported path and the only one carrying its `SessionStart` hook.
-That hook injects the `using-superpowers` skill, which is what makes the other thirteen fire on their own; symlinking the skill files alone gives you the content without the thing that invokes them.
-So `~/.claude/skills/` is deliberately empty.
-
-Codex discovers Superpowers through the tracked global links under `~/.agents/skills/`.
-Those links resolve into the pinned `coding-agent/vendor/superpowers` submodule rather than a versioned plugin-cache path that changes on every update.
-The links include `using-superpowers`, but Codex does not receive Claude Code's SessionStart hook, so activation depends on native skill matching.
-
-The two update separately, so they can drift.
-`verify.sh` STEP 18 compares the versions and reports skew.
-Update both:
-
-```sh
-claude plugin update
-git -C ~/dotfiles submodule update --remote
-git -C ~/dotfiles diff --submodule
-```
-
-Review the upstream changes before committing the new submodule revisions.
-Global skills from mattpocock/skills, the AXI repositories, vercel-labs/skills, and Superpowers remain separate links in the same registry so their names and sources are explicit.
+The gh-axi, chrome-devtools-axi, and Ponytail sources are pinned Git submodules under `coding-agent/vendor/`.
+Their curated links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/` for Codex and jcode.
+Update with `git submodule update --remote`, inspect `git diff --submodule`, and commit reviewed revisions.
+The shared registry checks in `verify.sh` validate the links.
 
 ## Memory
 

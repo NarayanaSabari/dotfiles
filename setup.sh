@@ -43,7 +43,9 @@ git submodule update --init --recursive
 # are moved to a recoverable backup before Stow takes ownership of those slots.
 mkdir -p \
   "$HOME/.agents" \
+  "$HOME/.local/bin" \
   "$HOME/.claude" \
+  "$HOME/.jcode" \
   "$HOME/.codex/browser" \
   "$HOME/.codex/computer-use" \
   "$HOME/.config" \
@@ -76,9 +78,13 @@ prepare_managed_slot() {
   fi
 }
 
+prepare_managed_slot "$HOME/.local/bin/jcode-revoke-worker" "$DOTFILES/.local/bin/jcode-revoke-worker"
+prepare_managed_slot "$HOME/.local/bin/gh-account" "$DOTFILES/.local/bin/gh-account"
 prepare_managed_slot "$HOME/AGENTS.md" "$DOTFILES/AGENTS.md"
+prepare_managed_slot "$HOME/.jcode/config.toml" "$DOTFILES/.jcode/config.toml"
+prepare_managed_slot "$HOME/.jcode/prompt-overlay.md" "$DOTFILES/.jcode/prompt-overlay.md"
+prepare_managed_slot "$HOME/.jcode/swarm-prompt.md" "$DOTFILES/.jcode/swarm-prompt.md"
 prepare_managed_slot "$HOME/.agents/skills" "$DOTFILES/.agents/skills"
-prepare_managed_slot "$HOME/.agents/superpowers" "$DOTFILES/.agents/superpowers"
 prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/.codex/AGENTS.md"
 prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/.codex/config.toml"
 prepare_managed_slot "$HOME/.codex/browser/config.toml" "$DOTFILES/.codex/browser/config.toml"
@@ -104,7 +110,6 @@ stow --dir="$DOTFILES" --target="$HOME" .
 #   ~/.codex/{browser,computer-use}/...
 #                            -> coding-agent/codex/...
 #   ~/.agents/skills         -> coding-agent/global/skills
-#   ~/.agents/superpowers    -> coding-agent/vendor/superpowers
 #
 # All of those are symlinks committed in the repo, so `stow .` reproduces them
 # and there is nothing to do here.
@@ -115,18 +120,7 @@ stow --dir="$DOTFILES" --target="$HOME" .
 # coding-agent/reference/harness.md), and a hook path that stops resolving is
 # silent - the guard simply never runs. verify.sh asserts those paths.
 #
-# Skill sources and links are committed under coding-agent/, so Stow handles the
-# complete filesystem layout. Only Claude Code's plugin registration remains an
-# application-level installation step.
-# ---------------------------------------------------------------------------
-# Claude Code gets Superpowers as a plugin, which is upstream's supported path
-# and the only one that brings its SessionStart hook. That hook injects the
-# using-superpowers skill, which is what makes the rest of them fire; symlinking
-# the skills alone gives you the files without the thing that invokes them.
-echo "Installing the Superpowers plugin for Claude Code..."
-if ! claude plugin list 2>/dev/null | grep -q 'superpowers@claude-plugins-official'; then
-  claude plugin install superpowers@claude-plugins-official
-fi
+# Skill sources and links are committed under coding-agent/ and managed by Stow.
 
 # NOTE: `claude plugin install` writes settings.json with an atomic rename, which
 # REPLACES .claude/settings.json - a symlink into coding-agent/ - with a real

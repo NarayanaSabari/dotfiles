@@ -143,7 +143,7 @@ assert BLOCK git-identity-guard.sh "identity fallback still checks the session c
   "$(bash_json "$IDREPO" "cd \$REPO && $G commit -m x")"
 
 # negative control: identity corrected -> the same verbs must pass
-( cd "$IDREPO" && $G config user.email sabarinarayanakg@rentai.now ) >/dev/null 2>&1
+( cd "$IDREPO" && $G config user.email sabarinarayanakg@rentai.now && $G config user.name Sabari-RentAI ) >/dev/null 2>&1
 for c in "$G commit -m x" "$G push" "$G rebase main" "$G merge --no-ff f"; do
   assert ALLOW git-identity-guard.sh "identity allows when correct: $c" "$(bash_json "$IDREPO" "$c")"
 done
@@ -370,42 +370,6 @@ for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex"; do
   done < <(find "$shim" -mindepth 1 ! -type d -print)
 done
 
-# ============================================================ STEP 18
-# Skills reach both harnesses.
-#
-# The harnesses get them by different routes, so each fails differently and
-# none says anything when it does. Claude Code has Superpowers as a plugin;
-# Codex gets the same skills through the tracked global registry.
-SP_CLONE="$HOME/.agents/superpowers"
-if [ -d "$SP_CLONE/skills" ]; then
-  # Every skill in the clone must be linked globally and resolve.
-  for skill in "$SP_CLONE"/skills/*/; do
-    [ -f "$skill/SKILL.md" ] || continue
-    name=$(basename "$skill")
-    link="$HOME/.agents/skills/$name"
-    if [ ! -L "$link" ]; then fail "the global registry is missing the $name skill link"
-    elif [ ! -f "$link/SKILL.md" ]; then fail "~/.agents/skills/$name does not resolve to a dir holding SKILL.md"
-    else pass; fi
-  done
-else
-  fail "$SP_CLONE is missing, so the global Superpowers source is unavailable"
-fi
-# The plugin must be enabled, or Claude Code has none: its skills come only from
-# there now, and ~/.claude/skills is deliberately empty.
-if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
-  jq -e '.enabledPlugins["superpowers@claude-plugins-official"] == true' \
-     "$HOME/.claude/settings.json" >/dev/null 2>&1 \
-    && pass || fail "the superpowers plugin is not enabled, so Claude Code has no skills at all"
-fi
-# The plugin and the clone update separately. Drift is not an error, but it
-# means the two harnesses are running different skills, which is worth knowing.
-PLUGIN_VER=$(ls -1 "$HOME/.claude/plugins/cache/claude-plugins-official/superpowers" 2>/dev/null | head -1)
-CLONE_VER=$(jq -r '.version // empty' "$SP_CLONE/.claude-plugin/plugin.json" 2>/dev/null)
-if [ -n "$PLUGIN_VER" ] && [ -n "$CLONE_VER" ]; then
-  [ "$PLUGIN_VER" = "$CLONE_VER" ] && pass \
-    || fail "superpowers version skew: Claude Code has $PLUGIN_VER, the global source has $CLONE_VER (claude plugin update; git submodule update --remote coding-agent/vendor/superpowers)"
-fi
-
 # ============================================================ STEP 20
 # Repository-owned skill registries.
 #
@@ -432,7 +396,7 @@ for registry in "$SOURCE_REPO/coding-agent/global/skills"; do
   [ "$found" = 1 ] || fail "${registry#$SOURCE_REPO/} contains no skills"
 done
 
-for shim in "$SOURCE_REPO/.agents/skills" "$SOURCE_REPO/.agents/superpowers"; do
+for shim in "$SOURCE_REPO/.agents/skills"; do
   if [ ! -L "$shim" ]; then
     fail "${shim#$SOURCE_REPO/} is not a tracked Stow-shim symlink"
   elif [ ! -e "$shim" ]; then
@@ -493,6 +457,69 @@ while IFS= read -r line; do
     *) pass ;;
   esac
 done < "$ROOT/submodules.txt"
+
+# Managed jcode policy slots, without including mutable runtime state.
+for name in config.toml prompt-overlay.md swarm-prompt.md; do
+  if [ "$(realpath "$SOURCE_REPO/.jcode/$name" 2>/dev/null)" = "$SOURCE_REPO/coding-agent/jcode/$name" ]; then
+    pass
+  else
+    fail "jcode tracked link is broken: $name"
+  fi
+  if [ "$(realpath "$HOME/.jcode/$name" 2>/dev/null)" = "$LIVE_REPO/coding-agent/jcode/$name" ]; then
+    pass
+  else
+    fail "jcode live link is broken: $name"
+  fi
+done
+
+# Jcode identity adapter uses the real raw-input contract.
+for probe in allow malformed; do
+  case "$probe" in allow) input='{"command":"git status"}'; expected=0 ;; malformed) input='not-json'; expected=2 ;; esac
+  printf '%s' "$input" | JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-identity-guard.sh" >/dev/null 2>&1
+  rc=$?
+  [ "$rc" -eq "$expected" ] && pass || fail "jcode identity adapter $probe returned $rc"
+done
+if bash "$SOURCE_REPO/coding-agent/tests/identity-routing.sh" >/dev/null 2>&1; then
+  pass
+else
+  fail "Git identity remote/worktree routing regression checks"
+fi
+
+# Revocation must block future tool calls for only the selected worker.
+REVOCATION_HOME="$ROOT/jcode-state"
+JCODE_HOME="$REVOCATION_HOME" "$SOURCE_REPO/coding-agent/bin/jcode-revoke-worker" session_revocation_probe >/dev/null
+for sid in session_revocation_probe session_unrevoked_probe; do
+  printf '%s' '{"command":"git status"}' | JCODE_HOME="$REVOCATION_HOME" JCODE_HOOK_SESSION_ID="$sid" JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-identity-guard.sh" >/dev/null 2>&1
+  rc=$?
+  expected=0
+  [ "$sid" = session_revocation_probe ] && expected=2
+  [ "$rc" -eq "$expected" ] && pass || fail "worker revocation $sid returned $rc"
+done
+if JCODE_HOME="$REVOCATION_HOME" "$SOURCE_REPO/coding-agent/bin/jcode-revoke-worker" 'session_../../invalid' >/dev/null 2>&1; then
+  fail 'worker revocation accepted an invalid session ID'
+else
+  pass
+fi
+
+# Catch config rewrites that silently disconnect the live guard or defaults.
+if python3 - "$SOURCE_REPO/coding-agent/jcode/config.toml" "$LIVE_REPO" <<'PYCODE'
+import pathlib, sys, tomllib
+with open(sys.argv[1], 'rb') as f:
+    config = tomllib.load(f)
+assert config['hooks']['pre_tool'] == str(pathlib.Path(sys.argv[2]) / 'coding-agent/hooks/jcode-identity-guard.sh')
+assert config['provider']['default_model'] == 'gpt-6-astra'
+assert config['provider']['openai_reasoning_effort'] == 'low'
+assert config['agents']['swarm_model'] == 'openai:gpt-5.6-luna'
+assert config['agents']['swarm_effort'] == 'max'
+assert config['agents']['swarm_max_concurrent_agents'] == 15
+assert config['features']['auto_poke'] is False
+assert config['ambient']['enabled'] is False
+PYCODE
+then
+  pass
+else
+  fail 'jcode config is invalid or routing/guard wiring has drifted'
+fi
 
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
