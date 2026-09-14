@@ -21,10 +21,15 @@ The guard is a pre-tool check, not an OS sandbox; jcode's hook timeout/startup f
 
 ## Custom source build
 
-Worker-routing changes live in `~/Developer/narayana/jcode` on `feat/worker-routing`.
+Worker routing and the input usage footer live in `~/Developer/narayana/jcode` on `feat/input-usage-footer`.
 The personal fork is `https://github.com/NarayanaSabari/jcode`.
 The checkout is separate from the pinned skill source under `coding-agent/vendor/jcode-skills`.
 The custom display preserves full model names, shows provider/auth and effort, and surfaces effort fallbacks and subsequent route changes.
+The footer below the composer shows context usage, model, effort, service tier, and cached subscription limits.
+Each connected Claude or OpenAI account has a separate email-labeled row when its stored profile supplies an email.
+Usage refreshes in the background; unavailable and stale results are labeled explicitly.
+Narrow terminals wrap the rows, and short terminals prioritize typing and the transcript; `/usage` shows the full account list.
+Astra defaults to low effort with the Standard service tier, with Fast disabled.
 Runtime values describe the provider selected by the harness; they are not independent verification of the upstream service's internal model routing.
 Build and publish through `jcode self-dev --build` from the source checkout.
 The local `current` channel is separate from the retained `stable` channel.
