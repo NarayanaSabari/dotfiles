@@ -9,3 +9,11 @@
 [submodule "coding-agent/vendor/ponytail"]
 	path = coding-agent/vendor/ponytail
 	url = https://github.com/DietrichGebert/ponytail.git
+[submodule "anthropic-skills"]
+	path = coding-agent/vendor/anthropic-skills
+	url = https://github.com/anthropics/skills.git
+	shallow = true
+[submodule "jcode-skills"]
+	path = coding-agent/vendor/jcode-skills
+	url = https://github.com/1jehuang/jcode.git
+	shallow = true

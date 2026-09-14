@@ -18,7 +18,7 @@ Then check the things that need judgment rather than a comparison, and report
 only what is wrong plus a one-line all-clear for the rest:
 
 1.
-   **Skills.** The shared registry contains gh-axi, chrome-devtools-axi, and ponytail.
+   **Skills.** Inspect the installed skills in the shared registry at `coding-agent/global/skills/`.
    Every link in `~/.agents/skills/` must resolve into a pinned repository under `coding-agent/vendor/`.
 
 2.

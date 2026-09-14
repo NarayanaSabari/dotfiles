@@ -77,7 +77,7 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 - Parallel sessions: herdr. tmux and treehouse are retired.
   Every `herdr` command needs the sandbox off, because it talks over a unix socket.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
-  The AXI and Ponytail skills link into pinned submodules under `vendor/`.
+  Curated skills link into pinned submodules under `vendor/`.
   Codex and jcode discover the tracked links through `~/.agents/skills/`.
   Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
 - Removing a skill link from the shared registry disables its discovery by Codex and jcode.

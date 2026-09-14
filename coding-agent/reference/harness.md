@@ -115,7 +115,7 @@ ln -sfn ../coding-agent/claude/settings.json .claude/settings.json
 
 ## Skills
 
-The gh-axi, chrome-devtools-axi, and Ponytail sources are pinned Git submodules under `coding-agent/vendor/`.
+Skill sources are pinned Git submodules under `coding-agent/vendor/`.
 Their curated links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/` for Codex and jcode.
 Update with `git submodule update --remote`, inspect `git diff --submodule`, and commit reviewed revisions.
 The shared registry checks in `verify.sh` validate the links.
