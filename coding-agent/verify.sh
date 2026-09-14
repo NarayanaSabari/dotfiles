@@ -521,6 +521,16 @@ else
   fail 'jcode config is invalid or routing/guard wiring has drifted'
 fi
 
+if grep -Fq 'The coordinator must delegate every task that changes project files through native swarm workers' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
+  && grep -Fq 'The user does not need to mention the swarm explicitly.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
+  && grep -Fq 'The coordinator must not implement project changes directly' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
+  && grep -Fq 'GPT-6 Astra and Claude Fable are top-tier coordinator models.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
+  && grep -Fq 'do not select the `swarm` or `swarm-deep` effort sentinel for Astra.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md"; then
+  pass
+else
+  fail 'jcode mandatory swarm delegation policy has drifted'
+fi
+
 # ---------------------------------------------------------------------- report
 if [ "$FAILED" -gt 0 ]; then
   printf '\nharness assertions: %d passed, %d FAILED\n' "$PASSED" "$FAILED" >&2

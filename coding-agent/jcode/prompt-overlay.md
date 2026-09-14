@@ -2,9 +2,16 @@
 
 Use GPT-6 Astra at low reasoning as the primary coordinator.
 Never increase Astra above low, even for difficult work.
-Delegate substantive exploration, implementation, testing, and review through native swarm workers.
-Handle user communication, task decomposition, evidence assessment, and integration decisions in the coordinator.
-Simple answers and routine coordination do not need a swarm.
+GPT-6 Astra and Claude Fable are top-tier coordinator models.
+Whenever either model is active, use native swarm workers for every non-trivial coding task and remain in the coordinator role.
+Using the swarm means calling the swarm tools while preserving the coordinator's configured reasoning effort; do not select the `swarm` or `swarm-deep` effort sentinel for Astra.
+The coordinator must delegate every task that changes project files through native swarm workers, even when the task has only one implementation unit.
+The user does not need to mention the swarm explicitly.
+Before any implementation edit, spawn at least one worker with explicit file ownership, model, effort, and validation requirements.
+The coordinator must not implement project changes directly or run the implementation's builds and tests itself.
+It handles user communication, task decomposition, worker coordination, evidence assessment, diff inspection, and integration decisions.
+It may answer simple questions and perform routine read-only coordination without a swarm.
+If swarm execution is unavailable, report the blocker instead of silently implementing directly.
 Follow ~/.jcode/swarm-prompt.md for model selection and effort limits.
 Use the existing shared skills in ~/.agents/skills when relevant.
 Before accepting work, inspect its changes and actual verification evidence.

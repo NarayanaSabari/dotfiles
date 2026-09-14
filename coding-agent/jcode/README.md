@@ -4,6 +4,11 @@ The config and prompt files here are exposed through .jcode Stow links and ~/.jc
 Keep ~/.jcode a real directory: authentication, sessions, memory, logs, and binaries remain untracked.
 Shared skills are already managed under coding-agent/global/skills and exposed through ~/.agents/skills.
 
+The root jcode session is a coordinator.
+Every project-file implementation must run through at least one native swarm worker without requiring the user to request swarm explicitly.
+The coordinator may inspect and integrate work, but it does not edit project files or run the implementation's verification itself.
+GPT-6 Astra and Claude Fable are treated as top-tier coordinators and must use swarm workers for non-trivial coding while retaining their configured effort.
+
 The stable v0.84.0 configuration supports coordinator and worker effort defaults, not per-model hard maximums.
 The routing prompt specifies the user's ceilings; it is not a mechanically enforced quota or effort limiter.
 Live tests confirmed Luna max, Sol high, Terra xhigh, and Claude Sonnet low on the intended OAuth routes.
