@@ -26,9 +26,10 @@ The personal fork is `https://github.com/NarayanaSabari/jcode`.
 The checkout is separate from the pinned skill source under `coding-agent/vendor/jcode-skills`.
 The custom display preserves full model names, shows provider/auth and effort, and surfaces effort fallbacks and subsequent route changes.
 The footer below the composer shows context usage, model, effort, service tier, and cached subscription limits.
-Each connected Claude or OpenAI account has a separate email-labeled row when its stored profile supplies an email.
+The footer uses at most three colored rows: model/context, OpenAI, and Claude.
+Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Usage refreshes in the background; unavailable and stale results are labeled explicitly.
-Narrow terminals wrap the rows, and short terminals prioritize typing and the transcript; `/usage` shows the full account list.
+Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
 Astra defaults to low effort with the Standard service tier, with Fast disabled.
 Runtime values describe the provider selected by the harness; they are not independent verification of the upstream service's internal model routing.
 Build and publish through `jcode self-dev --build` from the source checkout.
