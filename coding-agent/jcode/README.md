@@ -18,3 +18,14 @@ A native swarm stop was observed removing a worker from membership while its too
 The coordinator must revoke future tools using `jcode-revoke-worker` before stopping an owned worker and verify that in-flight work has settled.
 Revocation markers live in ~/.jcode/revoked-workers outside Git.
 The guard is a pre-tool check, not an OS sandbox; jcode's hook timeout/startup failures remain fail-open.
+
+## Custom source build
+
+Worker-routing changes live in `~/Developer/narayana/jcode` on `feat/worker-routing`.
+The personal fork is `https://github.com/NarayanaSabari/jcode`.
+The checkout is separate from the pinned skill source under `coding-agent/vendor/jcode-skills`.
+The custom display preserves full model names, shows provider/auth and effort, and surfaces effort fallbacks and subsequent route changes.
+Runtime values describe the provider selected by the harness; they are not independent verification of the upstream service's internal model routing.
+Build and publish through `jcode self-dev --build` from the source checkout.
+The local `current` channel is separate from the retained `stable` channel.
+After an upstream update, integrate and verify these changes again before adopting the new build.
