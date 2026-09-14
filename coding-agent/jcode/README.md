@@ -39,7 +39,8 @@ Option+Q (Alt+Q) hides or reveals captured thinking in the current client withou
 The panel hides when a tall composer leaves insufficient room, and diagrams reserve preview space ahead of lower activity cards.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Claude shows reset countdowns beside its session and weekly percentages when space permits; narrower rows preserve both quotas and the account identity.
-Usage refreshes in the background; unavailable and stale results are labeled explicitly.
+Usage refreshes in the background with a one-minute account/report cache; idle screens repaint the footer every 30 seconds and while a refresh is pending.
+Unavailable and stale results are labeled explicitly; provider rate-limit backoff still applies.
 Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
 Astra defaults to low effort with the Standard service tier, with Fast disabled.
 Runtime values describe the provider selected by the harness; they are not independent verification of the upstream service's internal model routing.
