@@ -37,6 +37,7 @@ Pinned diagrams stay in their existing pane; the activity panel does not duplica
 Alt+I toggles the panel; duplicate model, context, and quota overlays are hidden.
 The panel hides when a tall composer leaves insufficient room, and diagrams reserve preview space ahead of lower activity cards.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
+Claude shows reset countdowns beside its session and weekly percentages when space permits; narrower rows preserve both quotas and the account identity.
 Usage refreshes in the background; unavailable and stale results are labeled explicitly.
 Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
 Astra defaults to low effort with the Standard service tier, with Fast disabled.
