@@ -73,7 +73,7 @@ theme = ""
 active_sessions_manager = false
 external_sessions = true
 usage_display = "left"
-overscroll_status = "overscroll"
+overscroll_status = "off"
 
 [display.native_scrollbars]
 chat = true
