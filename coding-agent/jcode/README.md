@@ -33,7 +33,8 @@ The card is capped at 65 columns and adapts to narrower terminals.
 Activity widgets stack in a reserved 36-column panel on the right: Todos, Swarm, Background tasks, Git, then Diagrams.
 The panel appears only when activity data exists and the chat pane is at least 110 columns wide and 18 rows tall.
 Pinned diagrams stay in their existing pane; the activity panel does not duplicate them.
-Alt+I toggles the panel, and duplicate model, context, and quota overlays stay hidden while the custom footer is visible.
+Alt+I toggles the panel; duplicate model, context, and quota overlays are hidden.
+The panel hides when a tall composer leaves insufficient room, and diagrams reserve preview space ahead of lower activity cards.
 Each provider row shows one account email and an additional-account count; `/usage` lists every account.
 Usage refreshes in the background; unavailable and stale results are labeled explicitly.
 Narrow terminals shorten details without wrapping; short terminals prioritize typing and the transcript.
