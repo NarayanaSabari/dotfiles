@@ -6,7 +6,8 @@ user-invocable: false
 
 # Velvet
 
-Use the `velvet` CLI to read tickets and write concise work-log comments from coding-agent sessions.
+Prefer the typed Velvet MCP tools when the current agent exposes them, especially `velvet_log_work`, `velvet_current_ticket`, and `velvet_get_ticket`.
+Use the `velvet` CLI to read tickets and write concise work-log comments when MCP is unavailable.
 
 ## Configuration and invocation
 
