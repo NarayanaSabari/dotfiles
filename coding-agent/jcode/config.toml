@@ -147,7 +147,7 @@ swarm_max_concurrent_agents = 15
 [terminal]
 
 [hooks]
-pre_tool = "/Users/sabari/dotfiles/coding-agent/hooks/jcode-identity-guard.sh"
+pre_tool = "/Users/sabari/dotfiles/coding-agent/hooks/jcode-credential-guard.sh"
 pre_tool_timeout_ms = 5000
 
 [ambient]

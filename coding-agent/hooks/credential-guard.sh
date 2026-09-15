@@ -1,9 +1,10 @@
 #!/bin/bash
-# PreToolUse guard: block writes that create or stage credential material.
+# PreToolUse guard: block credential writes, staging, and secret reads.
 #
-# Two things it catches:
+# Three things it catches:
 #   1. Write/Edit to a credential-shaped path (.env, *.pem, *.key, service-account JSON, id_rsa).
 #   2. File content, or a `git add`/`git commit` payload, carrying a live-looking API key.
+#   3. Bash commands that print or read envkit-managed secret material.
 #
 # Exit 0 = allow, exit 2 = block with the message on stderr.
 
@@ -43,7 +44,7 @@ TOOL="$HOOK_TOOL"
 
 block() {
   printf 'BLOCKED by credential-guard: %s\n' "$1" >&2
-  printf 'Reference the value from the environment instead. If this is a false positive, say so and I will run it.\n' >&2
+  printf 'Use `envkit run -- cmd` to inject secrets without reading them.\n' >&2
   exit 2
 }
 
@@ -92,6 +93,38 @@ has_secret_material() {
     -e '"type"[[:space:]]*:[[:space:]]*"service_account"'
 }
 
+# --- secret-reading commands -------------------------------------------------
+is_reader_command() {
+  printf '%s' "$1" | grep -qE '(^|[;&|()[:space:]])(cat|less|more|head|tail|grep|rg|sed|awk|bat|cp|open|source|\.)([[:space:]]|$)'
+}
+
+reads_envkit_home() {
+  printf '%s' "$1" | grep -qE '(^|[^[:alnum:]_])(~/.envkit|\$HOME/.envkit|/Users/sabari/.envkit|\$ENVKIT_HOME)(/|$)'
+}
+
+reads_dotenv_file() {
+  printf '%s' "$1" | grep -qE '(^|[[:space:]"'"'"'=/])\.env(\.[^[:space:]"'"'"']*)?($|[[:space:]"'"'"'])' &&
+    ! printf '%s' "$1" | grep -qE '(^|[[:space:]"'"'"'=/])\.env\.(example|sample|template)($|[[:space:]"'"'"'])'
+}
+
+prints_environment() {
+  printf '%s' "$1" | grep -qE '(^|[;&|()[:space:]])(printenv|env|set)([[:space:]]*($|[;&|()]))|(^|[;&|()[:space:]])export[[:space:]]+-p([[:space:]]|$)'
+}
+
+echoes_secret_variable() {
+  printf '%s' "$1" | grep -qE '(^|[;&|()[:space:]])echo[[:space:]]+"?\$[A-Za-z_][A-Za-z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)"?([[:space:];&|)]|$)'
+}
+
+reads_envkit_path() {
+  # Loading an envkit file with the documented `set -a; . "$(envkit path)";
+  # set +a` pattern does not print a value and is necessary inside scripts.
+  if printf '%s' "$1" | grep -qE '(^|[;&|()[:space:]])(source|\.)[[:space:]]+"?\$\(envkit[[:space:]]+path\)"?'; then
+    return 1
+  fi
+  printf '%s' "$1" | grep -qE '(\$\(envkit[[:space:]]+path\)|`envkit[[:space:]]+path`|envkit[[:space:]]+path[[:space:]]*\|)' &&
+    is_reader_command "$1"
+}
+
 case "$TOOL" in
   Write|Edit|NotebookEdit)
     FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
@@ -107,6 +140,25 @@ case "$TOOL" in
 
   Bash)
     CMD="$HOOK_CMD"
+
+    if printf '%s' "$CMD" | grep -qE '(^|[;&|()[:space:]])envkit[[:space:]]+(get|export|edit)([[:space:]]|$)'; then
+      block "envkit get, export, and edit can expose secret values."
+    fi
+    if is_reader_command "$CMD" && reads_envkit_home "$CMD"; then
+      block "the command reads envkit-managed secret storage."
+    fi
+    if reads_envkit_path "$CMD"; then
+      block "the command reads the path returned by envkit."
+    fi
+    if is_reader_command "$CMD" && reads_dotenv_file "$CMD"; then
+      block "the command reads a .env file."
+    fi
+    if prints_environment "$CMD"; then
+      block "the command prints the shell environment."
+    fi
+    if echoes_secret_variable "$CMD"; then
+      block "the command echoes a credential-shaped environment variable."
+    fi
 
     # Only inspect commands that stage or record files in git.
     if printf '%s' "$CMD" | grep -qE '(^|[;&|[:space:]])([^;&|[:space:]]*/)?git[[:space:]]+([^;&|]*[[:space:]])?(add|commit)([[:space:]]|$)'; then

@@ -79,6 +79,13 @@ CLEANREPO="$ROOT/cleanrepo"; mkdir -p "$CLEANREPO"
 ( cd "$CLEANREPO" && $G init -q . ) >/dev/null 2>&1
 echo ok > "$CLEANREPO/readme.md"
 
+# A syntax error in any pre-tool hook blocks every matching tool before the
+# behavioral assertions can explain the real failure.
+for hook in "$HOOKS"/*.sh; do
+  if bash -n "$hook"; then pass
+  else fail "$(basename "$hook") has invalid bash syntax"; fi
+done
+
 # ============================================================ STEP 11a
 # git-guardrails.sh
 for c in "$G reset --hard" "$G clean -fd" "$G checkout ." "$G restore ." \
@@ -168,6 +175,17 @@ assert BLOCK credential-guard.sh "cred blocks git add -A sweeping .env"  "$(bash
 assert BLOCK credential-guard.sh "cred blocks git add . sweeping .env"   "$(bash_json "$CREDREPO" "$G add .")"
 assert BLOCK credential-guard.sh "cred blocks named git add .env"        "$(bash_json "$CREDREPO" "$G add .env")"
 assert ALLOW credential-guard.sh "cred allows explicit safe path"        "$(bash_json "$CREDREPO" "$G add src/app.py")"
+# envkit keeps project .env files outside the worktree. Agents must use its
+# command boundary, not print or read the stored values.
+assert BLOCK credential-guard.sh "cred blocks envkit storage reads"       "$(bash_json "$CREDREPO" "cat ~/.envkit/x/.env")"
+assert BLOCK credential-guard.sh "cred blocks envkit get"                 "$(bash_json "$CREDREPO" "envkit get FOO")"
+assert BLOCK credential-guard.sh "cred blocks envkit path reader"         "$(bash_json "$CREDREPO" "cat \"\$(envkit path)\"")"
+assert BLOCK credential-guard.sh "cred blocks printenv"                   "$(bash_json "$CREDREPO" "printenv")"
+assert BLOCK credential-guard.sh "cred blocks .env reader"                "$(bash_json "$CREDREPO" "cat .env")"
+assert BLOCK credential-guard.sh "cred blocks quoted .env reader"         "$(bash_json "$CREDREPO" "cat '.env'")"
+assert ALLOW credential-guard.sh "cred allows envkit run"                 "$(bash_json "$CREDREPO" "envkit run -- npm start")"
+assert ALLOW credential-guard.sh "cred allows envkit ls"                  "$(bash_json "$CREDREPO" "envkit ls")"
+assert ALLOW credential-guard.sh "cred allows .env.example reader"        "$(bash_json "$CREDREPO" "cat .env.example")"
 # tracked-only forms cannot stage a new secret, and must not false-positive
 assert ALLOW credential-guard.sh "cred allows git add -u"                "$(bash_json "$CREDREPO" "$G add -u")"
 assert ALLOW credential-guard.sh "cred allows commit -am"                "$(bash_json "$CREDREPO" "$G commit -am wip")"
@@ -479,6 +497,16 @@ for probe in allow malformed; do
   rc=$?
   [ "$rc" -eq "$expected" ] && pass || fail "jcode identity adapter $probe returned $rc"
 done
+for probe in allow secret malformed; do
+  case "$probe" in
+    allow) input='{"command":"envkit run -- npm start"}'; expected=0 ;;
+    secret) input='{"command":"envkit get FOO"}'; expected=2 ;;
+    malformed) input='not-json'; expected=2 ;;
+  esac
+  printf '%s' "$input" | JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-credential-guard.sh" >/dev/null 2>&1
+  rc=$?
+  [ "$rc" -eq "$expected" ] && pass || fail "jcode credential adapter $probe returned $rc"
+done
 if bash "$SOURCE_REPO/coding-agent/tests/identity-routing.sh" >/dev/null 2>&1; then
   pass
 else
@@ -506,7 +534,7 @@ if python3 - "$SOURCE_REPO/coding-agent/jcode/config.toml" "$LIVE_REPO" <<'PYCOD
 import pathlib, sys, tomllib
 with open(sys.argv[1], 'rb') as f:
     config = tomllib.load(f)
-assert config['hooks']['pre_tool'] == str(pathlib.Path(sys.argv[2]) / 'coding-agent/hooks/jcode-identity-guard.sh')
+assert config['hooks']['pre_tool'] == str(pathlib.Path(sys.argv[2]) / 'coding-agent/hooks/jcode-credential-guard.sh')
 assert config['provider']['default_model'] == 'gpt-6-astra'
 assert config['provider']['openai_reasoning_effort'] == 'low'
 assert config['agents']['swarm_model'] == 'openai:gpt-5.6-luna'

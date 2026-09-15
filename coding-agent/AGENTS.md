@@ -37,7 +37,7 @@ are about to write the same sentence in two places, it belongs up here instead.
 - Explain any risky or destructive operation - data loss, force pushes, deletions, schema or infra changes, anything outward-facing - before running it, and wait for me.
 - Never commit secrets: .env files, API keys, tokens, service-account JSON, private keys.
   Reference them from the environment instead and say so.
-  Never read or modify a `.env` without asking first.
+- Secrets live in envkit; use `envkit run -- cmd` or `set -a; . "$(envkit path)"; set +a` inside scripts, use `envkit ls` for key names, never `envkit get` or `envkit export`, never read `.env` or `~/.envkit`, and ask the user to run `envkit set KEY` in their own terminal when a new secret is needed.
 - Never sign your work.
   No `Co-Authored-By` trailer, no "Generated with" line, no session link, no tool name anywhere in a commit message, PR body, issue, or review comment.
   A commit message is the message and nothing else.
