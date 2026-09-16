@@ -17,3 +17,6 @@
 	path = coding-agent/vendor/jcode-skills
 	url = https://github.com/1jehuang/jcode.git
 	shallow = true
+[submodule "coding-agent/vendor/typesafe-skills"]
+	path = coding-agent/vendor/typesafe-skills
+	url = https://github.com/typesafe-ai/skills.git
