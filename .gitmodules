@@ -2,10 +2,6 @@
 	path = coding-agent/vendor/gh-axi
 	url = https://github.com/kunchenguid/gh-axi.git
 	shallow = true
-[submodule "chrome-devtools-axi"]
-	path = coding-agent/vendor/chrome-devtools-axi
-	url = https://github.com/kunchenguid/chrome-devtools-axi.git
-	shallow = true
 [submodule "coding-agent/vendor/ponytail"]
 	path = coding-agent/vendor/ponytail
 	url = https://github.com/DietrichGebert/ponytail.git

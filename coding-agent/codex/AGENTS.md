@@ -50,6 +50,6 @@ The canonical file is `~/dotfiles/coding-agent/codex/AGENTS.md`, exposed through
 ## Tools
 
 - Use plain `gh` or the `gh-axi` CLI for GitHub; never a GitHub MCP server.
-- Use the `chrome-devtools-axi` CLI for browser work, consulting its help for current commands.
+- Use the `browser` CLI at `~/.jcode/browser/browser` for browser work, consulting its help for current commands.
 - Use native Codex subagents for delegation inside a session.
 - Use herdr for separate harness sessions when needed; tmux and treehouse are retired.

@@ -72,8 +72,9 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 
 - GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`.
   Never a GitHub MCP server.
-- Browser: the `chrome-devtools-axi` CLI at `~/.agents/skills/chrome-devtools-axi`.
-  It is a CLI, not a registered skill, so call it with Bash.
+- Browser: jcode's built-in `browser` tool, which drives Firefox through the agent bridge.
+  Prefer `action: "handoff"` for multi-step tasks and direct actions otherwise.
+  Claude Code has no equivalent tool, so it drives the same bridge with the `browser` CLI at `~/.jcode/browser/browser`.
 - Parallel sessions: herdr. tmux and treehouse are retired.
   Every `herdr` command needs the sandbox off, because it talks over a unix socket.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
