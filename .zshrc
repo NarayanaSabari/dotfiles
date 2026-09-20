@@ -49,3 +49,13 @@ alias cd="z"
 
 # opencode
 export PATH=/Users/sabari/.opencode/bin:$PATH
+
+# Added by jcode installer
+export PATH="/Users/sabari/.local/bin:$PATH"
+
+# jcode resolves browser session sockets from XDG_RUNTIME_DIR, while the bridge
+# CLI falls back to /tmp when it is unset. On macOS the two disagree, so every
+# browser action re-spawns a session, waits out a 10s startup deadline, and Jev
+# handoff hands back on a timeout. Pinning one private directory fixes both.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$HOME/.jcode/run}"
+[ -d "$XDG_RUNTIME_DIR" ] || mkdir -p -m 700 "$XDG_RUNTIME_DIR"
