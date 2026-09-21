@@ -104,12 +104,28 @@ envkit run -- velvet recap --days 30 --workspace client-slug
 
 This spans every organisation the token's owner belongs to and returns Markdown that can be pasted into a message.
 
+## Working in a sprint
+
+When told to work in a sprint that does not exist yet, create it rather than treating it as a dead end.
+Sprints are calendar windows; a milestone inside one is the goal being named.
+
+```bash
+envkit run -- velvet sprints
+envkit run -- velvet sprints new "September 2026" 2026-09-01 2026-09-30
+envkit run -- velvet milestones new "$SPRINT_ID" "Ship the billing rewrite"
+envkit run -- velvet new "Migrate the invoice schema" --milestone "$MILESTONE_ID"
+```
+
+A new sprint starts `upcoming` and is not activated automatically, because activating one completes whichever sprint was active.
+Activate it only when the user asks.
+
 ## Reading and changing tickets
 
 ```bash
 envkit run -- velvet issue "$KEY"
 envkit run -- velvet issues --status in_progress
 envkit run -- velvet projects
+envkit run -- velvet milestones
 envkit run -- velvet new "Document token rotation" --desc "Add the operator runbook"
 ```
 
