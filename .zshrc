@@ -49,3 +49,6 @@ alias cd="z"
 
 # opencode
 export PATH=/Users/sabari/.opencode/bin:$PATH
+
+# Added by jcode installer
+export PATH="/Users/sabari/.local/bin:$PATH"
