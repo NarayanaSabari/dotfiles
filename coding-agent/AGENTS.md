@@ -82,5 +82,9 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
   Codex and jcode discover the tracked links through `~/.agents/skills/`.
   Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
 - Removing a skill link from the shared registry disables its discovery by Codex and jcode.
+- Strix: prefer the installed local CLI and existing ChatGPT subscription authentication, inheriting `STRIX_LLM` and `STRIX_TELEMETRY` from a fresh login shell.
+  A subscription scan does not need `LLM_API_KEY`; do not switch to Strix Cloud, upload source, or purchase credits unless explicitly requested.
+  Scan only authorized targets using synthetic data, never production patient data.
+  Local scan targets are writable, so use a disposable clean checkout to protect uncommitted work.
 - Shipping: review the diff, then push.
   There is no automated ship gate.

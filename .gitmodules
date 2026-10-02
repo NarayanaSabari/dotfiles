@@ -16,3 +16,7 @@
 [submodule "coding-agent/vendor/typesafe-skills"]
 	path = coding-agent/vendor/typesafe-skills
 	url = https://github.com/typesafe-ai/skills.git
+[submodule "coding-agent/vendor/strix"]
+	path = coding-agent/vendor/strix
+	url = https://github.com/usestrix/strix.git
+	shallow = true
