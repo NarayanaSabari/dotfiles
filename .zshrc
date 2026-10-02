@@ -43,6 +43,11 @@ if [ -f '/Users/sabari/Developer/freelancing/google-cloud-sdk/path.zsh.inc' ]; t
 if [ -f '/Users/sabari/Developer/freelancing/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/sabari/Developer/freelancing/google-cloud-sdk/completion.zsh.inc'; fi
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
+# ---- Strix (AI pentesting) ----
+# gpt-5.5 is the ChatGPT-subscription model that works: gpt-5.4 is unavailable, gpt-6.x hits content guardrails.
+export STRIX_LLM=chatgpt/gpt-5.5
+export STRIX_TELEMETRY=0
+
 # ---- Zoxide (better cd) ---- (keep at end of .zshrc)
 eval "$(zoxide init zsh)"
 alias cd="z"
@@ -52,3 +57,6 @@ export PATH=/Users/sabari/.opencode/bin:$PATH
 
 # Added by jcode installer
 export PATH="/Users/sabari/.local/bin:$PATH"
+
+# added by harness installer
+export PATH="$HOME/.local/bin:$PATH"
