@@ -476,17 +476,12 @@ while IFS= read -r line; do
   esac
 done < "$ROOT/submodules.txt"
 
-# Managed jcode policy slots, without including mutable runtime state.
+# Jcode uses its native harness; dotfiles must not reinstall custom policy.
 for name in config.toml prompt-overlay.md swarm-prompt.md; do
-  if [ "$(realpath "$SOURCE_REPO/.jcode/$name" 2>/dev/null)" = "$SOURCE_REPO/coding-agent/jcode/$name" ]; then
-    pass
+  if [ -e "$SOURCE_REPO/.jcode/$name" ] || [ -L "$SOURCE_REPO/.jcode/$name" ]; then
+    fail "jcode custom policy is still managed: $name"
   else
-    fail "jcode tracked link is broken: $name"
-  fi
-  if [ "$(realpath "$HOME/.jcode/$name" 2>/dev/null)" = "$LIVE_REPO/coding-agent/jcode/$name" ]; then
     pass
-  else
-    fail "jcode live link is broken: $name"
   fi
 done
 
@@ -527,36 +522,6 @@ if JCODE_HOME="$REVOCATION_HOME" "$SOURCE_REPO/coding-agent/bin/jcode-revoke-wor
   fail 'worker revocation accepted an invalid session ID'
 else
   pass
-fi
-
-# Catch config rewrites that silently disconnect the live guard or defaults.
-if python3 - "$SOURCE_REPO/coding-agent/jcode/config.toml" "$LIVE_REPO" <<'PYCODE'
-import pathlib, sys, tomllib
-with open(sys.argv[1], 'rb') as f:
-    config = tomllib.load(f)
-assert config['hooks']['pre_tool'] == str(pathlib.Path(sys.argv[2]) / 'coding-agent/hooks/jcode-credential-guard.sh')
-assert config['provider']['default_model'] == 'gpt-6-astra'
-assert config['provider']['openai_reasoning_effort'] == 'low'
-assert config['agents']['swarm_model'] == 'openai:gpt-5.6-luna'
-assert config['agents']['swarm_effort'] == 'max'
-assert config['agents']['swarm_max_concurrent_agents'] == 15
-assert config['features']['auto_poke'] is False
-assert config['ambient']['enabled'] is False
-PYCODE
-then
-  pass
-else
-  fail 'jcode config is invalid or routing/guard wiring has drifted'
-fi
-
-if grep -Fq 'The coordinator must delegate every task that changes project files through native swarm workers' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
-  && grep -Fq 'The user does not need to mention the swarm explicitly.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
-  && grep -Fq 'The coordinator must not implement project changes directly' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
-  && grep -Fq 'GPT-6 Astra and Claude Fable are top-tier coordinator models.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md" \
-  && grep -Fq 'do not select the `swarm` or `swarm-deep` effort sentinel for Astra.' "$SOURCE_REPO/coding-agent/jcode/prompt-overlay.md"; then
-  pass
-else
-  fail 'jcode mandatory swarm delegation policy has drifted'
 fi
 
 # ---------------------------------------------------------------------- report

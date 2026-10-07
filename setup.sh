@@ -78,12 +78,8 @@ prepare_managed_slot() {
   fi
 }
 
-prepare_managed_slot "$HOME/.local/bin/jcode-revoke-worker" "$DOTFILES/.local/bin/jcode-revoke-worker"
 prepare_managed_slot "$HOME/.local/bin/gh-account" "$DOTFILES/.local/bin/gh-account"
 prepare_managed_slot "$HOME/AGENTS.md" "$DOTFILES/AGENTS.md"
-prepare_managed_slot "$HOME/.jcode/config.toml" "$DOTFILES/.jcode/config.toml"
-prepare_managed_slot "$HOME/.jcode/prompt-overlay.md" "$DOTFILES/.jcode/prompt-overlay.md"
-prepare_managed_slot "$HOME/.jcode/swarm-prompt.md" "$DOTFILES/.jcode/swarm-prompt.md"
 prepare_managed_slot "$HOME/.agents/skills" "$DOTFILES/.agents/skills"
 prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/.codex/AGENTS.md"
 prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/.codex/config.toml"
