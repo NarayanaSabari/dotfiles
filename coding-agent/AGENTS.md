@@ -1,15 +1,7 @@
 <!--
-Shared Claude Code and jcode instructions for this machine.
+Global coding-agent instructions for this machine.
 jcode reads this file through ~/AGENTS.md.
-
-Claude Code reads it because coding-agent/claude/CLAUDE.md imports it, and adds
-its own section below that import.
-Codex has separate global instructions in coding-agent/codex/AGENTS.md.
-
-This file is shared by Claude Code and its subagents.
-Anything true of only one is under an explicit heading saying so.
-Do not add a third copy of a rule: if you
-are about to write the same sentence in two places, it belongs up here instead.
+jcode and Orca are the only coding harnesses on this machine.
 -->
 
 # Writing style
@@ -60,7 +52,8 @@ Table and the wildmatch gotcha that silently misrouted commits: [reference/git-i
 
 # Guardrails
 
-Claude Code runs the hook scripts from `coding-agent/hooks/`.
+Guard scripts live in `coding-agent/hooks/`, with `jcode-*` adapters for jcode's hook payload.
+They are not currently wired into `~/.jcode/config.toml`, so treat them as a backstop you may not have.
 They block work-destroying git commands, identity mismatches, credential writes, and tool-attribution trailers.
 When one blocks you, fix the cause it names rather than rephrasing the command to slip past.
 They fail closed: an unparseable payload refuses the command rather than allowing it.
@@ -74,13 +67,11 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
   Never a GitHub MCP server.
 - Browser: jcode's built-in `browser` tool, which drives Firefox through the agent bridge.
   Prefer `action: "handoff"` for multi-step tasks and direct actions otherwise.
-  Claude Code has no equivalent tool, so it drives the same bridge with the `browser` CLI at `~/.jcode/browser/browser`.
-- Parallel sessions: herdr. tmux and treehouse are retired.
-  Every `herdr` command needs the sandbox off, because it talks over a unix socket.
+- Parallel sessions: jcode swarm or Orca worktrees.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
   Curated skills link into pinned submodules under `vendor/`.
-  Codex and jcode discover the tracked links through `~/.agents/skills/`.
+  jcode discovers the tracked links through `~/.agents/skills/`.
   Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- Removing a skill link from the shared registry disables its discovery by Codex and jcode.
+- Removing a skill link from the shared registry disables its discovery by jcode.
 - Shipping: review the diff, then push.
   There is no automated ship gate.

@@ -1,4 +1,3 @@
-anomalyco/tap/opencode
 eza
 git
 neovim

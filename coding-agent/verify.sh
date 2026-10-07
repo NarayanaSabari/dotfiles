@@ -7,9 +7,9 @@
 # the wiring: a symlink or an import that stopped resolving reports nothing at
 # all, it just silently stops working, so those are assertions too.
 #
-# Covers: the Claude Code guards against their hook payload shape, fail-closed
-# parsing, configured hook paths, shared instruction wiring, and managed Codex
-# configuration. /harness-check runs this and judges what is left over.
+# Covers: the guard scripts against their hook payload shape, fail-closed
+# parsing, the jcode adapters that wrap them, shared instruction wiring, and the
+# skill registry.
 #
 # Design rules, learned the hard way:
 #   - Never touch a live repo. Everything runs in a scratch tree under a
@@ -25,12 +25,6 @@
 
 set -u
 SOURCE_REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-# The hooks live in the repo and settings.json points straight at them.
-# They were reached through a ~/.claude/hooks symlink until 2026-09-01,
-# when that link was observed vanishing repeatedly: recreated, verified,
-# then gone again a few commands later. Cause not established; something prunes a
-# symlink at that specific path. Referencing the real directory removes
-# the dependency rather than relying on a link that does not stay put.
 HOOKS="${HOOKS_DIR:-$SOURCE_REPO/coding-agent/hooks}"
 ROOT=$(cd "${TMPDIR:-/tmp}" && pwd -P)/harness-check-guards.$$
 FAKEHOME="$ROOT/home"
@@ -279,115 +273,6 @@ for hook in git-guardrails.sh git-identity-guard.sh credential-guard.sh commit-s
   done
 done
 
-# ============================================================ STEP 12
-# notify.sh must never hang or fail, whatever it is handed
-for payload in '' 'not json' '{"message":{"a":1}}' '{"message":[1,2]}' \
-               '{"message":"a\nb\"c\\d"}'; do
-  if printf '%s' "$payload" | timeout 10 "$HOOKS/notify.sh" done >/dev/null 2>&1; then pass
-  else fail "notify.sh non-zero exit on payload: ${payload:0:24}"; fi
-done
-BIG=$(printf 'x%.0s' $(seq 1 20000))
-if printf '{"message":"%s"}' "$BIG" | timeout 10 "$HOOKS/notify.sh" done >/dev/null 2>&1; then pass
-else fail "notify.sh failed on a 20KB message"; fi
-
-# ============================================================ STEP 13
-# Startup must be clean. A malformed permission rule is accepted silently by
-# the settings schema and only ever surfaces here.
-if command -v claude >/dev/null 2>&1; then
-  WARN=$(cd "$ROOT" && claude -d -p 2>&1 | grep -c "Permission deny rule")
-  [ "$WARN" = 0 ] && pass || fail "startup prints $WARN permission-rule warning(s); run 'claude -d -p' to see them"
-fi
-
-# ============================================================ STEP 14
-# Every hook command in settings.json must resolve to an executable file.
-#
-# This is the assertion that would have caught the ~/.claude/hooks symlink
-# disappearing. A hook path that no longer resolves is not an error Claude Code
-# reports: the guard simply never runs, and the session carries on unguarded.
-SETTINGS="$HOME/.claude/settings.json"
-if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
-  jq -r '.hooks // {} | to_entries[] | .value[]? | .hooks[]? | .command // empty' "$SETTINGS" \
-  | while IFS= read -r hookcmd; do
-      [ -n "$hookcmd" ] || continue
-      # Third-party hooks are not ours to assert on. Matched on the whole
-      # command, before tokenising: their paths contain a space
-      # ("Application Support"), so a token-split test never matches.
-      case "$hookcmd" in *"/Xirp/"*) continue ;; esac
-      # Quoted path first, since that form can contain spaces; otherwise the
-      # first absolute-looking token.
-      hookpath=$(printf '%s' "$hookcmd" | sed -nE "s/.*'([^']+)'.*/\\1/p")
-      [ -n "$hookpath" ] || hookpath=$(printf '%s' "$hookcmd" \
-        | awk '{for(i=1;i<=NF;i++) if($i ~ /^\//){print $i; exit}}')
-      [ -n "$hookpath" ] || continue
-      if [ -x "$hookpath" ]; then printf 'PASSLINE\n'
-      else printf 'FAILLINE %s\n' "$hookpath"; fi
-    done > "$ROOT/hookpaths.txt"
-  while IFS= read -r line; do
-    case "$line" in
-      PASSLINE) pass ;;
-      FAILLINE*) fail "settings.json names a hook that is missing or not executable: ${line#FAILLINE }" ;;
-    esac
-  done < "$ROOT/hookpaths.txt"
-fi
-
-# ============================================================ STEP 15
-# The CLAUDE.md -> AGENTS.md import must resolve.
-#
-# This is the highest-consequence check here. Claude Code's instructions are one
-# import line; if it stops resolving, the session starts with NO instructions
-# and says nothing about it. Three spellings fail, all silently (2026-09-01,
-# seven probes):
-#   - a relative import resolves against ~/.claude/, not the real file's dir
-#   - an import whose target is a symlink is not followed at all
-#   - therefore @~/AGENTS.md fails too, since ~/AGENTS.md is a stow symlink
-# Structural rather than a model probe: deterministic, and it runs in ms.
-REPO="$SOURCE_REPO"
-LIVE_REPO="$HOME/dotfiles"
-CLAUDEMD="$REPO/coding-agent/claude/CLAUDE.md"
-SHARED="$LIVE_REPO/coding-agent/AGENTS.md"
-if [ -f "$CLAUDEMD" ]; then
-  IMPORT=$(grep -m1 '^@' "$CLAUDEMD" | sed 's/^@//' | tr -d '[:space:]')
-  if [ -z "$IMPORT" ]; then
-    fail "CLAUDE.md has no @import line, so it carries no instructions at all"
-  else
-    case "$IMPORT" in
-      /*) pass ;;
-      *)  fail "CLAUDE.md import '$IMPORT' is not absolute; a relative import resolves against ~/.claude/ and silently loads nothing" ;;
-    esac
-    if [ -L "$IMPORT" ]; then
-      fail "CLAUDE.md imports '$IMPORT', which is a symlink; Claude Code does not follow symlink imports and will load nothing"
-    elif [ -f "$IMPORT" ]; then pass
-    else fail "CLAUDE.md imports '$IMPORT', which does not exist"; fi
-    [ "$IMPORT" = "$SHARED" ] && pass || fail "CLAUDE.md imports '$IMPORT', expected the shared file $SHARED"
-  fi
-fi
-# The home-level instruction link must resolve to the shared source.
-if [ -e "$HOME/AGENTS.md" ]; then
-  RESOLVED=$(cd "$(dirname "$HOME/AGENTS.md")" && realpath "$HOME/AGENTS.md" 2>/dev/null)
-  [ "$RESOLVED" = "$SHARED" ] && pass || fail "~/AGENTS.md resolves to '$RESOLVED', expected $SHARED"
-else
-  fail "~/AGENTS.md is missing"
-fi
-
-# ============================================================ STEP 16
-# The stow shims must contain nothing but symlinks.
-#
-# One rule holds the layout together: everything the agents read lives in
-# coding-agent/, and the root shim directories only point there. A real file
-# appearing in a shim means something wrote outside that structure, and it will
-# be read in preference to the file you think you are editing.
-for shim in "$REPO/.agents" "$REPO/.claude" "$REPO/.codex"; do
-  [ -d "$shim" ] || continue
-  while IFS= read -r entry; do
-    case "$(basename "$entry")" in .cc-writes) continue ;; esac
-    if [ -L "$entry" ]; then
-      [ -e "$entry" ] && pass || fail "${entry#$REPO/} is a broken symlink -> $(readlink "$entry")"
-    else
-      fail "${entry#$REPO/} is a real file; the shim must contain only symlinks into coding-agent/"
-    fi
-  done < <(find "$shim" -mindepth 1 ! -type d -print)
-done
-
 # ============================================================ STEP 20
 # Repository-owned skill registries.
 #
@@ -424,46 +309,13 @@ for shim in "$SOURCE_REPO/.agents/skills"; do
   fi
 done
 
-while IFS='|' read -r shim target; do
-  if [ ! -L "$SOURCE_REPO/$shim" ]; then
-    fail "$shim is not a tracked Stow-shim symlink"
-  elif [ ! -e "$SOURCE_REPO/$shim" ]; then
-    fail "$shim is broken"
-  elif [ "$(realpath "$SOURCE_REPO/$shim" 2>/dev/null)" != "$SOURCE_REPO/$target" ]; then
-    fail "$shim does not resolve to $target"
-  else
-    pass
-  fi
-done <<'EOF'
-.codex/AGENTS.md|coding-agent/codex/AGENTS.md
-.codex/config.toml|coding-agent/codex/config.toml
-.codex/browser/config.toml|coding-agent/codex/browser/config.toml
-.codex/computer-use/config.json|coding-agent/codex/computer-use/config.json
-EOF
-
-if command -v jq >/dev/null 2>&1; then
-  jq -e . "$SOURCE_REPO/coding-agent/codex/computer-use/config.json" >/dev/null 2>&1 \
-    && pass || fail "coding-agent/codex/computer-use/config.json is invalid JSON"
-fi
-
-# Only validate the live links after this layout has reached ~/dotfiles.
-# Detached worktrees can be tested without disrupting the currently active
-# checkout or pointing ~/.codex at a disposable worktree.
-if [ -f "$LIVE_REPO/coding-agent/codex/config.toml" ]; then
-  while IFS='|' read -r live target; do
-    if [ ! -L "$HOME/$live" ]; then
-      fail "~/$live is not a symlink into the live dotfiles checkout"
-    elif [ "$(realpath "$HOME/$live" 2>/dev/null)" != "$LIVE_REPO/$target" ]; then
-      fail "~/$live does not resolve to $LIVE_REPO/$target"
-    else
-      pass
-    fi
-  done <<'EOF'
-.codex/AGENTS.md|coding-agent/codex/AGENTS.md
-.codex/config.toml|coding-agent/codex/config.toml
-.codex/browser/config.toml|coding-agent/codex/browser/config.toml
-.codex/computer-use/config.json|coding-agent/codex/computer-use/config.json
-EOF
+# The home-level instruction link must resolve to the shared source.
+SHARED="$HOME/dotfiles/coding-agent/AGENTS.md"
+if [ -e "$HOME/AGENTS.md" ]; then
+  RESOLVED=$(realpath "$HOME/AGENTS.md" 2>/dev/null)
+  [ "$RESOLVED" = "$SHARED" ] && pass || fail "~/AGENTS.md resolves to '$RESOLVED', expected $SHARED"
+else
+  fail "~/AGENTS.md is missing"
 fi
 
 git -C "$SOURCE_REPO" submodule status --recursive 2>/dev/null > "$ROOT/submodules.txt"

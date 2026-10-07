@@ -52,8 +52,6 @@ export STRIX_TELEMETRY=0
 eval "$(zoxide init zsh)"
 alias cd="z"
 
-# opencode
-export PATH=/Users/sabari/.opencode/bin:$PATH
 
 # Added by jcode installer
 export PATH="/Users/sabari/.local/bin:$PATH"

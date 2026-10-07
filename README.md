@@ -72,7 +72,6 @@ This creates symlinks in your home directory (`~`) for the shell, editor, Git, a
 - `.wezterm.lua` -- WezTerm terminal config
 - `.config/nvim/` -- Neovim configuration
 - `.agents/skills` -- global agent skills
-- `.claude/` and `.codex/` -- harness-specific entry points
 
 ### 7. Set up Git
 
@@ -127,52 +126,31 @@ Review skill changes before committing the new submodule revisions.
 
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
-## Coding agents (Claude Code + Codex)
+## Coding agents (jcode + Orca)
 
-Claude Code and Codex use the same `coding-agent/` source tree with separate global instruction files.
-Claude Code imports `coding-agent/AGENTS.md`, while Codex reads `coding-agent/codex/AGENTS.md` through `~/.codex/AGENTS.md`.
-pi was retired on 2026-09-01.
+jcode and Orca are the only coding harnesses.
+jcode reads the shared instructions through `~/AGENTS.md` and skills through `~/.agents/skills`.
+Its own config, auth, and sessions stay untracked in `~/.jcode` (see `coding-agent/jcode/README.md`).
+Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-07.
 
 ```
 coding-agent/
-├── AGENTS.md          # Claude Code's shared instructions
-├── hooks/             # Claude Code guard scripts
+├── AGENTS.md          # shared instructions, exposed as ~/AGENTS.md
+├── hooks/             # guard scripts plus jcode-* adapters
+├── bin/               # helper scripts (gh-account, jcode-revoke-worker)
 ├── global/
 │   └── skills/        # curated registry exposed as ~/.agents/skills
-├── claude/
-│   ├── CLAUDE.md      #   an @import of AGENTS.md + Claude-only rules
-│   ├── agents/        #   sub-agent definitions
-│   ├── commands/      #   slash commands (/harness-check)
-│   └── settings.json, keybindings.json, statusline.sh, themes/
-├── codex/
-│   ├── config.toml    # Codex user configuration
-│   └── browser/, computer-use/
+├── jcode/             # notes on how jcode is configured
 ├── reference/         # evidence behind the one-line rules in AGENTS.md
+├── tests/             # identity-routing regression test
 ├── vendor/            # pinned third-party Git submodules
 └── verify.sh          # every mechanical assertion about the above
 ```
 
-How it maps into the live tools:
-
-| Source | Claude Code | Codex |
-|--------|-------------|-------|
-| `AGENTS.md` | via the import in `CLAUDE.md` | -- |
-| `codex/AGENTS.md` | -- | `~/.codex/AGENTS.md` |
-| `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | -- |
-| `claude/agents/`, `commands/`, app config | `~/.claude/...` | -- |
-| `codex/` | -- | `~/.codex/...` |
-| `hooks/` | named by absolute path in `settings.json` | -- |
-| `global/skills/` | -- | `~/.agents/skills/<name>` |
-| `vendor/superpowers` | plugin installation | via the global registry |
-
-`dotfiles/.agents/`, `dotfiles/.claude/`, and `dotfiles/.codex/` contain only symlinked files into `coding-agent/`; they are Stow shims.
-The links and their pinned sources are committed, and `setup.sh` initializes the submodules before Stow exposes them under your home directory.
+`dotfiles/.agents/` contains only symlinks into `coding-agent/`; it is a Stow shim.
 Mutable caches, credentials, sessions, and installer state stay outside the repository.
 
 **To change agent behaviour:** edit `coding-agent/AGENTS.md`.
-That is Claude Code's shared instruction file.
-Edit `coding-agent/codex/AGENTS.md` for Codex-specific guidance.
-Put a rule in `claude/CLAUDE.md` only if it is genuinely Claude Code specific.
 
 **After any change under `coding-agent/`, run `bash coding-agent/verify.sh`.**
 Most of what can break here breaks silently: a symlink that stops resolving, a hook that no longer runs, an import that loads nothing.
@@ -183,8 +161,6 @@ The suite is the only thing that reports those.
 ```
 ~/dotfiles/
 ├── .agents/           # global-agent stow shim (symlinks only)
-├── .claude/            # Claude Code stow shim (symlinks only)
-├── .codex/             # Codex stow shim (managed files only)
 ├── .config/
 │   └── nvim/           # Neovim configuration (Lua)
 ├── .gitignore

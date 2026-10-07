@@ -8,5 +8,4 @@
 --ignore=setup\.sh
 --ignore=README\.md
 --ignore=OPINIONS-proposals\.md
---ignore=routines
 --ignore=coding-agent

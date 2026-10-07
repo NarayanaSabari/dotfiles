@@ -44,10 +44,7 @@ git submodule update --init --recursive
 mkdir -p \
   "$HOME/.agents" \
   "$HOME/.local/bin" \
-  "$HOME/.claude" \
   "$HOME/.jcode" \
-  "$HOME/.codex/browser" \
-  "$HOME/.codex/computer-use" \
   "$HOME/.config" \
   "$HOME/.ssh"
 
@@ -81,10 +78,6 @@ prepare_managed_slot() {
 prepare_managed_slot "$HOME/.local/bin/gh-account" "$DOTFILES/.local/bin/gh-account"
 prepare_managed_slot "$HOME/AGENTS.md" "$DOTFILES/AGENTS.md"
 prepare_managed_slot "$HOME/.agents/skills" "$DOTFILES/.agents/skills"
-prepare_managed_slot "$HOME/.codex/AGENTS.md" "$DOTFILES/.codex/AGENTS.md"
-prepare_managed_slot "$HOME/.codex/config.toml" "$DOTFILES/.codex/config.toml"
-prepare_managed_slot "$HOME/.codex/browser/config.toml" "$DOTFILES/.codex/browser/config.toml"
-prepare_managed_slot "$HOME/.codex/computer-use/config.json" "$DOTFILES/.codex/computer-use/config.json"
 
 # Stow dotfiles to home directory
 echo "Symlinking dotfiles..."
@@ -93,41 +86,14 @@ stow --dir="$DOTFILES" --target="$HOME" .
 # ---------------------------------------------------------------------------
 # Coding agents
 #
-# Claude Code and Codex share the coding-agent source tree.
-# Claude Code's shared instructions live in coding-agent/AGENTS.md.
+# jcode is the only coding harness. It reads the shared instructions and skills
+# from the coding-agent source tree through these Stow links:
 #
 #   ~/AGENTS.md              -> coding-agent/AGENTS.md      (shared instructions)
-#   ~/.claude/CLAUDE.md      -> coding-agent/claude/CLAUDE.md, which is an
-#                               absolute @import of that same shared file
-#   ~/.claude/{agents,commands,settings.json,...}
-#                            -> coding-agent/claude/...
-#   ~/.codex/AGENTS.md       -> coding-agent/codex/AGENTS.md
-#   ~/.codex/config.toml     -> coding-agent/codex/config.toml
-#   ~/.codex/{browser,computer-use}/...
-#                            -> coding-agent/codex/...
 #   ~/.agents/skills         -> coding-agent/global/skills
 #
 # All of those are symlinks committed in the repo, so `stow .` reproduces them
 # and there is nothing to do here.
-#
-# Claude Code's hooks are deliberately NOT reached through a symlink:
-# settings.json names coding-agent/hooks/*.sh by absolute path. A ~/.claude/hooks
-# link was observed repeatedly disappearing on 2026-09-01 (see
-# coding-agent/reference/harness.md), and a hook path that stops resolving is
-# silent - the guard simply never runs. verify.sh asserts those paths.
-#
-# Skill sources and links are committed under coding-agent/ and managed by Stow.
-
-# NOTE: `claude plugin install` writes settings.json with an atomic rename, which
-# REPLACES .claude/settings.json - a symlink into coding-agent/ - with a real
-# file, silently orphaning the tracked copy. Repair it afterwards. verify.sh
-# STEP 16 catches this, and it is why that assertion exists.
-if [ ! -L "$DOTFILES/.claude/settings.json" ] && [ -f "$DOTFILES/.claude/settings.json" ]; then
-  echo "  repairing the settings.json shim that the plugin installer replaced"
-  cp "$DOTFILES/.claude/settings.json" "$DOTFILES/coding-agent/claude/settings.json"
-  rm "$DOTFILES/.claude/settings.json"
-  ln -sfn ../coding-agent/claude/settings.json "$DOTFILES/.claude/settings.json"
-fi
 
 # Prove the wiring rather than assuming it. This is fast, and every failure it
 # reports is one that is otherwise silent.
