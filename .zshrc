@@ -52,9 +52,5 @@ export STRIX_TELEMETRY=0
 eval "$(zoxide init zsh)"
 alias cd="z"
 
-
-# Added by jcode installer
-export PATH="/Users/sabari/.local/bin:$PATH"
-
 # added by harness installer
 export PATH="$HOME/.local/bin:$PATH"

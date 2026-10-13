@@ -44,7 +44,6 @@ git submodule update --init --recursive
 mkdir -p \
   "$HOME/.agents" \
   "$HOME/.local/bin" \
-  "$HOME/.jcode" \
   "$HOME/.config" \
   "$HOME/.ssh"
 
@@ -86,8 +85,8 @@ stow --dir="$DOTFILES" --target="$HOME" .
 # ---------------------------------------------------------------------------
 # Coding agents
 #
-# jcode is the only coding harness. It reads the shared instructions and skills
-# from the coding-agent source tree through these Stow links:
+# Coding harnesses read the shared instructions and skills from the
+# coding-agent source tree through these Stow links:
 #
 #   ~/AGENTS.md              -> coding-agent/AGENTS.md      (shared instructions)
 #   ~/.agents/skills         -> coding-agent/global/skills

@@ -55,11 +55,3 @@ It checks the session cwd, every `git -C <path>` in the command, and a leading l
 It is a backstop.
 Check the identity yourself.
 See [harness.md](/Users/sabari/dotfiles/coding-agent/reference/harness.md).
-
-## Jcode integration
-
-Jcode calls `jcode-identity-guard.sh` with raw JSON and `JCODE_HOOK_TOOL_NAME`/`JCODE_HOOK_CWD` metadata.
-The adapter validates the payload and invokes the shared identity guard.
-Only the identity guard is connected here; this does not enable the other Claude guards in jcode.
-Adapter and guard failures return exit 2 to block.
-Jcode itself fails open on hook startup failure or timeout, so this is not a sandbox or an absolute enforcement boundary.

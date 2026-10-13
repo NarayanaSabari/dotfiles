@@ -8,8 +8,7 @@
 # all, it just silently stops working, so those are assertions too.
 #
 # Covers: the guard scripts against their hook payload shape, fail-closed
-# parsing, the jcode adapters that wrap them, shared instruction wiring, and the
-# skill registry.
+# parsing, shared instruction wiring, and the skill registry.
 #
 # Design rules, learned the hard way:
 #   - Never touch a live repo. Everything runs in a scratch tree under a
@@ -328,52 +327,10 @@ while IFS= read -r line; do
   esac
 done < "$ROOT/submodules.txt"
 
-# Jcode uses its native harness; dotfiles must not reinstall custom policy.
-for name in config.toml prompt-overlay.md swarm-prompt.md; do
-  if [ -e "$SOURCE_REPO/.jcode/$name" ] || [ -L "$SOURCE_REPO/.jcode/$name" ]; then
-    fail "jcode custom policy is still managed: $name"
-  else
-    pass
-  fi
-done
-
-# Jcode identity adapter uses the real raw-input contract.
-for probe in allow malformed; do
-  case "$probe" in allow) input='{"command":"git status"}'; expected=0 ;; malformed) input='not-json'; expected=2 ;; esac
-  printf '%s' "$input" | JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-identity-guard.sh" >/dev/null 2>&1
-  rc=$?
-  [ "$rc" -eq "$expected" ] && pass || fail "jcode identity adapter $probe returned $rc"
-done
-for probe in allow secret malformed; do
-  case "$probe" in
-    allow) input='{"command":"envkit run -- npm start"}'; expected=0 ;;
-    secret) input='{"command":"envkit get FOO"}'; expected=2 ;;
-    malformed) input='not-json'; expected=2 ;;
-  esac
-  printf '%s' "$input" | JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-credential-guard.sh" >/dev/null 2>&1
-  rc=$?
-  [ "$rc" -eq "$expected" ] && pass || fail "jcode credential adapter $probe returned $rc"
-done
 if bash "$SOURCE_REPO/coding-agent/tests/identity-routing.sh" >/dev/null 2>&1; then
   pass
 else
   fail "Git identity remote/worktree routing regression checks"
-fi
-
-# Revocation must block future tool calls for only the selected worker.
-REVOCATION_HOME="$ROOT/jcode-state"
-JCODE_HOME="$REVOCATION_HOME" "$SOURCE_REPO/coding-agent/bin/jcode-revoke-worker" session_revocation_probe >/dev/null
-for sid in session_revocation_probe session_unrevoked_probe; do
-  printf '%s' '{"command":"git status"}' | JCODE_HOME="$REVOCATION_HOME" JCODE_HOOK_SESSION_ID="$sid" JCODE_HOOK_TOOL_NAME=bash JCODE_HOOK_CWD="$CLEANREPO" "$HOOKS/jcode-identity-guard.sh" >/dev/null 2>&1
-  rc=$?
-  expected=0
-  [ "$sid" = session_revocation_probe ] && expected=2
-  [ "$rc" -eq "$expected" ] && pass || fail "worker revocation $sid returned $rc"
-done
-if JCODE_HOME="$REVOCATION_HOME" "$SOURCE_REPO/coding-agent/bin/jcode-revoke-worker" 'session_../../invalid' >/dev/null 2>&1; then
-  fail 'worker revocation accepted an invalid session ID'
-else
-  pass
 fi
 
 # ---------------------------------------------------------------------- report

@@ -126,21 +126,19 @@ Review skill changes before committing the new submodule revisions.
 
 After making changes to any dotfile, they're already symlinked -- no need to re-run stow unless you add new files.
 
-## Coding agents (jcode + Orca)
+## Coding agents (Orca)
 
-jcode and Orca are the only coding harnesses.
-jcode reads the shared instructions through `~/AGENTS.md` and skills through `~/.agents/skills`.
-Its own config, auth, and sessions stay untracked in `~/.jcode` (see `coding-agent/jcode/README.md`).
-Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-07.
+Orca is the only coding harness.
+Shared instructions are exposed through `~/AGENTS.md` and skills through `~/.agents/skills`.
+Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-07, and jcode on 2026-10-13.
 
 ```
 coding-agent/
 ├── AGENTS.md          # shared instructions, exposed as ~/AGENTS.md
-├── hooks/             # guard scripts plus jcode-* adapters
-├── bin/               # helper scripts (gh-account, jcode-revoke-worker)
+├── hooks/             # guard scripts
+├── bin/               # helper scripts (gh-account)
 ├── global/
 │   └── skills/        # curated registry exposed as ~/.agents/skills
-├── jcode/             # notes on how jcode is configured
 ├── reference/         # evidence behind the one-line rules in AGENTS.md
 ├── tests/             # identity-routing regression test
 ├── vendor/            # pinned third-party Git submodules

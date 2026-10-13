@@ -3,8 +3,9 @@
 Evidence behind the one-line rules in [AGENTS.md](/Users/sabari/dotfiles/coding-agent/AGENTS.md).
 Nothing here is loaded into context automatically, so anything that must change behaviour belongs there, not in this file.
 
-jcode and Orca are the only coding harnesses.
+Orca is the only coding harness.
 Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-07, along with their dotfiles config.
+jcode was removed on 2026-10-13, along with its hook adapters and skill submodule.
 
 ## Layout
 
@@ -12,8 +13,7 @@ Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-
 |---|---|
 | `coding-agent/AGENTS.md` | shared instructions, exposed as `~/AGENTS.md` |
 | `coding-agent/global/` | the curated global skill registry exposed as `~/.agents/skills` |
-| `coding-agent/hooks/` | guard scripts and the `jcode-*` adapters that feed them jcode's hook payload |
-| `coding-agent/jcode/` | notes on how jcode is configured |
+| `coding-agent/hooks/` | guard scripts |
 | `coding-agent/reference/` | this directory |
 | `coding-agent/vendor/` | pinned upstream skill repositories |
 | `coding-agent/verify.sh` | every mechanical assertion about the above |
@@ -27,9 +27,6 @@ Claude Code, Codex, OpenCode, Pi, Droid, herdr, and Zed were removed on 2026-10-
 | `credential-guard.sh` | writes to credential-shaped paths, content carrying a live-looking key, and `git add` sweeping an untracked `.env`. |
 | `commit-signature-guard.sh` | tool-attribution trailers. Trailers only, never prose: an earlier version blocked the commit that introduced it by matching its own message. |
 
-`jcode-identity-guard.sh` and `jcode-credential-guard.sh` translate jcode's raw hook input into the payload the guards expect.
-They are not wired into `~/.jcode/config.toml`, whose hooks currently point at Orca's agent hook.
-
 ### Hook payloads
 
 The guards read `{"tool_name":..., "cwd":..., "tool_input":{"command":...}}`.
@@ -39,6 +36,6 @@ The verifier exercises allowed commands, blocked commands, and malformed payload
 ## Skills
 
 Skill sources are pinned Git submodules under `coding-agent/vendor/`.
-Their curated links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/` for jcode.
+Their curated links in `coding-agent/global/skills/` are exposed as `~/.agents/skills/`.
 Update with `git submodule update --remote`, inspect `git diff --submodule`, and commit reviewed revisions.
 The shared registry checks in `verify.sh` validate the links.

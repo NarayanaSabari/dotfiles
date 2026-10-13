@@ -1,7 +1,7 @@
 <!--
 Global coding-agent instructions for this machine.
-jcode reads this file through ~/AGENTS.md.
-jcode and Orca are the only coding harnesses on this machine.
+Harnesses read this file through ~/AGENTS.md.
+Orca is the only coding harness on this machine.
 -->
 
 # Writing style
@@ -52,8 +52,8 @@ Table and the wildmatch gotcha that silently misrouted commits: [reference/git-i
 
 # Guardrails
 
-Guard scripts live in `coding-agent/hooks/`, with `jcode-*` adapters for jcode's hook payload.
-They are not currently wired into `~/.jcode/config.toml`, so treat them as a backstop you may not have.
+Guard scripts live in `coding-agent/hooks/`.
+They are not currently wired into any harness, so treat them as a backstop you may not have.
 They block work-destroying git commands, identity mismatches, credential writes, and tool-attribution trailers.
 When one blocks you, fix the cause it names rather than rephrasing the command to slip past.
 They fail closed: an unparseable payload refuses the command rather than allowing it.
@@ -65,13 +65,10 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 
 - GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`.
   Never a GitHub MCP server.
-- Browser: jcode's built-in `browser` tool, which drives Firefox through the agent bridge.
-  Prefer `action: "handoff"` for multi-step tasks and direct actions otherwise.
-- Parallel sessions: jcode swarm or Orca worktrees.
+- Parallel sessions: Orca worktrees.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
   Curated skills link into pinned submodules under `vendor/`.
-  jcode discovers the tracked links through `~/.agents/skills/`.
   Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- Removing a skill link from the shared registry disables its discovery by jcode.
+- Removing a skill link from the shared registry disables its discovery.
 - Shipping: review the diff, then push.
   There is no automated ship gate.
