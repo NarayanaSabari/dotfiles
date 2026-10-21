@@ -6,39 +6,39 @@ user-invocable: false
 
 # Velvet
 
-Velvet is the record of what work actually happened, across every organisation and project.
-Use the hosted Velvet MCP tools: `velvet_log_work`, `velvet_current_ticket`, `velvet_attach_evidence`, `velvet_my_worklog`, and the rest of the `velvet_` tools.
+Velvet is the record of what work actually happened.
+Agents write to it with the `velvet` CLI, from a repository linked to one Velvet project.
 If the Velvet plugin is installed, its skills (`log-work`, `tickets`, `sprints`, `attach-image`, `recap`, `setup`) carry the full workflow; follow them.
 
-If no `velvet_` tools are available, the agent is not connected.
-Tell the user to connect the hosted server at `<velvet-url>/api/v1/w/<organisation>/mcp` with a personal API token as a bearer token, or to install the Velvet plugin.
-Never ask for the token in chat or write it to a file.
+## Check the link
+
+Run `velvet whoami` in the repository.
+
+- `command not found`: ask the user to run `curl -fsSL https://velvet.sabarinarayana.com/install.sh | sh`.
+- Exit 78 (no `velvet.yaml`) or exit 3 (no key, or revoked): ask the user to run `velvet init` in the repository. It opens a browser to approve.
+
+Never ask for a key in chat, write one to a file, or edit `velvet.yaml` to reach another project.
 
 ## Always log, even without a ticket
 
-After each meaningful unit of work, write one factual, first-person entry of 1-3 sentences with `velvet_log_work`.
+After each meaningful unit of work, write one factual, first-person entry of 1-3 sentences.
 
-1. If `git branch --show-current` names a ticket, pass it to `velvet_current_ticket` and log with that `key`.
-2. Otherwise log with the `project` named in the repository's "Velvet work log" section of `AGENTS.md` or `CLAUDE.md`.
-3. Otherwise pick the matching project from `velvet_list_projects`, or ask once.
+1. If `velvet key-from-branch` prints a key, log to it: `velvet log ENG-42 "..."`.
+2. Otherwise log to the repository's project: `velvet log "..."`.
 
-Set `kind` to `progress`, `decision`, `blocker`, or `note`.
+Flags go before the message: `velvet log ENG-42 --kind decision "..."`, with `progress` (default), `decision`, `blocker`, or `note`.
 Never invent a ticket key, time spent, or work that did not happen.
+Exit 7 means the ticket is in another project: tell the user.
 
 ## Attach the proof
 
-Attach a pull request URL, `owner/repo#42`, or a commit sha with `velvet_attach_evidence`.
+`velvet attach ENG-42 <pull request URL | owner/repo#42 | commit sha>`.
 
 ## Status
 
-Change a ticket's status with `velvet_set_status` only when the user explicitly asks.
+Run `velvet status KEY STATUS` only when the user explicitly asks.
 Never change it because work was logged, a pull request merged, or evidence was attached.
 
-## Without MCP
+## Recap
 
-The `velvet` CLI covers the same work log from a terminal when `VELVET_URL` and `VELVET_TOKEN` are exported:
-
-```bash
-velvet log --kind progress "I fixed token authentication and verified the request path."
-velvet recap --days 7
-```
+`velvet recap --days 7` covers this repository's project; My work log in the web app covers everything.
