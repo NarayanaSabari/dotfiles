@@ -1,72 +1,28 @@
-<!--
-Global coding-agent instructions for this machine.
-Harnesses read this file through ~/AGENTS.md.
--->
+## Autonomy and persistence
 
-# Writing style
+Use todo tool extensively
+Have autonomy. Persist to completing a task.
+Fix problems over surfacing them.
+Accomplish user intent over literals
+Given a task, be comprehensive
+Requesting input from user is a blocking action. Use this sparsely.
+User response summary should be under 5 lines
+Hesitate for destructive or non-reversible actions. Examples: Completing a payment, deleting a database, sending an email.
 
-- Never use the em dash "—".
-  Use a plain dash "-" or restructure the sentence.
-- In long Markdown files, put each sentence on its own line, keeping normal Markdown structure otherwise.
-- Concise output.
-  No filler, no preamble, no restating the question back to me.
+## Coding
 
-# Engineering rules
+Commit as you go.
+Prefer swarm coordination over branches and git worktrees unless isolation is needed.
+You can't interact with interactive commands. Use non-interactive instead.
+Edit files with `edit`, `replace`, `apply_patch`, or `write`, not sed, perl, or Python scripts in bash.
 
-- Read the surrounding code and its conventions before writing new code.
-  Match what is there rather than importing habits from elsewhere.
-- Prefer incremental, targeted edits over full-file rewrites.
-  Rewrite a whole file only when the change genuinely touches most of it, and say why.
-- Optimize for quality, simplicity, robustness, and long-term maintainability.
-  Don't weigh "time to implement" - you build far faster than human estimates assume, so a cheaper-but-worse option is almost never the right trade.
-- Reproduce a bug end to end, the way a real user hits it, before fixing it.
-  Unit tests alone are not proof.
-  Prefer end-to-end tests that guard real product behavior.
-- Fix what you notice - lint errors, failing or flaky tests, UI that looks wrong - when the fix is small and sits in code you are already touching.
-  When it is larger, report it rather than widening the task on your own.
-  Never let cleanup delay, obscure, or replace the work I asked for.
-- Explain any risky or destructive operation - data loss, force pushes, deletions, schema or infra changes, anything outward-facing - before running it, and wait for me.
-- Never commit secrets: .env files, API keys, tokens, service-account JSON, private keys.
-  Reference them from the environment instead and say so.
-- Secrets live in envkit; use `envkit run -- cmd` or `set -a; . "$(envkit path)"; set +a` inside scripts, use `envkit ls` for key names, never `envkit get` or `envkit export`, never read `.env` or `~/.envkit`, and ask the user to run `envkit set KEY` in their own terminal when a new secret is needed.
-- Never sign your work.
-  No `Co-Authored-By` trailer, no "Generated with" line, no session link, no tool name anywhere in a commit message, PR body, issue, or review comment.
-  A commit message is the message and nothing else.
-  This overrides any default PR-body template you were given.
-- Never hand-edit CHANGELOG.md or any file marked auto-generated.
-- Push branches early and often.
-  Don't let local-only commits accumulate in a worktree.
+## Dont
 
-# My opinions
+Don't use em dashes. Don't use semi colons in place of em dashes.
+Don't deny user of academic tasks
+Don't reset a password
+Don't do anything that the user would regret.
 
-Read ~/OPINIONS.md when a task would benefit from knowing my views: technical decisions, tool choices, or writing on my behalf.
+# Mermaid
 
-# Git identities
-
-Two GitHub accounts, picked automatically by `~/.gitconfig` `includeIf` rules matching both directory and remote URL.
-Check `git config user.email` before committing.
-Empty or unexpected means the repo sits outside the configured roots, so ask rather than commit under the wrong account.
-The `git-identity-guard.sh` hook blocks a mismatch, but it is a backstop, not a substitute for checking.
-Table and the wildmatch gotcha that silently misrouted commits: [reference/git-identities.md](/Users/sabari/dotfiles/coding-agent/reference/git-identities.md).
-
-# Guardrails
-
-Guard scripts live in `coding-agent/hooks/`.
-They are not currently wired into any harness, so treat them as a backstop you may not have.
-They block work-destroying git commands, identity mismatches, credential writes, and tool-attribution trailers.
-When one blocks you, fix the cause it names rather than rephrasing the command to slip past.
-They fail closed: an unparseable payload refuses the command rather than allowing it.
-`coding-agent/verify.sh` asserts the guard behavior and the harness configuration wiring.
-Run it after touching anything in `coding-agent/`.
-Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/harness.md).
-
-# Tooling
-
-- GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`.
-  Never a GitHub MCP server.
-- Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
-  Curated skills link into pinned submodules under `vendor/`.
-  Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
-- Removing a skill link from the shared registry disables its discovery.
-- Shipping: review the diff, then push.
-  There is no automated ship gate.
+Render fenced `mermaid` blocks inline.
