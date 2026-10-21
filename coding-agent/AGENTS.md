@@ -1,7 +1,6 @@
 <!--
 Global coding-agent instructions for this machine.
 Harnesses read this file through ~/AGENTS.md.
-Orca is the only coding harness on this machine.
 -->
 
 # Writing style
@@ -65,7 +64,6 @@ Details: [reference/harness.md](/Users/sabari/dotfiles/coding-agent/reference/ha
 
 - GitHub: plain `gh`, or the `gh-axi` CLI at `~/.agents/skills/gh-axi`.
   Never a GitHub MCP server.
-- Parallel sessions: Orca worktrees.
 - Skills have one explicit user registry under `coding-agent/global/skills/`, exposed as `~/.agents/skills`.
   Curated skills link into pinned submodules under `vendor/`.
   Update with `git -C ~/dotfiles submodule update --remote`, review the diff, then commit the new revisions.
